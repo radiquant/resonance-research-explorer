@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,26 +7,70 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowDown, Calculator, Zap } from 'lucide-react';
 
 const CopenAlgorithmVisualization: React.FC = () => {
-  const [word, setWord] = useState('ARNICA');
+  const [word, setWord] = useState('NUX VOMICA');
   const [potency, setPotency] = useState(6);
   const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M'>('D');
   const [showCalculation, setShowCalculation] = useState(false);
+
+  // Modernisierte Wortenergie-Normalisierung
+  const normalizeWordEnergy = (word: string): string => {
+    return word
+      .toUpperCase()
+      // Umlaute umwandeln
+      .replace(/Ä/g, 'AE')
+      .replace(/Ö/g, 'OE') 
+      .replace(/Ü/g, 'UE')
+      .replace(/ß/g, 'SS')
+      // Potenzangaben entfernen (D6, C200, LM1, etc.)
+      .replace(/\s*[DCLM]+\d+/g, '')
+      // Zahlen entfernen
+      .replace(/\d+/g, '')
+      // Sonderzeichen entfernen, aber Leerzeichen beibehalten
+      .replace(/[^A-Z\s]/g, '')
+      // Mehrfache Leerzeichen durch einzelne ersetzen
+      .replace(/\s+/g, ' ')
+      // Führende und nachfolgende Leerzeichen entfernen
+      .trim();
+  };
 
   // Buchstabenwerte A=1, B=2, etc.
   const getLetterValue = (letter: string): number => {
     return letter.toUpperCase().charCodeAt(0) - 64;
   };
 
-  // Schritt 1: Buchstabenwerte berechnen
-  const letterValues = word.split('').map((letter, index) => ({
-    letter: letter.toUpperCase(),
-    value: getLetterValue(letter),
-    position: index + 1,
-    weighted: getLetterValue(letter) * (index + 1)
-  }));
+  const cleanWord = normalizeWordEnergy(word);
 
-  // Schritt 2: Primärsumme
-  const primarySum = letterValues.reduce((sum, item) => sum + item.weighted, 0);
+  // Schritt 1: Buchstabenwerte berechnen (Leerzeichen überspringen)
+  const letterValues = [];
+  let position = 1;
+  
+  for (let i = 0; i < cleanWord.length; i++) {
+    const char = cleanWord[i];
+    if (char === ' ') {
+      letterValues.push({
+        letter: ' ',
+        value: 0,
+        position: '-',
+        weighted: 0,
+        isSpace: true
+      });
+      continue;
+    }
+    
+    letterValues.push({
+      letter: char,
+      value: getLetterValue(char),
+      position: position,
+      weighted: getLetterValue(char) * position,
+      isSpace: false
+    });
+    position++;
+  }
+
+  // Schritt 2: Primärsumme (nur Buchstaben, keine Leerzeichen)
+  const primarySum = letterValues
+    .filter(item => !item.isSpace)
+    .reduce((sum, item) => sum + item.weighted, 0);
 
   // Schritt 3: Baserate
   const baseRate = primarySum * 1000;
@@ -65,8 +108,11 @@ const CopenAlgorithmVisualization: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-2xl text-center text-blue-800 flex items-center justify-center gap-2">
             <Zap className="h-6 w-6" />
-            Bruce Copen Algorithmus - Grafische Darstellung
+            Modernisierter Bruce Copen Algorithmus
           </CardTitle>
+          <p className="text-center text-sm text-gray-600 mt-2">
+            ✓ Leerzeichen als Trennzeichen • ✓ Umlaute-Konvertierung (ä→ae, ö→oe, ü→ue, ß→ss)
+          </p>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -75,9 +121,12 @@ const CopenAlgorithmVisualization: React.FC = () => {
               <Input
                 id="word"
                 value={word}
-                onChange={(e) => setWord(e.target.value.toUpperCase())}
-                placeholder="z.B. ARNICA"
+                onChange={(e) => setWord(e.target.value)}
+                placeholder="z.B. Nux vomica, Schüßler Nr.1"
               />
+              <div className="text-xs text-gray-500 mt-1">
+                Normalisiert: "{cleanWord}"
+              </div>
             </div>
             <div>
               <Label htmlFor="potency">Potenz</Label>
@@ -107,7 +156,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
           </div>
           <Button onClick={handleCalculate} className="w-full">
             <Calculator className="h-4 w-4 mr-2" />
-            Algorithmus visualisieren
+            Modernisierten Algorithmus visualisieren
           </Button>
         </CardContent>
       </Card>
@@ -118,25 +167,44 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg text-green-700">
-                Schritt 1: Buchstabenwerte mit Positionsgewichtung
+                Schritt 1: Modernisierte Buchstabenwerte (Leerzeichen beibehalten)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-2">
                 {letterValues.map((item, index) => (
-                  <div key={index} className="bg-green-50 p-3 rounded-lg text-center border">
-                    <div className="text-2xl font-bold text-green-800">{item.letter}</div>
-                    <div className="text-sm text-gray-600">Wert: {item.value}</div>
-                    <div className="text-sm text-gray-600">Pos: {item.position}</div>
-                    <div className="text-lg font-semibold text-green-700 mt-2 border-t pt-2">
-                      {item.value} × {item.position} = {item.weighted}
-                    </div>
+                  <div 
+                    key={index} 
+                    className={`p-2 rounded-lg text-center border text-sm ${
+                      item.isSpace 
+                        ? 'bg-gray-50 border-gray-200' 
+                        : 'bg-green-50 border-green-200'
+                    }`}
+                  >
+                    {item.isSpace ? (
+                      <>
+                        <div className="text-lg text-gray-400">⎵</div>
+                        <div className="text-xs text-gray-400">Leer</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-lg font-bold text-green-800">{item.letter}</div>
+                        <div className="text-xs text-gray-600">W: {item.value}</div>
+                        <div className="text-xs text-gray-600">P: {item.position}</div>
+                        <div className="text-sm font-semibold text-green-700 border-t pt-1 mt-1">
+                          {item.weighted}
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
               <div className="mt-4 p-3 bg-green-100 rounded-lg">
                 <div className="text-center text-lg">
-                  <strong>Primärsumme = {letterValues.map(item => `${item.weighted}`).join(' + ')} = {primarySum}</strong>
+                  <strong>Primärsumme = {letterValues
+                    .filter(item => !item.isSpace)
+                    .map(item => `${item.weighted}`)
+                    .join(' + ')} = {primarySum}</strong>
                 </div>
               </div>
             </CardContent>
@@ -244,19 +312,20 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <Card className="border-2 border-green-400">
             <CardHeader>
               <CardTitle className="text-xl text-center text-green-800">
-                🎯 Authentische Bruce Copen Rate
+                🎯 Modernisierte Bruce Copen Rate
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-gradient-to-r from-green-100 to-blue-100 p-6 rounded-lg text-center">
                 <div className="text-lg text-gray-700 mb-2">
-                  {word} {potencyType}{potency}
+                  "{cleanWord}" {potencyType}{potency}
                 </div>
                 <div className="text-4xl font-bold text-green-800 mb-4">
                   {finalRate.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">
-                  Berechnet nach Original Copen-Algorithmus (1978-1995)
+                  Berechnet mit modernisiertem Copen-Algorithmus<br/>
+                  ✓ Leerzeichen-Erhaltung ✓ Umlaut-Konvertierung
                 </div>
               </div>
             </CardContent>

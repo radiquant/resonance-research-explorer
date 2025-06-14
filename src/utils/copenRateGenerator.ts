@@ -24,6 +24,33 @@ export interface WordEnergyInput {
 }
 
 /**
+ * Modernisierte Wortenergie-Normalisierung
+ * - Leerzeichen werden als Trennzeichen beibehalten
+ * - Umlaute werden korrekt umgewandelt (ä→ae, ö→oe, ü→ue, ß→ss)
+ * - Potenzangaben und Zahlen werden entfernt
+ * - Sonderzeichen werden entfernt
+ */
+function normalizeWordEnergy(word: string): string {
+  return word
+    .toUpperCase()
+    // Umlaute umwandeln
+    .replace(/Ä/g, 'AE')
+    .replace(/Ö/g, 'OE') 
+    .replace(/Ü/g, 'UE')
+    .replace(/ß/g, 'SS')
+    // Potenzangaben entfernen (D6, C200, LM1, etc.)
+    .replace(/\s*[DCLM]+\d+/g, '')
+    // Zahlen entfernen
+    .replace(/\d+/g, '')
+    // Sonderzeichen entfernen, aber Leerzeichen beibehalten
+    .replace(/[^A-Z\s]/g, '')
+    // Mehrfache Leerzeichen durch einzelne ersetzen
+    .replace(/\s+/g, ' ')
+    // Führende und nachfolgende Leerzeichen entfernen
+    .trim();
+}
+
+/**
  * Berechnet authentische Bruce Copen Rate aus Wortenergie
  */
 export function calculateCopenRate(
@@ -31,6 +58,9 @@ export function calculateCopenRate(
   potency: number = 6, 
   potencyType: 'D' | 'C' | 'LM' | 'M' = 'D'
 ): CopenRateResult {
+  // Modernisierte Wortenergie-Normalisierung
+  const cleanWord = normalizeWordEnergy(word);
+  
   // Originales Copen-Buchstabensystem
   const letterValues: { [key: string]: number } = {};
   for (let i = 1; i <= 26; i++) {
@@ -38,13 +68,18 @@ export function calculateCopenRate(
   }
   
   // Schritt 1: Buchstabenwerte mit Positionsgewichtung
-  const cleanWord = word.toUpperCase().replace(/[^A-Z]/g, '');
   let letterSum = 0;
+  let position = 1;
   
   for (let i = 0; i < cleanWord.length; i++) {
-    const letter = cleanWord[i];
-    const letterValue = letterValues[letter] || 0;
-    letterSum += letterValue * (i + 1);
+    const char = cleanWord[i];
+    if (char === ' ') {
+      // Leerzeichen überspringen, aber Position nicht erhöhen
+      continue;
+    }
+    const letterValue = letterValues[char] || 0;
+    letterSum += letterValue * position;
+    position++;
   }
   
   // Schritt 2: Baserate (minimum 4-stellig)
@@ -158,8 +193,8 @@ export function validateWordEnergy(word: string): { valid: boolean; error?: stri
     return { valid: false, error: 'Wort darf nicht leer sein' };
   }
   
-  if (!/^[a-zA-ZäöüÄÖÜß\s]+$/.test(word)) {
-    return { valid: false, error: 'Nur Buchstaben und Leerzeichen erlaubt' };
+  if (!/^[a-zA-ZäöüÄÖÜß\s\d\-\.]+$/.test(word)) {
+    return { valid: false, error: 'Nur Buchstaben, Leerzeichen und gängige Zeichen erlaubt' };
   }
   
   if (word.length > 50) {
