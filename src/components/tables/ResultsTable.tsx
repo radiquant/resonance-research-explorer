@@ -20,16 +20,26 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
   if (results.length === 0) return null;
 
   return (
-    <Card>
+    <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-white">
           Berechnete Copen-Raten ({results.length})
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onExport}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onExport}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
               <Download className="h-4 w-4 mr-2" />
               CSV Export
             </Button>
-            <Button variant="outline" size="sm" onClick={onClear}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onClear}
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Löschen
             </Button>
@@ -40,26 +50,26 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Wortenergie</th>
-                <th className="text-left p-2">Potenz</th>
-                <th className="text-left p-2">Typ</th>
-                <th className="text-left p-2">Alphabet</th>
-                <th className="text-left p-2">Copen-Rate</th>
-                <th className="text-left p-2">Details</th>
+              <tr className="border-b border-white/20">
+                <th className="text-left p-2 text-white">Wortenergie</th>
+                <th className="text-left p-2 text-white">Potenz</th>
+                <th className="text-left p-2 text-white">Typ</th>
+                <th className="text-left p-2 text-white">Alphabet</th>
+                <th className="text-left p-2 text-white">Copen-Rate</th>
+                <th className="text-left p-2 text-white">Details</th>
               </tr>
             </thead>
             <tbody>
               {results.map((result, index) => (
-                <tr key={index} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-medium">{result.word}</td>
-                  <td className="p-2">{result.potency}</td>
-                  <td className="p-2">{result.potencyType}</td>
-                  <td className="p-2 text-xs">
+                <tr key={index} className="border-b border-white/10 hover:bg-white/5">
+                  <td className="p-2 font-medium text-white">{result.word}</td>
+                  <td className="p-2 text-blue-200">{result.potency}</td>
+                  <td className="p-2 text-blue-200">{result.potencyType}</td>
+                  <td className="p-2 text-xs text-blue-200">
                     {alphabetSystems[result.alphabetType].name}
                   </td>
-                  <td className="p-2 font-mono text-blue-600">{result.rate.toLocaleString()}</td>
-                  <td className="p-2 text-xs text-gray-500">
+                  <td className="p-2 font-mono text-blue-300 font-semibold">{result.rate.toLocaleString()}</td>
+                  <td className="p-2 text-xs text-blue-300">
                     Σ:{result.calculation.letterSum} → 
                     Base:{result.calculation.baseRate.toLocaleString()} → 
                     Fib:{result.calculation.fibonacciRate.toLocaleString()}

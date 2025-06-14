@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator } from "lucide-react";
+import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import RadionikGeneral from "@/components/theories/RadionikGeneral";
 import RadionikCopen from "@/components/theories/RadionikCopen";
 import HarmonikaleBaklayan from "@/components/theories/HarmonikaleBaklayan";
@@ -11,11 +13,11 @@ import WellengenetikGarjajev from "@/components/theories/WellengenetikGarjajev";
 import ChakrenMeridiane from "@/components/theories/ChakrenMeridiane";
 import TheorienBroers from "@/components/theories/TheorienBroers";
 import CopenAlgorithmVisualization from "@/components/CopenAlgorithmVisualization";
-import CopenRateGenerator from "@/components/CopenRateGenerator";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTheory, setSelectedTheory] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const theories = [
     {
@@ -23,7 +25,16 @@ const Index = () => {
       title: "Bruce Copen Raten-Generator",
       description: "Praktischer Generator für Copen-Raten mit Alphabet-Auswahl",
       icon: Calculator,
-      component: CopenRateGenerator
+      isRoute: true,
+      route: "/copen-generator"
+    },
+    {
+      id: "import-center",
+      title: "Daten Import Center",
+      description: "PDF, Bilder und CSV-Dateien importieren und verarbeiten",
+      icon: Upload,
+      isRoute: true,
+      route: "/import"
     },
     {
       id: "copen-algorithm",
@@ -88,17 +99,25 @@ const Index = () => {
     theory.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleTheoryClick = (theory: any) => {
+    if (theory.isRoute && theory.route) {
+      navigate(theory.route);
+    } else {
+      setSelectedTheory(theory.id);
+    }
+  };
+
   if (selectedTheory) {
     const theory = theories.find(t => t.id === selectedTheory);
-    if (theory) {
+    if (theory && theory.component) {
       const Component = theory.component;
       return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
           <div className="container mx-auto px-4 py-8">
             <Button 
               variant="outline" 
               onClick={() => setSelectedTheory(null)}
-              className="mb-6"
+              className="mb-6 bg-white/10 border-white/20 text-white hover:bg-white/20"
             >
               ← Zurück zur Übersicht
             </Button>
@@ -110,48 +129,48 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 text-gray-800">
+          <h1 className="text-5xl font-bold mb-6 text-white">
             Resonanz Forschungs-Explorer
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Umfassende Sammlung energetischer und frequenzbasierter Theorien
+          <p className="text-xl text-blue-200 mb-8 max-w-3xl mx-auto">
+            Umfassende Sammlung energetischer und frequenzbasierter Theorien mit modernen Analyse-Tools
           </p>
           
           <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-300 h-5 w-5" />
             <Input
               placeholder="Theorien durchsuchen..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 text-lg py-3"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredTheories.map((theory) => {
             const Icon = theory.icon;
             return (
               <Card 
                 key={theory.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer group"
-                onClick={() => setSelectedTheory(theory.id)}
+                className="bg-white/10 border-white/20 backdrop-blur-sm hover:bg-white/15 transition-all duration-300 cursor-pointer group hover:scale-105"
+                onClick={() => handleTheoryClick(theory)}
               >
-                <CardHeader>
-                  <div className="flex items-center space-x-3">
-                    <Icon className="h-8 w-8 text-blue-600 group-hover:text-blue-800 transition-colors" />
-                    <div>
-                      <CardTitle className="text-lg group-hover:text-blue-800 transition-colors">
-                        {theory.title}
-                      </CardTitle>
+                <CardHeader className="text-center">
+                  <div className="flex justify-center mb-4">
+                    <div className="p-4 bg-blue-500/20 rounded-full group-hover:bg-blue-400/30 transition-colors">
+                      <Icon className="h-10 w-10 text-blue-300 group-hover:text-blue-200 transition-colors" />
                     </div>
                   </div>
+                  <CardTitle className="text-xl text-white group-hover:text-blue-200 transition-colors">
+                    {theory.title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-blue-200 text-center text-base leading-relaxed">
                     {theory.description}
                   </CardDescription>
                 </CardContent>
@@ -161,8 +180,8 @@ const Index = () => {
         </div>
 
         {filteredTheories.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">
+          <div className="text-center py-16">
+            <p className="text-blue-200 text-xl">
               Keine Theorien gefunden für "{searchTerm}"
             </p>
           </div>
