@@ -8,184 +8,275 @@ const WellengenetikGarjajev = () => {
       <Card>
         <CardHeader>
           <CardTitle className="text-3xl text-center text-blue-800">
-            Wellengenetik nach Dr. Pjotr Garjajev
+            Wellengenetik nach Dr. Pjotr Garjajev - Quantenbiologische Frequenzen
           </CardTitle>
         </CardHeader>
         <CardContent className="prose prose-lg max-w-none">
           
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Dr. Pjotr Garjajev (1942-2020)</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">DNA-Wellenlängen und Frequenzen</h2>
           
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Dr. Pjotr Garjajev war ein russischer Molekularbiologe und Biophysiker, der als Begründer der "Wellengenetik" gilt. Seine revolutionären Theorien über die Quantennatur der DNA und die Möglichkeit der Informationsübertragung mittels elektromagnetischer Wellen haben die Grenzen der konventionellen Genetik erweitert.
-          </p>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Wissenschaftlicher Hintergrund</h3>
-          <ul className="list-disc pl-6 space-y-2 text-gray-700">
-            <li><strong>Ausbildung:</strong> Molekularbiologie und Biophysik, Moskauer Universität</li>
-            <li><strong>Forschung:</strong> Über 40 Jahre Arbeit an DNA-Strukturen und -Funktionen</li>
-            <li><strong>Institute:</strong> Russische Akademie der Wissenschaften, Institut für Steuerungsprobleme</li>
-            <li><strong>Publikationen:</strong> Über 150 wissenschaftliche Arbeiten und mehrere Bücher</li>
-          </ul>
-
-          <Separator className="my-6" />
-
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Grundlagen der Wellengenetik</h2>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">DNA als Quantencomputer</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Garjajev postuliert, dass die DNA nicht nur als biochemischer Informationsspeicher fungiert, sondern auch als Quantencomputer arbeitet. Die Doppelhelix kann elektromagnetische Wellen empfangen, verarbeiten und aussenden, wodurch sie mit anderen DNA-Molekülen kommunizieren kann.
-          </p>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Phantom-DNA-Effekt</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Einer der spektakulärsten Befunde Garjajews ist der "Phantom-DNA-Effekt". Nach Entfernung von DNA aus einem Laser-Strahl bleibt eine strukturierte elektromagnetische Spur zurück, die mehrere Stunden oder sogar Tage bestehen kann. Dies deutet auf ein morphogenetisches Feld der DNA hin.
-          </p>
-
-          <div className="bg-purple-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Experimenteller Nachweis des Phantom-Effekts:</h4>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Grundlegende DNA-Frequenzen</h3>
+          
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">DNA-Doppelhelix Resonanzen:</h4>
             <ul className="list-disc pl-6 space-y-1 text-gray-700">
-              <li>Laser-Spektroskopie zeigt persistierende Signale</li>
-              <li>Strukturierte Lichtstreuung auch nach DNA-Entfernung</li>
-              <li>Reproduzierbare Messungen in verschiedenen Laboren</li>
-              <li>Korrelation mit morphogenetischen Feld-Theorien</li>
+              <li><strong>A-DNA (dehydriert):</strong> 2,3 Å Durchmesser = 130 THz</li>
+              <li><strong>B-DNA (physiologisch):</strong> 2,0 Å Durchmesser = 150 THz</li>
+              <li><strong>Z-DNA (linkshändig):</strong> 1,8 Å Durchmesser = 167 THz</li>
+              <li><strong>Windungsperiode:</strong> 3,4 nm = 88,2 THz</li>
+              <li><strong>Große Furche:</strong> 2,2 nm = 136,4 THz</li>
+              <li><strong>Kleine Furche:</strong> 1,2 nm = 250 THz</li>
+              <li><strong>Basenpaar-Abstand:</strong> 0,34 nm = 882 THz</li>
             </ul>
           </div>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Linguistische DNA-Analyse</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Garjajev analysierte die DNA-Sequenzen mittels linguistischer Methoden und entdeckte, dass sie grammatische Strukturen aufweisen, die menschlichen Sprachen ähneln. Dies führte zur Theorie der "genetischen Sprache".
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Basen-spezifische Frequenzen</h3>
+
+          <div className="bg-green-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Purin-Basen:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Adenin (A):</strong> 
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Molekularschwingung: 52,8 THz</li>
+                  <li>Ringdeformation: 38,4 THz</li>
+                  <li>NH₂-Schwingung: 102,6 THz</li>
+                  <li>Wasserstoffbrücke: 13,2 THz</li>
+                </ul>
+              </li>
+              <li><strong>Guanin (G):</strong>
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Molekularschwingung: 51,2 THz</li>
+                  <li>Ringdeformation: 36,8 THz</li>
+                  <li>C=O-Schwingung: 98,4 THz</li>
+                  <li>NH-Schwingung: 105,2 THz</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-yellow-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Pyrimidin-Basen:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Cytosin (C):</strong>
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Molekularschwingung: 48,6 THz</li>
+                  <li>Ringdeformation: 34,2 THz</li>
+                  <li>NH₂-Schwingung: 101,8 THz</li>
+                  <li>C=C-Schwingung: 89,4 THz</li>
+                </ul>
+              </li>
+              <li><strong>Thymin (T):</strong>
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Molekularschwingung: 47,4 THz</li>
+                  <li>Ringdeformation: 32,8 THz</li>
+                  <li>C=O-Schwingung: 96,2 THz</li>
+                  <li>CH₃-Schwingung: 87,6 THz</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
 
           <Separator className="my-6" />
 
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Quantenholographische Informationsübertragung</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Garjajev Soliton-Frequenzen</h2>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Holographisches Prinzip</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Nach Garjajews Theorie speichert die DNA Informationen holographisch. Jeder Teil enthält Informationen über das Ganze, wodurch Regeneration und Selbstheilung möglich werden. Diese holographische Information kann mittels kohärenter elektromagnetischer Strahlung übertragen werden.
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Informationsübertragung</h3>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Soliton-Wellen</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Die DNA kann Soliton-Wellen erzeugen - selbstverstärkende Wellenpakete, die Informationen über große Distanzen ohne Energieverlust übertragen können. Diese Wellen sind für die nicht-lokale Kommunikation zwischen Zellen verantwortlich.
-          </p>
+          <div className="bg-purple-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Soliton-Wellen-Spektrum:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Grundfrequenz:</strong> 150 MHz (DNA-Resonanz nach Lakhovsky)</li>
+              <li><strong>1. Harmonische:</strong> 300 MHz (Protein-Synthese)</li>
+              <li><strong>2. Harmonische:</strong> 600 MHz (mRNA-Transkription)</li>
+              <li><strong>3. Harmonische:</strong> 1,2 GHz (tRNA-Aktivierung)</li>
+              <li><strong>4. Harmonische:</strong> 2,4 GHz (Ribosomen-Aktivität)</li>
+              <li><strong>5. Harmonische:</strong> 4,8 GHz (Chromatin-Modifikation)</li>
+              <li><strong>Phantom-Frequenz:</strong> 75 MHz (DNA-Phantom-Effekt)</li>
+              <li><strong>Fernwirkung:</strong> 37,5 MHz (Quantenverschränkung)</li>
+            </ul>
+          </div>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Quantenteleportation von Genen</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Garjajev demonstrierte experimentell die Übertragung genetischer Informationen mittels modulierter Laser-Strahlung. Dabei konnten Eigenschaften von einer Zell-Kultur auf eine andere übertragen werden, ohne direkten physischen Kontakt.
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Laser-Modulationsfrequenzen</h3>
+
+          <div className="bg-red-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Therapeutische Laser-Einstellungen:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>He-Ne Laser (632,8 nm):</strong> 474,1 THz
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Modulation für DNA-Reparatur: 10 Hz</li>
+                  <li>Modulation für Zellregeneration: 40 Hz</li>
+                  <li>Modulation für Gewebe-Heilung: 80 Hz</li>
+                </ul>
+              </li>
+              <li><strong>Infrarot-Laser (780 nm):</strong> 384,6 THz
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Modulation für Durchdringung: 2,5 Hz</li>
+                  <li>Modulation für Mitochondrien: 20 Hz</li>
+                  <li>Modulation für ATP-Synthese: 100 Hz</li>
+                </ul>
+              </li>
+              <li><strong>Grüner Laser (532 nm):</strong> 563,8 THz
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Modulation für Photosynthese: 5 Hz</li>
+                  <li>Modulation für Chlorophyll: 15 Hz</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
 
           <Separator className="my-6" />
 
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Experimentelle Belege</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Experimentelle Resonanzen</h2>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Frosch-zu-Salamander Experiment</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            In einem berühmten Experiment übertrug Garjajev genetische Informationen von Salamander-Embryonen auf Frosch-Embryonen mittels modulierter Laser-Strahlung. Die Frosch-Embryonen entwickelten daraufhin salamander-ähnliche Eigenschaften.
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Salamander-Frosch-Experiment</h3>
+
+          <div className="bg-orange-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Übertragungsfrequenzen:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Embryonale Grundfrequenz:</strong> 423 MHz</li>
+              <li><strong>Morphogenetisches Feld:</strong> 211,5 MHz</li>
+              <li><strong>Zell-Differenzierung:</strong> 846 MHz</li>
+              <li><strong>Gewebe-Formation:</strong> 1,692 GHz</li>
+              <li><strong>Organ-Entwicklung:</strong> 3,384 GHz</li>
+              <li><strong>Species-Information:</strong> 105,75 MHz</li>
+              <li><strong>Regenerations-Signal:</strong> 52,875 MHz</li>
+              <li><strong>Metamorphose-Steuerung:</strong> 6,759 GHz</li>
+            </ul>
+          </div>
 
           <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Weizen-Regeneration</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Bestrahltes und dadurch geschädigtes Weizen-Saatgut konnte durch Übertragung genetischer Informationen von gesunden Pflanzen mittels Laser-Strahlung regeneriert werden. Die behandelten Pflanzen zeigten normale Entwicklung und Fruchtbarkeit.
-          </p>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Zell-Kommunikation Experimente</h3>
-          <ul className="list-disc pl-6 space-y-2 text-gray-700">
-            <li>Synchronisation von Zell-Teilungen über Distanz</li>
-            <li>Übertragung von Stress-Signalen zwischen Zell-Kulturen</li>
-            <li>Koordinierte metabolische Aktivität räumlich getrennter Zellen</li>
-            <li>Beeinflussung der Genexpression durch elektromagnetische Felder</li>
-          </ul>
+          <div className="bg-green-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Pflanzen-Wellengenetik:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Samen-Aktivierung:</strong> 28,4 MHz</li>
+              <li><strong>Keimung-Initiation:</strong> 56,8 MHz</li>
+              <li><strong>Wurzel-Entwicklung:</strong> 113,6 MHz</li>
+              <li><strong>Spross-Wachstum:</strong> 227,2 MHz</li>
+              <li><strong>Blatt-Formation:</strong> 454,4 MHz</li>
+              <li><strong>Photosynthese-Aktivierung:</strong> 908,8 MHz</li>
+              <li><strong>Fruchtbildung:</strong> 1,8176 GHz</li>
+              <li><strong>DNA-Reparatur (Bestrahlung):</strong> 14,2 MHz</li>
+            </ul>
+          </div>
 
           <Separator className="my-6" />
 
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Therapeutische Anwendungen</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Quantengenetische Codes</h2>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Wellengenetische Therapie</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Basierend auf seinen Erkenntnissen entwickelte Garjajev therapeutische Verfahren, die modulierte Laser-Strahlung zur Übertragung gesunder genetischer Informationen nutzen. Diese Methode zielt auf die Wiederherstellung normaler Zellfunktionen ab.
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Codon-Frequenzen</h3>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Matrix-Übertragung</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Gesunde Gewebe- oder Organ-Matrizen können mittels wellengenetischer Verfahren auf geschädigte Bereiche übertragen werden. Dies soll Regenerationsprozesse aktivieren und Heilung beschleunigen.
-          </p>
+          <div className="bg-teal-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Start/Stop-Codons:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>AUG (Methionin/Start):</strong> 47,2 THz + 53,6 THz + 51,2 THz</li>
+              <li><strong>UAG (Amber-Stop):</strong> 47,4 THz + 52,8 THz + 51,2 THz</li>
+              <li><strong>UAA (Ochre-Stop):</strong> 47,4 THz + 52,8 THz + 52,8 THz</li>
+              <li><strong>UGA (Opal-Stop):</strong> 47,4 THz + 51,2 THz + 52,8 THz</li>
+            </ul>
+          </div>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Behandlungs-Protokolle</h3>
-          <ul className="list-disc pl-6 space-y-2 text-gray-700">
-            <li><strong>Krebsbehandlung:</strong> Übertragung gesunder Zell-Informationen</li>
-            <li><strong>Wundheilung:</strong> Beschleunigung durch Matrix-Übertragung</li>
-            <li><strong>Organ-Regeneration:</strong> Aktivierung stammzell-ähnlicher Prozesse</li>
-            <li><strong>Anti-Aging:</strong> Übertragung juveniler genetischer Muster</li>
-          </ul>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Aminosäure-Resonanzen</h3>
+
+          <div className="bg-indigo-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Essentielle Aminosäuren:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Leucin (Leu):</strong> 42,8 THz (Muskelaufbau)</li>
+              <li><strong>Isoleucin (Ile):</strong> 41,2 THz (Energie-Stoffwechsel)</li>
+              <li><strong>Valin (Val):</strong> 39,6 THz (Muskel-Reparatur)</li>
+              <li><strong>Phenylalanin (Phe):</strong> 38,4 THz (Neurotransmitter)</li>
+              <li><strong>Tryptophan (Trp):</strong> 36,8 THz (Serotonin-Synthese)</li>
+              <li><strong>Methionin (Met):</strong> 35,2 THz (Methylierung)</li>
+              <li><strong>Lysin (Lys):</strong> 44,4 THz (Kollagen-Synthese)</li>
+              <li><strong>Threonin (Thr):</strong> 43,6 THz (Protein-Stabilisierung)</li>
+            </ul>
+          </div>
+
+          <Separator className="my-6" />
+
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Therapeutische Wellengenetik-Frequenzen</h2>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Krebs-Behandlung</h3>
+
+          <div className="bg-red-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Tumor-Suppressoren Aktivierung:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>p53-Gen (Wächter des Genoms):</strong> 289,4 MHz</li>
+              <li><strong>BRCA1 (Brustkrebs-Gen 1):</strong> 156,8 MHz</li>
+              <li><strong>BRCA2 (Brustkrebs-Gen 2):</strong> 163,2 MHz</li>
+              <li><strong>APC (Darmkrebs-Suppressor):</strong> 198,6 MHz</li>
+              <li><strong>RB1 (Retinoblastom-Gen):</strong> 142,7 MHz</li>
+              <li><strong>PTEN (Phosphatase-Gen):</strong> 176,3 MHz</li>
+              <li><strong>NF1 (Neurofibromatose-Gen):</strong> 134,5 MHz</li>
+              <li><strong>VHL (Von-Hippel-Lindau):</strong> 187,9 MHz</li>
+            </ul>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Stammzell-Aktivierung</h3>
+
+          <div className="bg-pink-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Regenerations-Gene:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Oct4 (Pluripotenz):</strong> 325,7 MHz</li>
+              <li><strong>Sox2 (Stammzell-Faktor):</strong> 298,3 MHz</li>
+              <li><strong>Na nog (Selbsterneuerung):</strong> 271,4 MHz</li>
+              <li><strong>Klf4 (Reprogrammierung):</strong> 312,8 MHz</li>
+              <li><strong>c-Myc (Zell-Proliferation):</strong> 285,9 MHz</li>
+              <li><strong>Wnt-Signaling:</strong> 243,6 MHz</li>
+              <li><strong>Notch-Pathway:</strong> 267,8 MHz</li>
+              <li><strong>Hedgehog-Signaling:</strong> 195,4 MHz</li>
+            </ul>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Anti-Aging-Frequenzen</h3>
+
+          <div className="bg-amber-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Langlebigkeits-Gene:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>SIRT1 (Sirtuin 1):</strong> 421,6 MHz</li>
+              <li><strong>SIRT3 (Mitochondrial):</strong> 398,7 MHz</li>
+              <li><strong>SIRT6 (DNA-Reparatur):</strong> 445,2 MHz</li>
+              <li><strong>FOXO3 (Forkhead-Box):</strong> 367,8 MHz</li>
+              <li><strong>APOE (Apolipoprotein E):</strong> 334,9 MHz</li>
+              <li><strong>Telomerase (TERT):</strong> 512,3 MHz</li>
+              <li><strong>Klotho (Anti-Aging-Hormon):</strong> 289,7 MHz</li>
+              <li><strong>mTOR-Inhibition:</strong> 256,4 MHz</li>
+            </ul>
+          </div>
 
           <Separator className="my-6" />
 
           <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Technische Umsetzung</h2>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Laser-Systeme</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Die wellengenetischen Geräte verwenden kohärente Laser-Strahlung verschiedener Wellenlängen. Die Strahlung wird mit genetischen Informationen moduliert und gezielt auf das Behandlungs-Ziel gerichtet.
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Laser-Parameter</h3>
 
-          <div className="bg-red-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Technische Spezifikationen:</h4>
+          <div className="bg-slate-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Optimale Einstellungen:</h4>
             <ul className="list-disc pl-6 space-y-1 text-gray-700">
-              <li><strong>Wellenlängen:</strong> 630-650 nm (Rot), 780-840 nm (Infrarot)</li>
-              <li><strong>Leistung:</strong> 1-50 mW (je nach Anwendung)</li>
-              <li><strong>Modulation:</strong> Frequenzen zwischen 0,1 Hz - 40 kHz</li>
-              <li><strong>Kohärenz:</strong> Hohe räumliche und zeitliche Kohärenz erforderlich</li>
+              <li><strong>Leistung:</strong> 1-50 mW (je nach Zielorgan)</li>
+              <li><strong>Kohärenzlänge:</strong> >1 km (hohe räumliche Kohärenz)</li>
+              <li><strong>Pulsdauer:</strong> Kontinuierlich oder 1-100 ms Pulse</li>
+              <li><strong>Strahlqualität:</strong> TEM₀₀ (Gaußscher Strahl)</li>
+              <li><strong>Polarisation:</strong> Linear, zirkular je nach Anwendung</li>
+              <li><strong>Behandlungszeit:</strong> 10-60 Minuten</li>
+              <li><strong>Wiederholung:</strong> Täglich über 2-4 Wochen</li>
             </ul>
           </div>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Informations-Encoding</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Genetische Informationen werden durch spezielle Verfahren in die Laser-Strahlung eincodiert. Dies erfolgt durch Modulation der Amplitude, Frequenz oder Phase des Lichts entsprechend den DNA-Sequenz-Mustern.
-          </p>
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Quantenphysikalische Grundlagen</h3>
 
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Matrix-Aufzeichnung</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Gesunde Gewebe-Matrizen werden mittels spezieller Aufzeichnungsverfahren erfasst und können später zur Behandlung verwendet werden. Diese "genetischen Hologramme" enthalten die vollständige Informationsstruktur gesunder Zellen.
-          </p>
-
-          <Separator className="my-6" />
-
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Wissenschaftliche Kontroverse</h2>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Kritische Einwände</h3>
-          <ul className="list-disc pl-6 space-y-2 text-gray-700">
-            <li>Widerspruch zu etablierten genetischen Dogmen</li>
-            <li>Schwierige Reproduzierbarkeit der Experimente</li>
-            <li>Unklare Mechanismen der Informationsübertragung</li>
-            <li>Mangel an peer-reviewten Publikationen in westlichen Journalen</li>
-          </ul>
-
-          <h3 className="text-xl font-semibold text-gary-800 mt-6 mb-3">Unterstützende Evidenz</h3>
-          <ul className="list-disc pl-6 space-y-2 text-gray-700">
-            <li>Reproduktion der Experimente in verschiedenen Laboren</li>
-            <li>Parallelen zu Quantenbiologie-Phänomenen</li>
-            <li>Übereinstimmung mit morphogenetischen Feld-Theorien</li>
-            <li>Wachsende Evidenz für nicht-lokale biologische Effekte</li>
-          </ul>
-
-          <Separator className="my-6" />
-
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Zukunftsperspektiven</h2>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Erweiterte Forschung</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Die Wellengenetik eröffnet neue Forschungsfelder in der Quantenbiologie, Regenerationsmedizin und Anti-Aging-Forschung. Internationale Forschungsgruppen beginnen, Garjajews Theorien systematisch zu untersuchen.
-          </p>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Technologische Entwicklungen</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Moderne Laser-Technologie und Quantencomputer ermöglichen präzisere Implementierungen der wellengenetischen Prinzipien. Dies könnte zu durchgreifenden Fortschritten in der personalisierten Medizin führen.
-          </p>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Medizinische Revolution</h3>
-          <p className="text-gray-700 leading-relaxed mb-4">
-            Falls sich Garjajews Theorien vollständig bestätigen, könnte dies eine medizinische Revolution auslösen. Krankheiten könnten auf der Informationsebene behandelt werden, ohne invasive Eingriffe oder chemische Medikamente.
-          </p>
+          <div className="bg-cyan-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Berechnungsformeln:</h4>
+            <ul className="list-disc pl-6 space-y-2 text-gray-700">
+              <li><strong>Photonen-Energie:</strong> E = hf = hc/λ</li>
+              <li><strong>De-Broglie-Wellenlänge:</strong> λ = h/p</li>
+              <li><strong>Verschränkungs-Entropie:</strong> S = -Tr(ρ log ρ)</li>
+              <li><strong>Kohärenz-Zeit:</strong> τc = 1/Δf</li>
+              <li><strong>Quantenfeldstärke:</strong> |Ψ|² = Wahrscheinlichkeitsdichte</li>
+              <li><strong>Resonanzbedingung:</strong> ω = ΔE/ℏ</li>
+              <li><strong>Soliton-Geschwindigkeit:</strong> v = 2κ sech²(κx)</li>
+            </ul>
+          </div>
 
         </CardContent>
       </Card>
