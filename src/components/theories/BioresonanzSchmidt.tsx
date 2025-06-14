@@ -561,7 +561,7 @@ const BioresonanzSchmidt = () => {
               <li><strong>Ausgangsleistung:</strong> 0,1-10 mW (einstellbar)</li>
               <li><strong>Modulationsarten:</strong> AM (0,1-100 Hz), FM (±10 Hz)</li>
               <li><strong>Impedanz-Anpassung:</strong> 50 Ω (Standard) / 75 Ω (biologisch)</li>
-              <li><strong>Rauschunterdrückung:</strong> > 60 dB</li>
+              <li><strong>Rauschunterdrückung:</strong> {'>'}60 dB</li>
               <li><strong>Digitale Steuerung:</strong> 32-Bit Mikrocontroller</li>
             </ul>
           </div>
