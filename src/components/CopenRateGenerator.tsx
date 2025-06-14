@@ -13,6 +13,7 @@ import {
 import { type AlphabetType } from '@/utils/alphabetSystems';
 import SingleCalculationForm from '@/components/forms/SingleCalculationForm';
 import BatchImportForm from '@/components/forms/BatchImportForm';
+import FileImportForm from '@/components/forms/FileImportForm';
 import ResultsTable from '@/components/tables/ResultsTable';
 
 const CopenRateGenerator: React.FC = () => {
@@ -93,6 +94,14 @@ const CopenRateGenerator: React.FC = () => {
     reader.readAsText(file);
   };
 
+  const handleFileImportData = (extractedData: string) => {
+    setCsvInput(extractedData);
+    toast({
+      title: 'Daten importiert',
+      description: 'Extrahierte Daten wurden in das CSV-Feld eingefügt'
+    });
+  };
+
   const handleExport = () => {
     if (results.length === 0) {
       toast({
@@ -137,17 +146,21 @@ const CopenRateGenerator: React.FC = () => {
         </CardHeader>
       </Card>
 
-      <SingleCalculationForm
-        word={singleWord}
-        potency={singlePotency}
-        potencyType={singlePotencyType}
-        alphabetType={singleAlphabetType}
-        onWordChange={setSingleWord}
-        onPotencyChange={setSinglePotency}
-        onPotencyTypeChange={setSinglePotencyType}
-        onAlphabetTypeChange={setSingleAlphabetType}
-        onCalculate={handleSingleCalculation}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <SingleCalculationForm
+          word={singleWord}
+          potency={singlePotency}
+          potencyType={singlePotencyType}
+          alphabetType={singleAlphabetType}
+          onWordChange={setSingleWord}
+          onPotencyChange={setSinglePotency}
+          onPotencyTypeChange={setSinglePotencyType}
+          onAlphabetTypeChange={setSingleAlphabetType}
+          onCalculate={handleSingleCalculation}
+        />
+
+        <FileImportForm onDataExtracted={handleFileImportData} />
+      </div>
 
       <BatchImportForm
         csvInput={csvInput}

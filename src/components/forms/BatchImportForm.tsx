@@ -26,7 +26,7 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Excel/CSV Import
+          CSV/Excel Import
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -37,7 +37,7 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
             className="flex-1"
           >
             <Upload className="h-4 w-4 mr-2" />
-            Datei auswählen
+            CSV-Datei auswählen
           </Button>
           <input
             ref={fileInputRef}
@@ -49,14 +49,14 @@ const BatchImportForm: React.FC<BatchImportFormProps> = ({
         </div>
         
         <div>
-          <Label htmlFor="csvInput">CSV-Daten (Format: Wort,Potenz,Typ)</Label>
+          <Label htmlFor="csvInput">CSV-Daten (Format: Wort,Potenz,Typ,Alphabet)</Label>
           <Textarea
             id="csvInput"
             value={csvInput}
             onChange={(e) => onCsvInputChange(e.target.value)}
-            placeholder="Arnica,6,D
-Belladonna,12,D
-Nux vomica,30,C"
+            placeholder="Arnica,6,D,latin
+Belladonna,12,D,latin
+Nux vomica,30,C,latin"
             rows={6}
           />
         </div>
