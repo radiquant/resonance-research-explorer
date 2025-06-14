@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -218,7 +219,7 @@ const WellengenetikGarjajev = () => {
             <ul className="list-disc pl-6 space-y-1 text-gray-700">
               <li><strong>Oct4 (Pluripotenz):</strong> 325,7 MHz</li>
               <li><strong>Sox2 (Stammzell-Faktor):</strong> 298,3 MHz</li>
-              <li><strong>Na nog (Selbsterneuerung):</strong> 271,4 MHz</li>
+              <li><strong>Nanog (Selbsterneuerung):</strong> 271,4 MHz</li>
               <li><strong>Klf4 (Reprogrammierung):</strong> 312,8 MHz</li>
               <li><strong>c-Myc (Zell-Proliferation):</strong> 285,9 MHz</li>
               <li><strong>Wnt-Signaling:</strong> 243,6 MHz</li>
@@ -253,7 +254,7 @@ const WellengenetikGarjajev = () => {
             <h4 className="font-semibold text-gray-800 mb-2">Optimale Einstellungen:</h4>
             <ul className="list-disc pl-6 space-y-1 text-gray-700">
               <li><strong>Leistung:</strong> 1-50 mW (je nach Zielorgan)</li>
-              <li><strong>Kohärenzlänge:</strong> >1 km (hohe räumliche Kohärenz)</li>
+              <li><strong>Kohärenzlänge:</strong> {'>'}1 km (hohe räumliche Kohärenz)</li>
               <li><strong>Pulsdauer:</strong> Kontinuierlich oder 1-100 ms Pulse</li>
               <li><strong>Strahlqualität:</strong> TEM₀₀ (Gaußscher Strahl)</li>
               <li><strong>Polarisation:</strong> Linear, zirkular je nach Anwendung</li>
