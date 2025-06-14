@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Upload, FileImage, FileText, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createWorker } from 'tesseract.js';
+import { parseMentalRatesText } from '@/utils/mentalRatesParser';
 
 interface FileImportFormProps {
   onDataExtracted: (extractedData: string) => void;
@@ -126,14 +127,25 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
     setCurrentStep('Bild wird geladen...');
     setProgress(20);
     
-    setCurrentStep('OCR wird durchgeführt...');
+    setCurrentStep('OCR wird durchgeführt (optimiert für mentale Raten)...');
     setProgress(40);
     
     try {
-      const worker = await createWorker('deu');
+      const worker = await createWorker('deu+eng', 1, {
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setProgress(40 + (m.progress * 40));
+          }
+        }
+      });
       
-      setProgress(60);
-      setCurrentStep('Text wird erkannt...');
+      // Optimierte OCR-Parameter für kleine Schrift und Tabellen
+      await worker.setParameters({
+        tessedit_pageseg_mode: '6', // Uniform block of text
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüÄÖÜß0123456789.,- '
+      });
+      
+      setCurrentStep('Text wird erkannt (mentale Raten)...');
       
       const { data: { text } } = await worker.recognize(file);
       
@@ -141,15 +153,31 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       
       setProgress(95);
       
+      console.log('OCR-Rohtext:', text);
+      
       if (text && text.trim()) {
-        const cleanedText = cleanExtractedText(text);
-        onDataExtracted(cleanedText);
-        setProgress(100);
+        // Verwende speziellen Parser für mentale Raten
+        const mentalRatesCSV = parseMentalRatesText(text);
         
-        toast({
-          title: 'Bild erfolgreich analysiert',
-          description: `${cleanedText.split('\n').length} Zeilen aus ${file.name} extrahiert`
-        });
+        if (mentalRatesCSV) {
+          onDataExtracted(mentalRatesCSV);
+          setProgress(100);
+          
+          const lineCount = mentalRatesCSV.split('\n').length;
+          toast({
+            title: 'Mentale Raten erfolgreich erkannt',
+            description: `${lineCount} mentale Copen Raten aus ${file.name} extrahiert`
+          });
+        } else {
+          // Fallback zur Standard-Verarbeitung
+          const cleanedText = cleanExtractedText(text);
+          onDataExtracted(cleanedText);
+          
+          toast({
+            title: 'Bild analysiert (Standard-Format)',
+            description: `Text aus ${file.name} extrahiert`
+          });
+        }
       } else {
         toast({
           title: 'Kein Text erkannt',
@@ -285,7 +313,7 @@ Ruta,30,C,latin`;
             <FileImage className="h-12 w-12 text-gray-400 mb-2" />
             <Label className="text-sm font-medium text-gray-700 mb-2">Bilddateien</Label>
             <p className="text-xs text-gray-500 text-center mb-1">
-              OCR-Texterkennung (Deutsch)
+              OCR-Texterkennung (Deutsch/Englisch)
             </p>
             <p className="text-xs text-blue-600 font-medium">
               Max. {formatFileSize(MAX_FILE_SIZE_IMAGE)}
