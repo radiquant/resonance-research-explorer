@@ -1,3 +1,4 @@
+
 import { type AlphabetType, alphabetSystems, calculateLetterSum } from './alphabetSystems';
 
 export interface CopenRateResult {
@@ -122,9 +123,9 @@ export const parseWordEnergyData = (csvData: string): WordEnergyInput[] => {
 };
 
 export const exportCopenRatesToCSV = (results: CopenRateResult[]): string => {
-  const header = 'Wortenergie,Potenz,Typ,Copen-Rate\n';
+  const header = 'Wortenergie,Potenz,Typ,Alphabet,Copen-Rate\n';
   const rows = results.map(result => {
-    return `${result.word},${result.potency},${result.potencyType},${result.rate}`;
+    return `${result.word},${result.potency},${result.potencyType},${result.alphabetType},${result.rate}`;
   });
   return header + rows.join('\n');
 };

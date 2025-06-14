@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain } from "lucide-react";
+import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator } from "lucide-react";
 import RadionikGeneral from "@/components/theories/RadionikGeneral";
 import RadionikCopen from "@/components/theories/RadionikCopen";
 import HarmonikaleBaklayan from "@/components/theories/HarmonikaleBaklayan";
@@ -11,12 +11,20 @@ import WellengenetikGarjajev from "@/components/theories/WellengenetikGarjajev";
 import ChakrenMeridiane from "@/components/theories/ChakrenMeridiane";
 import TheorienBroers from "@/components/theories/TheorienBroers";
 import CopenAlgorithmVisualization from "@/components/CopenAlgorithmVisualization";
+import CopenRateGenerator from "@/components/CopenRateGenerator";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTheory, setSelectedTheory] = useState<string | null>(null);
 
   const theories = [
+    {
+      id: "copen-rate-generator",
+      title: "Bruce Copen Raten-Generator",
+      description: "Praktischer Generator für Copen-Raten mit Alphabet-Auswahl",
+      icon: Calculator,
+      component: CopenRateGenerator
+    },
     {
       id: "copen-algorithm",
       title: "Bruce Copen Algorithmus Visualisierung",
