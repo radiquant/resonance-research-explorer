@@ -111,7 +111,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
             Modernisierter Bruce Copen Algorithmus
           </CardTitle>
           <p className="text-center text-sm text-gray-600 mt-2">
-            ✓ Leerzeichen als Trennzeichen • ✓ Umlaute-Konvertierung (ä→ae, ö→oe, ü→ue, ß→ss)
+            ✓ Leerzeichen als Trennzeichen • ✓ Umlaute-Konvertierung (ä→ae, ö→oe, ü→ue, ß→ss) • ✓ D0 Ursubstanz
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -134,10 +134,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 id="potency"
                 type="number"
                 value={potency}
-                onChange={(e) => setPotency(parseInt(e.target.value) || 6)}
-                min={1}
+                onChange={(e) => setPotency(parseInt(e.target.value) || 0)}
+                min={0}
                 max={50000}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                0 = Ursubstanz/Urtinktur
+              </div>
             </div>
             <div>
               <Label htmlFor="potencyType">Typ</Label>
@@ -280,15 +283,20 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg text-orange-700">
-                Schritt 4: Potenzanpassung ({potencyType}{potency})
+                Schritt 4: Potenzanpassung ({potencyType}{potency}{potency === 0 ? ' (Ursubstanz)' : ''})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-orange-50 p-4 rounded-lg">
                 <div className="text-center mb-4">
                   <div className="text-lg font-semibold text-orange-800">
-                    Potenz-Modifier für {potencyType}{potency}
+                    Potenz-Modifier für {potencyType}{potency}{potency === 0 ? ' (Ursubstanz/Urtinktur)' : ''}
                   </div>
+                  {potency === 0 && (
+                    <div className="text-sm text-gray-600 mt-2">
+                      Bei D0 (Ursubstanz) wird kein Potenz-Modifier angewendet
+                    </div>
+                  )}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                   <div className="bg-white p-3 rounded border">
@@ -318,14 +326,14 @@ const CopenAlgorithmVisualization: React.FC = () => {
             <CardContent>
               <div className="bg-gradient-to-r from-green-100 to-blue-100 p-6 rounded-lg text-center">
                 <div className="text-lg text-gray-700 mb-2">
-                  "{cleanWord}" {potencyType}{potency}
+                  "{cleanWord}" {potencyType}{potency}{potency === 0 ? ' (Ursubstanz)' : ''}
                 </div>
                 <div className="text-4xl font-bold text-green-800 mb-4">
                   {finalRate.toLocaleString()}
                 </div>
                 <div className="text-sm text-gray-600">
                   Berechnet mit modernisiertem Copen-Algorithmus<br/>
-                  ✓ Leerzeichen-Erhaltung ✓ Umlaut-Konvertierung
+                  ✓ Leerzeichen-Erhaltung ✓ Umlaut-Konvertierung {potency === 0 ? '✓ D0 Ursubstanz-Unterstützung' : ''}
                 </div>
               </div>
             </CardContent>

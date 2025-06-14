@@ -165,10 +165,13 @@ const CopenRateGenerator: React.FC = () => {
                 id="potency"
                 type="number"
                 value={singlePotency}
-                onChange={(e) => setSinglePotency(parseInt(e.target.value) || 6)}
-                min={1}
+                onChange={(e) => setSinglePotency(parseInt(e.target.value) || 0)}
+                min={0}
                 max={50000}
               />
+              <div className="text-xs text-gray-500 mt-1">
+                0 = Ursubstanz/Urtinktur
+              </div>
             </div>
             <div>
               <Label htmlFor="potencyType">Typ</Label>
