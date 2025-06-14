@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,11 +16,13 @@ import {
   type CopenRateResult,
   type WordEnergyInput
 } from '@/utils/copenRateGenerator';
+import { alphabetSystems, type AlphabetType } from '@/utils/alphabetSystems';
 
 const CopenRateGenerator: React.FC = () => {
   const [singleWord, setSingleWord] = useState('');
   const [singlePotency, setSinglePotency] = useState(6);
   const [singlePotencyType, setSinglePotencyType] = useState<'D' | 'C' | 'LM' | 'M'>('D');
+  const [singleAlphabetType, setSingleAlphabetType] = useState<AlphabetType>('latin');
   const [results, setResults] = useState<CopenRateResult[]>([]);
   const [csvInput, setCsvInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,7 +39,7 @@ const CopenRateGenerator: React.FC = () => {
       return;
     }
 
-    const result = calculateCopenRate(singleWord, singlePotency, singlePotencyType);
+    const result = calculateCopenRate(singleWord, singlePotency, singlePotencyType, singleAlphabetType);
     setResults(prev => [result, ...prev]);
     
     toast({
@@ -149,7 +150,7 @@ const CopenRateGenerator: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="md:col-span-2">
               <Label htmlFor="word">Wortenergie</Label>
               <Input
@@ -186,6 +187,24 @@ const CopenRateGenerator: React.FC = () => {
                   <SelectItem value="M">M (Millennial)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="alphabetType">Alphabet</Label>
+              <Select value={singleAlphabetType} onValueChange={(value) => setSingleAlphabetType(value as AlphabetType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(alphabetSystems).map(([key, system]) => (
+                    <SelectItem key={key} value={key}>
+                      {system.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="text-xs text-gray-500 mt-1">
+                {alphabetSystems[singleAlphabetType].description}
+              </div>
             </div>
           </div>
           <Button onClick={handleSingleCalculation} className="w-full">
@@ -268,6 +287,7 @@ Nux vomica,30,C"
                     <th className="text-left p-2">Wortenergie</th>
                     <th className="text-left p-2">Potenz</th>
                     <th className="text-left p-2">Typ</th>
+                    <th className="text-left p-2">Alphabet</th>
                     <th className="text-left p-2">Copen-Rate</th>
                     <th className="text-left p-2">Details</th>
                   </tr>
@@ -278,6 +298,9 @@ Nux vomica,30,C"
                       <td className="p-2 font-medium">{result.word}</td>
                       <td className="p-2">{result.potency}</td>
                       <td className="p-2">{result.potencyType}</td>
+                      <td className="p-2 text-xs">
+                        {alphabetSystems[result.alphabetType].name}
+                      </td>
                       <td className="p-2 font-mono text-blue-600">{result.rate.toLocaleString()}</td>
                       <td className="p-2 text-xs text-gray-500">
                         Σ:{result.calculation.letterSum} → 

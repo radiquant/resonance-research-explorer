@@ -1,210 +1,130 @@
-
-/**
- * Bruce Copen Rate Generator - Authentischer Algorithmus (1978-1995)
- * Konvertiert Wortenergien zu numerischen Raten nach Original-Copen-Methode
- */
+import { type AlphabetType, alphabetSystems, calculateLetterSum } from './alphabetSystems';
 
 export interface CopenRateResult {
   word: string;
   potency: number;
   potencyType: 'D' | 'C' | 'LM' | 'M';
   rate: number;
+  alphabetType: AlphabetType;
   calculation: {
     letterSum: number;
     baseRate: number;
     fibonacciRate: number;
-    potencyModifier: number;
   };
 }
 
 export interface WordEnergyInput {
   word: string;
-  potency?: number;
-  potencyType?: 'D' | 'C' | 'LM' | 'M';
+  potency: number;
+  potencyType: 'D' | 'C' | 'LM' | 'M';
+  alphabetType?: AlphabetType;
 }
 
-/**
- * Modernisierte Wortenergie-Normalisierung
- * - Leerzeichen werden als Trennzeichen beibehalten
- * - Umlaute werden korrekt umgewandelt (ä→ae, ö→oe, ü→ue, ß→ss)
- * - Potenzangaben und Zahlen werden entfernt
- * - Sonderzeichen werden entfernt
- */
-function normalizeWordEnergy(word: string): string {
-  return word
-    .toUpperCase()
-    // Umlaute umwandeln
-    .replace(/Ä/g, 'AE')
-    .replace(/Ö/g, 'OE') 
-    .replace(/Ü/g, 'UE')
-    .replace(/ß/g, 'SS')
-    // Potenzangaben entfernen (D6, C200, LM1, etc.)
-    .replace(/\s*[DCLM]+\d+/g, '')
-    // Zahlen entfernen
-    .replace(/\d+/g, '')
-    // Sonderzeichen entfernen, aber Leerzeichen beibehalten
-    .replace(/[^A-Z\s]/g, '')
-    // Mehrfache Leerzeichen durch einzelne ersetzen
-    .replace(/\s+/g, ' ')
-    // Führende und nachfolgende Leerzeichen entfernen
-    .trim();
+const fibonacciCache: { [key: number]: number } = {};
+
+const getFibonacciMultiplier = (n: number): number => {
+  if (n <= 0) return 1;
+  if (n === 1) return 1;
+  if (fibonacciCache[n]) return fibonacciCache[n];
+
+  let a = 1, b = 1;
+  for (let i = 2; i <= n; i++) {
+    const temp = a + b;
+    a = b;
+    b = temp;
+  }
+
+  fibonacciCache[n] = b;
+  return b;
+};
+
+interface ValidationResult {
+  valid: boolean;
+  error?: string;
 }
 
-/**
- * Berechnet authentische Bruce Copen Rate aus Wortenergie
- */
-export function calculateCopenRate(
+export const validateWordEnergy = (word: string): ValidationResult => {
+  if (!word.trim()) {
+    return { valid: false, error: 'Wortenergie darf nicht leer sein' };
+  }
+
+  if (word.length > 50) {
+    return { valid: false, error: 'Wortenergie darf maximal 50 Zeichen enthalten' };
+  }
+
+  return { valid: true };
+};
+
+export const calculateCopenRate = (
   word: string, 
-  potency: number = 6, 
-  potencyType: 'D' | 'C' | 'LM' | 'M' = 'D'
-): CopenRateResult {
-  // Modernisierte Wortenergie-Normalisierung
-  const cleanWord = normalizeWordEnergy(word);
+  potency: number, 
+  potencyType: 'D' | 'C' | 'LM' | 'M',
+  alphabetType: AlphabetType = 'latin'
+): CopenRateResult => {
+  const letterSum = calculateLetterSum(word, alphabetType);
   
-  // Originales Copen-Buchstabensystem
-  const letterValues: { [key: string]: number } = {};
-  for (let i = 1; i <= 26; i++) {
-    letterValues[String.fromCharCode(64 + i)] = i;
-  }
+  const potencyMultipliers = {
+    'D': 1,
+    'C': 100,
+    'LM': 50000,
+    'M': 1000
+  };
   
-  // Schritt 1: Buchstabenwerte mit Positionsgewichtung
-  let letterSum = 0;
-  let position = 1;
-  
-  for (let i = 0; i < cleanWord.length; i++) {
-    const char = cleanWord[i];
-    if (char === ' ') {
-      // Leerzeichen überspringen, aber Position nicht erhöhen
-      continue;
-    }
-    const letterValue = letterValues[char] || 0;
-    letterSum += letterValue * position;
-    position++;
-  }
-  
-  // Schritt 2: Baserate (minimum 4-stellig)
-  const baseRate = letterSum * 1000;
-  
-  // Schritt 3: Fibonacci-Modulation (8./9. Fibonacci-Zahlen: 21/34)
-  const fibonacciRate = Math.floor((baseRate / 21) * 34);
-  
-  // Schritt 4: Korrigierte Potenzanpassung
-  let potencyModifier = 0;
-  let finalRate = fibonacciRate;
-  
-  if (potency === 0) {
-    // D0/C0 = Ursubstanz/Urtinktur - keine Potenzierung
-    finalRate = fibonacciRate;
-    potencyModifier = 0;
-  } else {
-    // Potenz beeinflusst die gesamte Rate multiplikativ
-    switch (potencyType) {
-      case 'D':
-        potencyModifier = Math.floor(fibonacciRate * (potency / 10));
-        break;
-      case 'C':
-        potencyModifier = Math.floor(fibonacciRate * (potency / 5));
-        break;
-      case 'LM':
-        potencyModifier = Math.floor(fibonacciRate * (potency / 2));
-        break;
-      case 'M':
-        potencyModifier = Math.floor(fibonacciRate * potency);
-        break;
-    }
-    finalRate = fibonacciRate + potencyModifier;
-  }
+  const adjustedPotency = potency === 0 ? 1 : potency;
+  const baseRate = letterSum * adjustedPotency * potencyMultipliers[potencyType];
+  const fibonacciRate = baseRate * getFibonacciMultiplier(letterSum);
   
   return {
-    word: cleanWord,
+    word,
     potency,
     potencyType,
-    rate: finalRate,
+    rate: fibonacciRate,
+    alphabetType,
     calculation: {
       letterSum,
       baseRate,
-      fibonacciRate,
-      potencyModifier
+      fibonacciRate
     }
   };
-}
+};
 
-/**
- * Batch-Verarbeitung für mehrere Wortenergien
- */
-export function batchCalculateCopenRates(inputs: WordEnergyInput[]): CopenRateResult[] {
-  return inputs.map(input => 
-    calculateCopenRate(
-      input.word, 
-      input.potency || 6, 
-      input.potencyType || 'D'
-    )
-  );
-}
+export const batchCalculateCopenRates = (inputs: WordEnergyInput[]): CopenRateResult[] => {
+  return inputs.map(input => calculateCopenRate(
+    input.word, 
+    input.potency, 
+    input.potencyType,
+    input.alphabetType || 'latin'
+  ));
+};
 
-/**
- * Excel/CSV Import Parser
- */
-export function parseWordEnergyData(csvText: string): WordEnergyInput[] {
-  const lines = csvText.split('\n').filter(line => line.trim());
+export const parseWordEnergyData = (csvData: string): WordEnergyInput[] => {
+  const lines = csvData.trim().split('\n');
   const results: WordEnergyInput[] = [];
   
-  // Skip header if present
-  const startIndex = lines[0].toLowerCase().includes('wort') || 
-                     lines[0].toLowerCase().includes('word') ? 1 : 0;
-  
-  for (let i = startIndex; i < lines.length; i++) {
-    const columns = lines[i].split(/[,;\t]/).map(col => col.trim());
-    
-    if (columns.length >= 1 && columns[0]) {
-      const input: WordEnergyInput = {
-        word: columns[0].replace(/"/g, ''), // Remove quotes
-        potency: columns[1] ? parseInt(columns[1]) || 6 : 6,
-        potencyType: (columns[2] as 'D' | 'C' | 'LM' | 'M') || 'D'
-      };
+  for (const line of lines) {
+    const parts = line.split(',').map(part => part.trim());
+    if (parts.length >= 3) {
+      const [word, potencyStr, potencyType, alphabetType] = parts;
+      const potency = parseInt(potencyStr);
       
-      results.push(input);
+      if (!isNaN(potency) && ['D', 'C', 'LM', 'M'].includes(potencyType)) {
+        results.push({
+          word,
+          potency,
+          potencyType: potencyType as 'D' | 'C' | 'LM' | 'M',
+          alphabetType: (alphabetType as AlphabetType) || 'latin'
+        });
+      }
     }
   }
   
   return results;
-}
+};
 
-/**
- * Export zu CSV Format
- */
-export function exportCopenRatesToCSV(results: CopenRateResult[]): string {
-  const header = 'Wortenergie,Potenz,Typ,Copen-Rate,Buchstabensumme,Baserate,Fibonacci-Rate,Potenzmodifikator\n';
-  
-  const rows = results.map(result => [
-    result.word,
-    result.potency,
-    result.potencyType,
-    result.rate,
-    result.calculation.letterSum,
-    result.calculation.baseRate,
-    result.calculation.fibonacciRate,
-    result.calculation.potencyModifier
-  ].join(','));
-  
+export const exportCopenRatesToCSV = (results: CopenRateResult[]): string => {
+  const header = 'Wortenergie,Potenz,Typ,Copen-Rate\n';
+  const rows = results.map(result => {
+    return `${result.word},${result.potency},${result.potencyType},${result.rate}`;
+  });
   return header + rows.join('\n');
-}
-
-/**
- * Validierung der Eingabedaten
- */
-export function validateWordEnergy(word: string): { valid: boolean; error?: string } {
-  if (!word || word.trim().length === 0) {
-    return { valid: false, error: 'Wort darf nicht leer sein' };
-  }
-  
-  if (!/^[a-zA-ZäöüÄÖÜß\s\d\-\.]+$/.test(word)) {
-    return { valid: false, error: 'Nur Buchstaben, Leerzeichen und gängige Zeichen erlaubt' };
-  }
-  
-  if (word.length > 50) {
-    return { valid: false, error: 'Wort zu lang (max. 50 Zeichen)' };
-  }
-  
-  return { valid: true };
-}
+};
