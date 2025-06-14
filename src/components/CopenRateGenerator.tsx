@@ -1,11 +1,6 @@
-import React, { useState, useRef } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Upload, Download, Calculator, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   calculateCopenRate,
@@ -13,10 +8,12 @@ import {
   parseWordEnergyData,
   exportCopenRatesToCSV,
   validateWordEnergy,
-  type CopenRateResult,
-  type WordEnergyInput
+  type CopenRateResult
 } from '@/utils/copenRateGenerator';
-import { alphabetSystems, type AlphabetType } from '@/utils/alphabetSystems';
+import { type AlphabetType } from '@/utils/alphabetSystems';
+import SingleCalculationForm from '@/components/forms/SingleCalculationForm';
+import BatchImportForm from '@/components/forms/BatchImportForm';
+import ResultsTable from '@/components/tables/ResultsTable';
 
 const CopenRateGenerator: React.FC = () => {
   const [singleWord, setSingleWord] = useState('');
@@ -25,7 +22,6 @@ const CopenRateGenerator: React.FC = () => {
   const [singleAlphabetType, setSingleAlphabetType] = useState<AlphabetType>('latin');
   const [results, setResults] = useState<CopenRateResult[]>([]);
   const [csvInput, setCsvInput] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleSingleCalculation = () => {
@@ -141,180 +137,30 @@ const CopenRateGenerator: React.FC = () => {
         </CardHeader>
       </Card>
 
-      {/* Einzelberechnung */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
-            Einzelne Wortenergie berechnen
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="md:col-span-2">
-              <Label htmlFor="word">Wortenergie</Label>
-              <Input
-                id="word"
-                value={singleWord}
-                onChange={(e) => setSingleWord(e.target.value)}
-                placeholder="z.B. Arnica, Belladonna..."
-              />
-            </div>
-            <div>
-              <Label htmlFor="potency">Potenz</Label>
-              <Input
-                id="potency"
-                type="number"
-                value={singlePotency}
-                onChange={(e) => setSinglePotency(parseInt(e.target.value) || 0)}
-                min={0}
-                max={50000}
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                0 = Ursubstanz/Urtinktur
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="potencyType">Typ</Label>
-              <Select value={singlePotencyType} onValueChange={(value) => setSinglePotencyType(value as any)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="D">D (Dezimal)</SelectItem>
-                  <SelectItem value="C">C (Centesimal)</SelectItem>
-                  <SelectItem value="LM">LM (50-Millesimal)</SelectItem>
-                  <SelectItem value="M">M (Millennial)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="alphabetType">Alphabet</Label>
-              <Select value={singleAlphabetType} onValueChange={(value) => setSingleAlphabetType(value as AlphabetType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(alphabetSystems).map(([key, system]) => (
-                    <SelectItem key={key} value={key}>
-                      {system.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="text-xs text-gray-500 mt-1">
-                {alphabetSystems[singleAlphabetType].description}
-              </div>
-            </div>
-          </div>
-          <Button onClick={handleSingleCalculation} className="w-full">
-            <Calculator className="h-4 w-4 mr-2" />
-            Copen-Rate berechnen
-          </Button>
-        </CardContent>
-      </Card>
+      <SingleCalculationForm
+        word={singleWord}
+        potency={singlePotency}
+        potencyType={singlePotencyType}
+        alphabetType={singleAlphabetType}
+        onWordChange={setSingleWord}
+        onPotencyChange={setSinglePotency}
+        onPotencyTypeChange={setSinglePotencyType}
+        onAlphabetTypeChange={setSingleAlphabetType}
+        onCalculate={handleSingleCalculation}
+      />
 
-      {/* Batch Import */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Excel/CSV Import
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="flex-1"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Datei auswählen
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv,.txt"
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="csvInput">CSV-Daten (Format: Wort,Potenz,Typ)</Label>
-            <Textarea
-              id="csvInput"
-              value={csvInput}
-              onChange={(e) => setCsvInput(e.target.value)}
-              placeholder="Arnica,6,D
-Belladonna,12,D
-Nux vomica,30,C"
-              rows={6}
-            />
-          </div>
-          
-          <Button onClick={handleBatchCalculation} className="w-full">
-            <Calculator className="h-4 w-4 mr-2" />
-            Batch-Berechnung starten
-          </Button>
-        </CardContent>
-      </Card>
+      <BatchImportForm
+        csvInput={csvInput}
+        onCsvInputChange={setCsvInput}
+        onFileUpload={handleFileUpload}
+        onBatchCalculate={handleBatchCalculation}
+      />
 
-      {/* Ergebnisse */}
-      {results.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Berechnete Copen-Raten ({results.length})
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleExport}>
-                  <Download className="h-4 w-4 mr-2" />
-                  CSV Export
-                </Button>
-                <Button variant="outline" size="sm" onClick={clearResults}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Löschen
-                </Button>
-              </div>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left p-2">Wortenergie</th>
-                    <th className="text-left p-2">Potenz</th>
-                    <th className="text-left p-2">Typ</th>
-                    <th className="text-left p-2">Alphabet</th>
-                    <th className="text-left p-2">Copen-Rate</th>
-                    <th className="text-left p-2">Details</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {results.map((result, index) => (
-                    <tr key={index} className="border-b hover:bg-gray-50">
-                      <td className="p-2 font-medium">{result.word}</td>
-                      <td className="p-2">{result.potency}</td>
-                      <td className="p-2">{result.potencyType}</td>
-                      <td className="p-2 text-xs">
-                        {alphabetSystems[result.alphabetType].name}
-                      </td>
-                      <td className="p-2 font-mono text-blue-600">{result.rate.toLocaleString()}</td>
-                      <td className="p-2 text-xs text-gray-500">
-                        Σ:{result.calculation.letterSum} → 
-                        Base:{result.calculation.baseRate.toLocaleString()} → 
-                        Fib:{result.calculation.fibonacciRate.toLocaleString()}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ResultsTable
+        results={results}
+        onExport={handleExport}
+        onClear={clearResults}
+      />
     </div>
   );
 };
