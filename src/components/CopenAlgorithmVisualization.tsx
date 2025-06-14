@@ -78,18 +78,21 @@ const CopenAlgorithmVisualization: React.FC = () => {
   // Schritt 4: Fibonacci-Modulation (21 = 8. Fib, 34 = 9. Fib)
   const fibonacciRate = Math.floor((baseRate / 21) * 34);
 
-  // Schritt 5: Potenzanpassung
+  // Schritt 4: Korrigierte Potenzanpassung
   const getPotencyModifier = () => {
-    const digits = fibonacciRate.toString().length;
+    if (potency === 0) {
+      return 0; // Ursubstanz - keine Potenzierung
+    }
+    
     switch (potencyType) {
       case 'D':
-        return potency * Math.pow(10, digits - 1);
+        return Math.floor(fibonacciRate * (potency / 10));
       case 'C':
-        return potency * Math.pow(10, digits);
+        return Math.floor(fibonacciRate * (potency / 5));
       case 'LM':
-        return 50 * Math.pow(10, digits);
+        return Math.floor(fibonacciRate * (potency / 2));
       case 'M':
-        return 100 * Math.pow(10, digits);
+        return Math.floor(fibonacciRate * potency);
       default:
         return 0;
     }
@@ -279,22 +282,30 @@ const CopenAlgorithmVisualization: React.FC = () => {
             <ArrowDown className="h-8 w-8 text-blue-500" />
           </div>
 
-          {/* Schritt 4: Potenzanpassung */}
+          {/* Schritt 4: Korrigierte Potenzanpassung */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg text-orange-700">
-                Schritt 4: Potenzanpassung ({potencyType}{potency}{potency === 0 ? ' (Ursubstanz)' : ''})
+                Schritt 4: Korrigierte Potenzanpassung ({potencyType}{potency}{potency === 0 ? ' (Ursubstanz)' : ''})
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-orange-50 p-4 rounded-lg">
                 <div className="text-center mb-4">
                   <div className="text-lg font-semibold text-orange-800">
-                    Potenz-Modifier für {potencyType}{potency}{potency === 0 ? ' (Ursubstanz/Urtinktur)' : ''}
+                    {potency === 0 ? 'Ursubstanz - Keine Potenzierung' : `Potenz-Faktor für ${potencyType}${potency}`}
                   </div>
-                  {potency === 0 && (
+                  {potency === 0 ? (
                     <div className="text-sm text-gray-600 mt-2">
-                      Bei D0 (Ursubstanz) wird kein Potenz-Modifier angewendet
+                      Bei D0/C0 (Ursubstanz) wird die reine Fibonacci-Rate verwendet
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-600 mt-2">
+                      Potenz beeinflusst die Rate multiplikativ: 
+                      {potencyType === 'D' && ` Fibonacci-Rate × (${potency}/10)`}
+                      {potencyType === 'C' && ` Fibonacci-Rate × (${potency}/5)`}
+                      {potencyType === 'LM' && ` Fibonacci-Rate × (${potency}/2)`}
+                      {potencyType === 'M' && ` Fibonacci-Rate × ${potency}`}
                     </div>
                   )}
                 </div>
@@ -304,7 +315,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
                     <div className="text-lg font-bold">{fibonacciRate.toLocaleString()}</div>
                   </div>
                   <div className="bg-white p-3 rounded border">
-                    <div className="text-sm text-gray-600">Potenz-Modifier</div>
+                    <div className="text-sm text-gray-600">Potenz-Bonus</div>
                     <div className="text-lg font-bold">+{potencyModifier.toLocaleString()}</div>
                   </div>
                   <div className="bg-orange-100 p-3 rounded border-2 border-orange-300">

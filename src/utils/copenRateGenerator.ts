@@ -88,27 +88,32 @@ export function calculateCopenRate(
   // Schritt 3: Fibonacci-Modulation (8./9. Fibonacci-Zahlen: 21/34)
   const fibonacciRate = Math.floor((baseRate / 21) * 34);
   
-  // Schritt 4: Potenzanpassung nach Copen-Standard
+  // Schritt 4: Korrigierte Potenzanpassung
   let potencyModifier = 0;
-  const digits = fibonacciRate.toString().length;
+  let finalRate = fibonacciRate;
   
-  switch (potencyType) {
-    case 'D':
-      potencyModifier = potency * Math.pow(10, digits - 1);
-      break;
-    case 'C':
-      potencyModifier = potency * Math.pow(10, digits);
-      break;
-    case 'LM':
-      potencyModifier = 50 * Math.pow(10, digits);
-      break;
-    case 'M':
-      potencyModifier = 100 * Math.pow(10, digits);
-      break;
+  if (potency === 0) {
+    // D0/C0 = Ursubstanz/Urtinktur - keine Potenzierung
+    finalRate = fibonacciRate;
+    potencyModifier = 0;
+  } else {
+    // Potenz beeinflusst die gesamte Rate multiplikativ
+    switch (potencyType) {
+      case 'D':
+        potencyModifier = Math.floor(fibonacciRate * (potency / 10));
+        break;
+      case 'C':
+        potencyModifier = Math.floor(fibonacciRate * (potency / 5));
+        break;
+      case 'LM':
+        potencyModifier = Math.floor(fibonacciRate * (potency / 2));
+        break;
+      case 'M':
+        potencyModifier = Math.floor(fibonacciRate * potency);
+        break;
+    }
+    finalRate = fibonacciRate + potencyModifier;
   }
-  
-  // Finale Rate
-  const finalRate = fibonacciRate + potencyModifier;
   
   return {
     word: cleanWord,
