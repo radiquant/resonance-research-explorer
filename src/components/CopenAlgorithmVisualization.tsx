@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -99,6 +100,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   };
 
   const potencyModifier = getPotencyModifier();
+  // HIER WAR DER FEHLER: Die finale Rate wurde nicht korrekt berechnet
   const finalRate = fibonacciRate + potencyModifier;
 
   const handleCalculate = () => {
@@ -164,6 +166,19 @@ const CopenAlgorithmVisualization: React.FC = () => {
             <Calculator className="h-4 w-4 mr-2" />
             Modernisierten Algorithmus visualisieren
           </Button>
+          
+          {/* LIVE PREVIEW der finalen Rate */}
+          <div className="bg-gradient-to-r from-green-100 to-blue-100 p-4 rounded-lg text-center border-2 border-green-300">
+            <div className="text-lg text-gray-700 mb-2">
+              "{cleanWord}" {potencyType}{potency}{potency === 0 ? ' (Ursubstanz)' : ''}
+            </div>
+            <div className="text-3xl font-bold text-green-800">
+              {finalRate.toLocaleString()}
+            </div>
+            <div className="text-sm text-gray-600 mt-2">
+              Live-Vorschau der Bruce Copen Rate
+            </div>
+          </div>
         </CardContent>
       </Card>
 
