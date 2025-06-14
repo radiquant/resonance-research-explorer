@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,12 +10,20 @@ import BioresonanzSchmidt from "@/components/theories/BioresonanzSchmidt";
 import WellengenetikGarjajev from "@/components/theories/WellengenetikGarjajev";
 import ChakrenMeridiane from "@/components/theories/ChakrenMeridiane";
 import TheorienBroers from "@/components/theories/TheorienBroers";
+import CopenAlgorithmVisualization from "@/components/CopenAlgorithmVisualization";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTheory, setSelectedTheory] = useState<string | null>(null);
 
   const theories = [
+    {
+      id: "copen-algorithm",
+      title: "Bruce Copen Algorithmus Visualisierung",
+      description: "Grafische Darstellung des authentischen Copen-Algorithmus",
+      icon: Zap,
+      component: CopenAlgorithmVisualization
+    },
     {
       id: "radionik-general",
       title: "Radionik Allgemein",
