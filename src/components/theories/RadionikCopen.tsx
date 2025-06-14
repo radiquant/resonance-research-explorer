@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -262,45 +261,104 @@ const RadionikCopen = () => {
             <h4 className="font-semibold text-gray-800 mb-2">Korrigierte Implementierung (Ganze Zahlen):</h4>
             <div className="bg-white p-3 rounded border-l-4 border-slate-400 my-3">
               <pre className="text-sm overflow-x-auto">
-{`def calculate_authentic_copen_rate(word, potency=6, potency_type="D"):
+{`def normalize_word_energy(word):
+    """
+    Normalisiert Wortenergie nach modernem Copen-Standard
+    WICHTIG: Potenzangaben werden automatisch entfernt!
+    """
+    return word.upper() \\
+        .replace('Ä', 'AE').replace('Ö', 'OE').replace('Ü', 'UE').replace('ß', 'SS') \\
+        .replace(r'\\s*[DCLM]+\\d+', '')  # Entfernt D6, C200, LM1 etc. \\
+        .replace(r'\\d+', '')  # Entfernt alle Zahlen \\
+        .replace(r'[^A-Z\\s]', '')  # Nur Buchstaben und Leerzeichen \\
+        .replace(r'\\s+', ' ').strip()  # Normalisiert Leerzeichen
+
+def calculate_authentic_copen_rate(word, potency=6, potency_type="D"):
     """
     Berechnet authentische Copen-Rate (Ganze Zahlen)
     Nach Original Copen-Algorithmus (1978-1995)
+    
+    KORREKTE VERWENDUNG:
+    - word: "Nux Vomica" (OHNE Potenzangabe!)
+    - potency: 6 (separate Eingabe)
+    - potency_type: "D" (separate Eingabe)
+    
+    FALSCHE VERWENDUNG:
+    - word: "Nux Vomica D6" → wird automatisch zu "NUX VOMICA"
     """
-    # Buchstaben zu Zahlen mit Positionsgewichtung
+    # Normalisierung der Wortenergie
+    clean_word = normalize_word_energy(word)
+    
+    # Buchstabenwerte A=1, B=2, etc. (Leerzeichen überspringen)
     letter_values = {chr(i+64): i for i in range(1, 27)}
     
-    # Primärsumme mit Position
-    primary_sum = sum(
-        letter_values.get(c.upper(), 0) * (i + 1) 
-        for i, c in enumerate(word)
-    )
+    # Primärsumme mit Positionsgewichtung (nur Buchstaben)
+    position = 1
+    primary_sum = 0
+    
+    for char in clean_word:
+        if char == ' ':
+            continue  # Leerzeichen überspringen
+        value = letter_values.get(char, 0)
+        primary_sum += value * position
+        position += 1
     
     # Baserate (minimum 4-stellig)
     base_rate = primary_sum * 1000
     
     # Fibonacci-Modulation (8. Fib-Zahl = 21, 9. = 34)
-    fibonacci_mod = (base_rate // 21) * 34
+    fibonacci_rate = (base_rate // 21) * 34
     
-    # Potenzanpassung
-    if potency_type == "D":
-        potency_modifier = potency * (10 ** (len(str(fibonacci_mod)) - 1))
+    # Potenzanpassung (korrigiert)
+    if potency == 0:
+        potency_modifier = 0  # Ursubstanz
+    elif potency_type == "D":
+        potency_modifier = fibonacci_rate * (potency / 10)
     elif potency_type == "C":
-        potency_modifier = potency * (10 ** len(str(fibonacci_mod)))
+        potency_modifier = fibonacci_rate * (potency / 5)
     elif potency_type == "LM":
-        potency_modifier = 50 * (10 ** len(str(fibonacci_mod)))
+        potency_modifier = fibonacci_rate * (potency / 2)
     elif potency_type == "M":
-        potency_modifier = 100 * (10 ** len(str(fibonacci_mod)))
+        potency_modifier = fibonacci_rate * potency
+    else:
+        potency_modifier = 0
     
-    final_rate = fibonacci_mod + potency_modifier
+    final_rate = fibonacci_rate + int(potency_modifier)
     
-    return int(final_rate)
+    return int(final_rate), {
+        'clean_word': clean_word,
+        'primary_sum': primary_sum,
+        'base_rate': base_rate,
+        'fibonacci_rate': fibonacci_rate,
+        'potency_modifier': int(potency_modifier)
+    }
 
-# Beispiele:
-print(f"Arnica D6: {calculate_authentic_copen_rate('ARNICA', 6, 'D')}")
-print(f"Sulphur C200: {calculate_authentic_copen_rate('SULPHUR', 200, 'C')}")
-print(f"Lyc LM1: {calculate_authentic_copen_rate('LYCOPODIUM', 1, 'LM')}")`}
+# KORREKTE Beispiele:
+rate1, details1 = calculate_authentic_copen_rate('ARNICA', 6, 'D')
+print(f"Arnica D6: {rate1}")
+print(f"Details: {details1}")
+
+rate2, details2 = calculate_authentic_copen_rate('NUX VOMICA', 30, 'C')
+print(f"Nux Vomica C30: {rate2}")
+
+# WICHTIG: Diese Eingaben werden automatisch normalisiert:
+rate3, details3 = calculate_authentic_copen_rate('Nux Vomica D12', 30, 'C')
+print(f"'Nux Vomica D12' wird zu: '{details3['clean_word']}' C30: {rate3}")
+
+# Ursubstanz (D0) Beispiel:
+rate4, details4 = calculate_authentic_copen_rate('ARNICA', 0, 'D')
+print(f"Arnica D0 (Ursubstanz): {rate4}")`}
               </pre>
+            </div>
+            <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400 mt-3">
+              <h5 className="font-semibold text-gray-800 mb-2">Wichtige Bedienungshinweise:</h5>
+              <ul className="text-sm space-y-1 text-gray-700">
+                <li><strong>✅ Richtig:</strong> Wortenergie = "Nux Vomica", Potenz = 6, Typ = "D"</li>
+                <li><strong>❌ Falsch:</strong> Wortenergie = "Nux Vomica D6" (wird automatisch bereinigt)</li>
+                <li><strong>🔄 Normalisierung:</strong> "Schüßler Nr.1 D12" → "SCHUESSLER NR"</li>
+                <li><strong>📝 Leerzeichen:</strong> Bleiben als Trennzeichen erhalten</li>
+                <li><strong>🇩🇪 Umlaute:</strong> ä→ae, ö→oe, ü→ue, ß→ss</li>
+              </ul>
             </div>
           </div>
 
