@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -68,7 +69,7 @@ const BioresonanzSchmidt = () => {
           <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">2.2 Harmonische Frequenz-Spektren</h3>
 
           <div className="bg-yellow-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Schmidt'sche Harmonikale Gesetzmäßigkeiten:</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">Schmidt&apos;sche Harmonikale Gesetzmäßigkeiten:</h4>
             <div className="bg-white p-3 rounded border-l-4 border-yellow-400 my-3">
               <strong>Grundfrequenz-System:</strong><br/>
               f_n = f₀ × 2^n (n = 0, 1, 2, 3, ...)<br/>
@@ -88,18 +89,18 @@ const BioresonanzSchmidt = () => {
           <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">2.3 Elektromagnetische Biofeld-Theorie</h3>
 
           <div className="bg-teal-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Schmidt'sche Biofeld-Gleichungen:</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">Schmidt&apos;sche Biofeld-Gleichungen:</h4>
             <div className="bg-white p-3 rounded border-l-4 border-teal-400 my-3">
               <strong>Biofeld-Wellengleichung:</strong><br/>
               ∇²E - μσ∂E/∂t - με∂²E/∂t² = 0<br/><br/>
               <strong>Komplexe Permittivität (biologisches Gewebe):</strong><br/>
-              ε* = ε' - jε" = ε₀(εᵣ' - jεᵣ")<br/>
-              εᵣ" = σ/(ωε₀) + εᵣ"_dipol<br/><br/>
+              ε* = ε&apos; - jε&quot; = ε₀(εᵣ&apos; - jεᵣ&quot;)<br/>
+              εᵣ&quot; = σ/(ωε₀) + εᵣ&quot;_dipol<br/><br/>
               <strong>Eindringtiefe:</strong><br/>
               δ = 1/√(πfμσ)<br/>
               Für biologisches Gewebe bei f = 10 MHz: δ ≈ 16 mm<br/><br/>
               <strong>Resonanzbedingung (Schmidt-Kriterium):</strong><br/>
-              |Z_bio - Z_antenna| < Z_threshold<br/>
+              |Z_bio - Z_antenna| &lt; Z_threshold<br/>
               Z_bio = √(μᵣ/εᵣ*) × Z₀
             </div>
           </div>
@@ -123,7 +124,7 @@ const BioresonanzSchmidt = () => {
               Typischer Bereich: Q = 10-100<br/><br/>
               <strong>Energieabsorptions-Rate (SAR):</strong><br/>
               SAR = σ|E|²/(2ρ)<br/>
-              Für therapeutische Anwendung: SAR < 2 W/kg
+              Für therapeutische Anwendung: SAR &lt; 2 W/kg
             </div>
           </div>
 
@@ -135,14 +136,14 @@ const BioresonanzSchmidt = () => {
               <strong>Cole-Cole-Gleichung:</strong><br/>
               ε*(ω) = ε∞ + (εₛ - ε∞)/(1 + (jωτ)^(1-α))<br/><br/>
               <strong>Debye-Relaxation (α = 0):</strong><br/>
-              ε'(ω) = ε∞ + (εₛ - ε∞)/(1 + ω²τ²)<br/>
-              ε"(ω) = (εₛ - ε∞)ωτ/(1 + ω²τ²)<br/><br/>
+              ε&apos;(ω) = ε∞ + (εₛ - ε∞)/(1 + ω²τ²)<br/>
+              ε&quot;(ω) = (εₛ - ε∞)ωτ/(1 + ω²τ²)<br/><br/>
               <strong>Charakteristische Frequenzen:</strong><br/>
               • β-Dispersion (Zellmembranen): 1 kHz - 100 MHz<br/>
-              • γ-Dispersion (freies Wasser): > 1 GHz<br/>
+              • γ-Dispersion (freies Wasser): &gt; 1 GHz<br/>
               • δ-Dispersion (gebundenes Wasser): 100 MHz - 1 GHz<br/><br/>
               <strong>Schmidt-Resonanz-Kriterium:</strong><br/>
-              dε"/df = 0 (Maximum der dielektrischen Verluste)
+              dε&quot;/df = 0 (Maximum der dielektrischen Verluste)
             </div>
           </div>
 
@@ -173,10 +174,10 @@ const BioresonanzSchmidt = () => {
           <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">4.1 Automatische Frequenz-Suche (AFS)</h3>
 
           <div className="bg-cyan-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Schmidt'scher Scan-Algorithmus:</h4>
+            <h4 className="font-semibold text-gray-800 mb-2">Schmidt&apos;scher Scan-Algorithmus:</h4>
             <div className="bg-white p-3 rounded border-l-4 border-cyan-400 my-3">
               <strong>Pseudocode:</strong><br/>
-              <pre className="text-sm">{`function paul_schmidt_scan(patient_sample):
+              <pre className="text-sm whitespace-pre-wrap">{`function paul_schmidt_scan(patient_sample):
     frequency_range = [0.1, 10_000_000]  # 0.1 Hz bis 10 MHz
     detected_frequencies = []
     
@@ -214,7 +215,7 @@ const BioresonanzSchmidt = () => {
             <h4 className="font-semibold text-gray-800 mb-2">Therapeutisches Protokoll:</h4>
             <div className="bg-white p-3 rounded border-l-4 border-amber-400 my-3">
               <strong>Behandlungsalgorithmus:</strong><br/>
-              <pre className="text-sm">{`function schmidt_therapy_protocol(detected_frequencies):
+              <pre className="text-sm whitespace-pre-wrap">{`function schmidt_therapy_protocol(detected_frequencies):
     # Phase 1: Grundregulation (0.1-10 Hz)
     for f in [0.1, 0.6, 1.2, 2.4, 4.8, 9.6]:
         apply_frequency(f, duration=300, power=low)
