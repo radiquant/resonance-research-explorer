@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,7 +142,7 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       
       // Optimierte OCR-Parameter für kleine Schrift und Tabellen
       await worker.setParameters({
-        tessedit_pageseg_mode: '6', // Uniform block of text
+        tessedit_pageseg_mode: 6, // Changed from string "6" to number 6
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüÄÖÜß0123456789.,- '
       });
       
