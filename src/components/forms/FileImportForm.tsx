@@ -142,7 +142,7 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       
       // Optimierte OCR-Parameter für kleine Schrift und Tabellen
       await worker.setParameters({
-        tessedit_pageseg_mode: PSM.SINGLE_UNIFORM_BLOCK,
+        tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüÄÖÜß0123456789.,- '
       });
       
