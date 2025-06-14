@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -298,7 +299,7 @@ const RadionikCopen = () => {
 # Beispiele:
 print(f"Arnica D6: {calculate_authentic_copen_rate('ARNICA', 6, 'D')}")
 print(f"Sulphur C200: {calculate_authentic_copen_rate('SULPHUR', 200, 'C')}")
-print(f"Lyc LM1: {calculate_authentic_copen_rate('LYCOPODIUM', 1, 'LM')}"}`
+print(f"Lyc LM1: {calculate_authentic_copen_rate('LYCOPODIUM', 1, 'LM')}")`}
               </pre>
             </div>
           </div>
@@ -418,86 +419,6 @@ print(f"Lyc LM1: {calculate_authentic_copen_rate('LYCOPODIUM', 1, 'LM')}"}`
               <li><strong>Trichomonas vaginalis:</strong> 20.1-22.8 (Urogenital)</li>
               <li><strong>Blastocystis hominis:</strong> 18.9-21.6 (Darmparasit)</li>
               <li><strong>Entamoeba histolytica:</strong> 22.4-25.1 (Amöbenruhr)</li>
-            </ul>
-          </div>
-
-          <Separator className="my-6" />
-
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">6. Moderne Copen-Technologien</h2>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">6.1 Computergestützte Rate-Analyse</h3>
-
-          <div className="bg-slate-100 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Moderner Algorithmus (Python-Implementierung):</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-slate-400 my-3">
-              <pre className="text-sm overflow-x-auto">
-{`def calculate_copen_rate(word, potency=1):
-    """
-    Berechnet Copen-Rate aus Wortenergie
-    Nach Original Copen-Algorithmus (1985)
-    """
-    # Buchstaben zu Zahlen
-    letter_values = {chr(i+64): i for i in range(1, 27)}
-    
-    # Grundsumme berechnen
-    base_sum = sum(letter_values.get(c.upper(), 0) for c in word)
-    
-    # Goldener Schnitt Modulation
-    golden_ratio = 1.618033988749
-    modified_rate = (base_sum * golden_ratio) % 10
-    
-    # Potenzierungsmodulation
-    if potency > 1:
-        potency_factor = 1 + (math.log10(potency) / 10)
-        modified_rate *= potency_factor
-    
-    return round(modified_rate, 2)
-
-# Beispiel: Arnica D6
-rate = calculate_copen_rate("ARNICA", 6)
-print(f"Arnica D6 Rate: {rate}")  # Output: 4.77`}
-              </pre>
-            </div>
-          </div>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">6.2 Resonanz-Verstärkungs-Techniken</h3>
-
-          <div className="bg-green-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Authentische Copen-Methoden:</h4>
-            <ul className="list-disc pl-6 space-y-1 text-gray-700">
-              <li><strong>Harmonische Verstärkung:</strong> Obertonreihen der Grundrate</li>
-              <li><strong>Sequentielle Anwendung:</strong> Aufsteigende Potenzreihen</li>
-              <li><strong>Interferenz-Muster:</strong> Kombinierte Raten für komplexe Zustände</li>
-              <li><strong>Zirkadiane Anpassung:</strong> Zeitabhängige Rate-Modulation</li>
-              <li><strong>Biofeedback-Integration:</strong> Patient-spezifische Anpassung</li>
-            </ul>
-          </div>
-
-          <Separator className="my-6" />
-
-          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">7. Wissenschaftliche Validierung und Kritik</h2>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">7.1 Positive Studienergebnisse</h3>
-
-          <div className="bg-blue-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Signifikante Forschungsergebnisse:</h4>
-            <ul className="list-disc pl-6 space-y-1 text-gray-700">
-              <li><strong>Copen & Langman (1978):</strong> 78% Trefferquote bei bakterieller Detektion (n=240, p&lt;0.001)</li>
-              <li><strong>Sussex Medical School (1982):</strong> Signifikante Verbesserung chronischer Leiden (n=156, p=0.012)</li>
-              <li><strong>European Alternative Medicine Congress (1995):</strong> Meta-Analyse 15 Studien, Effektstärke d=0.62</li>
-              <li><strong>Institute for Frontier Science (2001):</strong> Fernwirkung nachgewiesen bis 100km</li>
-            </ul>
-          </div>
-
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">7.2 Kritische Bewertung</h3>
-
-          <div className="bg-amber-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">Methodische Einschränkungen:</h4>
-            <ul className="list-disc pl-6 space-y-1 text-gray-700">
-              <li><strong>Reproduzierbarkeit:</strong> Operateur-Abhängigkeit bei manueller Anwendung</li>
-              <li><strong>Placebo-Kontrolle:</strong> Schwierige Blindung bei bewussten Patienten</li>
-              <li><strong>Mechanismus:</strong> Quantenfeld-Theorie noch nicht vollständig validiert</li>
-              <li><strong>Standardisierung:</strong> Verschiedene Copen-Schulen verwenden abweichende Raten</li>
             </ul>
           </div>
 
