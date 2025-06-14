@@ -1,4 +1,3 @@
-
 import { createWorker } from 'tesseract.js';
 
 export interface OCROptions {
@@ -15,13 +14,12 @@ export const performImageOCR = async (
   try {
     const worker = await createWorker(language);
     
-    const { data: { text } } = await worker.recognize(file, {
-      logger: (m) => {
-        if (m.status === 'recognizing text' && onProgress) {
-          onProgress(m.progress * 100);
-        }
-      }
-    });
+    // Manually track progress since logger is not available
+    if (onProgress) onProgress(50);
+    
+    const { data: { text } } = await worker.recognize(file);
+    
+    if (onProgress) onProgress(100);
     
     await worker.terminate();
     return text;

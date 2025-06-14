@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -136,13 +135,7 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       setProgress(60);
       setCurrentStep('Text wird erkannt...');
       
-      const { data: { text } } = await worker.recognize(file, {
-        logger: (m) => {
-          if (m.status === 'recognizing text') {
-            setProgress(60 + (m.progress * 30));
-          }
-        }
-      });
+      const { data: { text } } = await worker.recognize(file);
       
       await worker.terminate();
       
