@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -246,6 +245,53 @@ const WellengenetikGarjajev = () => {
 
           <Separator className="my-6" />
 
+          <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Erweiterte Garjajev-Experimente</h2>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Quantenholographie-Effekte</h3>
+
+          <div className="bg-emerald-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">DNA-Phantom-Phänomen:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Phantom-Persistenz:</strong> 30-40 Tage nach DNA-Entfernung</li>
+              <li><strong>Phantom-Frequenz:</strong> 75 MHz (½ der DNA-Grundfrequenz)</li>
+              <li><strong>Spektrale Signatur:</strong> Identisch mit ursprünglicher DNA</li>
+              <li><strong>Räumliche Ausdehnung:</strong> Bis zu 2000 km dokumentiert</li>
+              <li><strong>Quantenverschränkung:</strong> Instantane Informationsübertragung</li>
+              <li><strong>Kohärenz-Zeit:</strong> {'>'}24 Stunden bei Raumtemperatur</li>
+              <li><strong>Temperatur-Abhängigkeit:</strong> Verstärkung bei 4°C</li>
+            </ul>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Polarisations-Experimente</h3>
+
+          <div className="bg-cyan-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Licht-Polarisation und DNA:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Rechts-zirkulare Pol.:</strong> DNA-Aktivierung (+15% Synthese)</li>
+              <li><strong>Links-zirkulare Pol.:</strong> DNA-Suppression (-12% Synthese)</li>
+              <li><strong>Lineare Polarisation:</strong> Neutrale bis schwache Wirkung</li>
+              <li><strong>Elliptische Polarisation:</strong> Abhängig vom Achsenverhältnis</li>
+              <li><strong>Optimaler Winkel:</strong> 42° zur DNA-Helix-Achse</li>
+              <li><strong>Frequenz-Abhängigkeit:</strong> Maximum bei 632,8 nm</li>
+            </ul>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Morphogenetische Feld-Übertragung</h3>
+
+          <div className="bg-violet-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Fernwirkung biologischer Information:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Maximal dokumentierte Distanz:</strong> 20 km (Moskau-Experiment)</li>
+              <li><strong>Übertragungszeit:</strong> Praktisch instantan ({'>'}c nicht überschritten)</li>
+              <li><strong>Erfolgsrate:</strong> 78% bei optimalen Bedingungen</li>
+              <li><strong>Störfaktoren:</strong> Elektromagnetische Felder {'>'}10 mT</li>
+              <li><strong>Verstärkung durch:</strong> Laser-Kohärenz, Faraday-Käfig</li>
+              <li><strong>Empfänger-Vorbereitung:</strong> 24h Synchronisation</li>
+            </ul>
+          </div>
+
+          <Separator className="my-6" />
+
           <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">Technische Umsetzung</h2>
 
           <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Laser-Parameter</h3>
@@ -275,6 +321,35 @@ const WellengenetikGarjajev = () => {
               <li><strong>Quantenfeldstärke:</strong> |Ψ|² = Wahrscheinlichkeitsdichte</li>
               <li><strong>Resonanzbedingung:</strong> ω = ΔE/ℏ</li>
               <li><strong>Soliton-Geschwindigkeit:</strong> v = 2κ sech²(κx)</li>
+            </ul>
+          </div>
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Erweiterte Geräte-Konfiguration</h3>
+
+          <div className="bg-indigo-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Garjajev Wave-Genetics Generator:</h4>
+            <ul className="list-disc pl-6 space-y-1 text-gray-700">
+              <li><strong>Laser-Array:</strong> 
+                <ul className="list-disc pl-6 mt-1">
+                  <li>He-Ne: 632,8 nm, 5-50 mW</li>
+                  <li>Dioden: 780/850 nm, 10-100 mW</li>
+                  <li>Grün: 532 nm, 1-20 mW</li>
+                </ul>
+              </li>
+              <li><strong>Modulatoren:</strong>
+                <ul className="list-disc pl-6 mt-1">
+                  <li>Akusto-optisch: 0,1-100 MHz</li>
+                  <li>Elektro-optisch: DC bis 10 GHz</li>
+                  <li>Mechanisch: 0,01 Hz bis 10 kHz</li>
+                </ul>
+              </li>
+              <li><strong>Detektor-System:</strong>
+                <ul className="list-disc pl-6 mt-1">
+                  <li>CCD-Kamera für Phantom-Detektion</li>
+                  <li>Photomultiplier für schwache Signale</li>
+                  <li>Interferometer für Kohärenz-Messung</li>
+                </ul>
+              </li>
             </ul>
           </div>
 
