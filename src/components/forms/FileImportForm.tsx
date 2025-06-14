@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -141,7 +142,7 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       
       // Optimierte OCR-Parameter für kleine Schrift und Tabellen
       await worker.setParameters({
-        tessedit_pageseg_mode: PSM.UNIFORM_BLOCK, // Use PSM enum instead of number
+        tessedit_pageseg_mode: PSM.SINGLE_UNIFORM_BLOCK,
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüÄÖÜß0123456789.,- '
       });
       
