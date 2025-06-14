@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileImage, FileText, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createWorker } from 'tesseract.js';
+import { createWorker, PSM } from 'tesseract.js';
 import { parseMentalRatesText } from '@/utils/mentalRatesParser';
 
 interface FileImportFormProps {
@@ -142,7 +141,7 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       
       // Optimierte OCR-Parameter für kleine Schrift und Tabellen
       await worker.setParameters({
-        tessedit_pageseg_mode: 6, // Changed from string "6" to number 6
+        tessedit_pageseg_mode: PSM.UNIFORM_BLOCK, // Use PSM enum instead of number
         tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüÄÖÜß0123456789.,- '
       });
       
