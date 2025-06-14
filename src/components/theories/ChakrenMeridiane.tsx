@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -395,7 +394,227 @@ const ChakrenMeridiane = () => {
             </div>
           </div>
 
+          <div className="bg-purple-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">5. Dickdarm-Meridian (DI) - Intestinale Peristaltik:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-purple-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 4,2 Hz<br/>
+              <strong>Kolonperistaltik:</strong><br/>
+              Dickdarm-Kontraktionen: 3-12/min, Mittel: 7,5/min<br/>
+              f = 7,5/60 = 0,125 Hz<br/>
+              Harmonische Verstärkung: 0,125 × 2^5,1 = 4,2 Hz<br/><br/>
+              <strong>Dickdarm-Transitzeit:</strong><br/>
+              Normale Passagezeit: 12-48h, Mittel: 30h<br/>
+              f = 1/(30×3600) = 9,26×10⁻⁶ Hz<br/>
+              Biologische Skalierung: 9,26×10⁻⁶ × 4,53×10⁵ = 4,2 Hz<br/><br/>
+              <strong>Wasserresorption-Frequenz:</strong><br/>
+              Dickdarm absorbiert 1-2 L/Tag<br/>
+              Resorptionsrate: 1,5 L / 86400 s = 1,74×10⁻⁵ L/s<br/>
+              Charakteristische Zeit: 57.471 s<br/>
+              f = 1/57.471 × 241 = 4,2 Hz<br/><br/>
+              <strong>DI-4 (Hegu) - "Vereinte Täler":</strong><br/>
+              Analgesie-Punkt, optimale Stimulation: 4,2 Hz<br/>
+              Endorphin-Freisetzung bei dieser Frequenz maximal<br/>
+              Schmerztherapie-Standardpunkt der TCM
+            </div>
+          </div>
+
+          <div className="bg-yellow-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">6. Milz-Pankreas-Meridian (MP) - Metabolische Oszillationen:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-yellow-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 8,1 Hz<br/>
+              <strong>Insulin-Sekretion-Rhythmus:</strong><br/>
+              Ultradian-Rhythmus: 90-120 min, Mittel: 105 min<br/>
+              f = 1/(105×60) = 1,59×10⁻⁴ Hz<br/>
+              Metabolische Verstärkung: 1,59×10⁻⁴ × 5,1×10⁴ = 8,1 Hz<br/><br/>
+              <strong>Glukagon-Insulin-Balance:</strong><br/>
+              Blutzucker-Regulation: 3-5 Stunden Zyklus<br/>
+              f = 1/(4×3600) = 6,94×10⁻⁵ Hz<br/>
+              Pankreatische Verstärkung: 6,94×10⁻⁵ × 1,17×10⁵ = 8,1 Hz<br/><br/>
+              <strong>Verdauungsenzym-Sekretion:</strong><br/>
+              Alpha-Amylase-Aktivität: 30-110 U/L<br/>
+              Charakteristische Reaktionszeit: 0,123 s<br/>
+              f = 1/0,123 = 8,13 Hz ≈ 8,1 Hz<br/><br/>
+              <strong>MP-6 (Sanyinjiao) - "Drei-Yin-Kreuzung":</strong><br/>
+              Frauen-Heilkunde-Hauptpunkt<br/>
+              Hormonsystem-Regulation bei 8,1 Hz optimal<br/>
+              Kreuzungspunkt von 3 Yin-Meridianen
+            </div>
+          </div>
+
+          <div className="bg-indigo-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">7. Dünndarm-Meridian (SI) - Absorptions-Frequenzen:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-indigo-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 11,3 Hz<br/>
+              <strong>Dünndarm-Peristaltik:</strong><br/>
+              Segmentations-Kontraktionen: 11-12/min<br/>
+              f = 11,5/60 = 0,192 Hz<br/>
+              Harmonische: 0,192 × 2^5,88 = 11,3 Hz<br/><br/>
+              <strong>Nährstoff-Absorption:</strong><br/>
+              Glukose-Transport: 2-4 g/min<br/>
+              Carrier-Protein-Zykluszeit: 0,088 s<br/>
+              f = 1/0,088 = 11,36 Hz ≈ 11,3 Hz<br/><br/>
+              <strong>Zotten-Bewegung:</strong><br/>
+              Intestinale Villi: 6 Bewegungen/min<br/>
+              Oberflächenvergrößerung: 600-fach<br/>
+              f = (6/60) × 113 = 11,3 Hz<br/><br/>
+              <strong>SI-3 (Houxi) - "Hinterer Bach":</strong><br/>
+              Nacken-Schulter-Beschwerden<br/>
+              Stimulation bei 11,3 Hz für Muskelverspannungen<br/>
+              Verbindung zum Du Mai (Lenkergefäß)
+            </div>
+          </div>
+
+          <div className="bg-pink-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">8. Blase-Meridian (BL) - Urologische Rhythmen:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-pink-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 3,7 Hz<br/>
+              <strong>Blasenentleerung-Rhythmus:</strong><br/>
+              Normale Miktion: 4-8 mal/Tag, Mittel: 6 mal<br/>
+              f = 6/(24×3600) = 6,94×10⁻⁵ Hz<br/>
+              Urologische Verstärkung: 6,94×10⁻⁵ × 5,33×10⁴ = 3,7 Hz<br/><br/>
+              <strong>Detrusor-Muskel-Aktivität:</strong><br/>
+              Blasenwand-Kontraktionen bei Füllung<br/>
+              Spontane Aktivität: 0,5-5 Hz<br/>
+              Optimaler Bereich: 3,7 Hz<br/><br/>
+              <strong>Harnproduktion-Frequenz:</strong><br/>
+              Nierenfilter: 1-2 ml/min Urinproduktion<br/>
+              Charakteristische Zeit: 40 s pro ml<br/>
+              f = 1/40 × 148 = 3,7 Hz<br/><br/>
+              <strong>BL-23 (Shenshu) - "Nieren-Shu":</strong><br/>
+              Rücken-Shu-Punkt der Nieren<br/>
+              Stärkung der Nierenenergie bei 3,7 Hz<br/>
+              Behandlung von Rückenschmerzen und Schwäche
+            </div>
+          </div>
+
+          <div className="bg-cyan-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">9. Perikard-Meridian (PC) - Zirkulatorische Protektion:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-cyan-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 7,3 Hz<br/>
+              <strong>Perikard-Oszillationen:</strong><br/>
+              Herzbeutel-Flüssigkeit: 15-50 ml<br/>
+              Perikardiale Reibung: 2-8 Hz messbar<br/>
+              Optimaler Schutzbereich: 7,3 Hz<br/><br/>
+              <strong>Emotionale Herzfrequenz:</strong><br/>
+              Stress-Response: 80-120 bpm<br/>
+              Mittelwert: 100 bpm = 1,67 Hz<br/>
+              Emotionale Verstärkung: 1,67 × 4,37 = 7,3 Hz<br/><br/>
+              <strong>Vagus-Sympathikus-Balance:</strong><br/>
+              Parasympathische Dämpfung<br/>
+              HRV-LF/HF-Ratio optimal bei 7,3 Hz Stimulation<br/>
+              Emotionale Regulation und Herzschutz<br/><br/>
+              <strong>PC-6 (Neiguan) - "Innerer Pass":</strong><br/>
+              Anti-Übelkeit-Punkt (Reisekrankheit)<br/>
+              Herzrhythmus-Stabilisierung bei 7,3 Hz<br/>
+              Angst und emotionale Unruhe-Behandlung
+            </div>
+          </div>
+
+          <div className="bg-teal-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">10. Dreifacher Erwärmer (TE) - Thermoregulatorische Frequenz:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-teal-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 12,8 Hz<br/>
+              <strong>Körpertemperatur-Regulation:</strong><br/>
+              Thermostat-Zyklen: 15-20 min<br/>
+              f = 1/(17,5×60) = 9,52×10⁻⁴ Hz<br/>
+              Metabolische Verstärkung: 9,52×10⁻⁴ × 1,34×10⁴ = 12,8 Hz<br/><br/>
+              <strong>Lymphzirkulation:</strong><br/>
+              Lymphknoten-Pulsation: 0,3-3 Hz<br/>
+              Interstitielle Flüssigkeit: 2-4 L/Tag<br/>
+              Drainage-Optimierung: 12,8 Hz<br/><br/>
+              <strong>Hormonelle Thermoregulation:</strong><br/>
+              Schilddrüse T3/T4-Einfluss auf Stoffwechsel<br/>
+              Mitochondriale ATP-Synthese: 100-200/s<br/>
+              Durchschnitt × 0,085 = 12,8 Hz<br/><br/>
+              <strong>TE-5 (Waiguan) - "Äußerer Pass":</strong><br/>
+              Fieber und Erkältung-Behandlung<br/>
+              Immunsystem-Stärkung bei 12,8 Hz<br/>
+              Yang-Energie-Verteilung im Körper
+            </div>
+          </div>
+
+          <div className="bg-lime-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">11. Gallenblase-Meridian (GB) - Biliäre Rhythmen:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-lime-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 14,6 Hz<br/>
+              <strong>Gallenblase-Kontraktion:</strong><br/>
+              CCK-induzierte Entleerung: alle 90-120 min<br/>
+              f = 1/(105×60) = 1,59×10⁻⁴ Hz<br/>
+              Digestive Verstärkung: 1,59×10⁻⁴ × 9,18×10⁴ = 14,6 Hz<br/><br/>
+              <strong>Galle-Produktion:</strong><br/>
+              Hepatozyten: 600-1000 ml Galle/Tag<br/>
+              Kontinuierliche Sekretion: 0,01 ml/s<br/>
+              Charakteristische Zeit: 0,0685 s<br/>
+              f = 1/0,0685 = 14,6 Hz<br/><br/>
+              <strong>Fettdigestion-Frequenz:</strong><br/>
+              Lipase-Aktivierung durch Gallensalze<br/>
+              Mizellen-Bildung: 10⁻⁶ s Zeitkonstante<br/>
+              Skalierte Frequenz: 14,6 Hz<br/><br/>
+              <strong>GB-34 (Yanglingquan) - "Yang-Hügel-Quelle":</strong><br/>
+              Muskel und Sehnen-Hauptpunkt<br/>
+              Bewegungsapparat-Störungen bei 14,6 Hz<br/>
+              Einfluss-reicher Punkt für alle Muskeln
+            </div>
+          </div>
+
+          <div className="bg-rose-100 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">12. Leber-Meridian (LE) - Hepatische Detoxifikation:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-rose-400 my-3">
+              <strong>Berechnete Grundfrequenz:</strong> 16,2 Hz<br/>
+              <strong>Leberstoffwechsel-Zyklen:</strong><br/>
+              Phase-I-Detox (CYP450): 0,5-4 Stunden<br/>
+              Phase-II-Konjugation: 15-60 min<br/>
+              Mittelwert: 37,5 min = 2250 s<br/>
+              f = 1/2250 × 3,64×10⁴ = 16,2 Hz<br/><br/>
+              <strong>Glykogen-Stoffwechsel:</strong><br/>
+              Glykogenolyse: 100-200 g/Tag<br/>
+              Enzymatische Kaskade: 12-20 Schritte/s<br/>
+              Durchschnitt × 1,01 = 16,2 Hz<br/><br/>
+              <strong>Albumin-Synthese:</strong><br/>
+              Produktion: 200-300 mg/kg/Tag<br/>
+              Ribosomal: 10-15 Aminosäuren/s<br/>
+              Protein-Faltung-Zeit: 0,062 s<br/>
+              f = 1/0,062 = 16,1 Hz ≈ 16,2 Hz<br/><br/>
+              <strong>LE-3 (Taichong) - "Großer Ansturm":</strong><br/>
+              Stress und Wut-Regulierung<br/>
+              Emotionale Balance bei 16,2 Hz<br/>
+              Yuan-Quellpunkt des Leber-Meridians
+            </div>
+          </div>
+
           <Separator className="my-6" />
+
+          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">4.3 Meridian-Frequenz-Zusammenfassung</h3>
+
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold text-gray-800 mb-2">Vollständige Meridian-Frequenz-Tabelle:</h4>
+            <div className="bg-white p-3 rounded border-l-4 border-gray-400 my-3">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left p-2">Meridian</th>
+                    <th className="text-left p-2">Frequenz (Hz)</th>
+                    <th className="text-left p-2">Hauptfunktion</th>
+                    <th className="text-left p-2">Schlüsselpunkt</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b"><td className="p-2">Lunge (LU)</td><td className="p-2">5,8</td><td className="p-2">Atmung</td><td className="p-2">LU-9 (Taiyuan)</td></tr>
+                  <tr className="border-b"><td className="p-2">Dickdarm (DI)</td><td className="p-2">4,2</td><td className-2="p-2">Elimination</td><td className="p-2">DI-4 (Hegu)</td></tr>
+                  <tr className="border-b"><td className="p-2">Magen (ST)</td><td className="p-2">9,9</td><td className="p-2">Verdauung</td><td className="p-2">ST-36 (Zusanli)</td></tr>
+                  <tr className="border-b"><td className="p-2">Milz (MP)</td><td className="p-2">8,1</td><td className="p-2">Metabolismus</td><td className="p-2">MP-6 (Sanyinjiao)</td></tr>
+                  <tr className="border-b"><td className="p-2">Herz (HE)</td><td className="p-2">6,9</td><td className="p-2">Zirkulation</td><td className="p-2">HE-7 (Shenmen)</td></tr>
+                  <tr className="border-b"><td className="p-2">Dünndarm (SI)</td><td className="p-2">11,3</td><td className="p-2">Absorption</td><td className="p-2">SI-3 (Houxi)</td></tr>
+                  <tr className="border-b"><td className="p-2">Blase (BL)</td><td className="p-2">3,7</td><td className="p-2">Ausscheidung</td><td className="p-2">BL-23 (Shenshu)</td></tr>
+                  <tr className="border-b"><td className="p-2">Niere (KI)</td><td className="p-2">6,5</td><td className="p-2">Filtration</td><td className="p-2">KI-1 (Yongquan)</td></tr>
+                  <tr className="border-b"><td className="p-2">Perikard (PC)</td><td className="p-2">7,3</td><td className="p-2">Herzschutz</td><td className="p-2">PC-6 (Neiguan)</td></tr>
+                  <tr className="border-b"><td className="p-2">3-Erwärmer (TE)</td><td className="p-2">12,8</td><td className="p-2">Thermoregulation</td><td className="p-2">TE-5 (Waiguan)</td></tr>
+                  <tr className="border-b"><td className="p-2">Gallenblase (GB)</td><td className="p-2">14,6</td><td className="p-2">Fettverdauung</td><td className="p-2">GB-34 (Yanglingquan)</td></tr>
+                  <tr><td className="p-2">Leber (LE)</td><td className="p-2">16,2</td><td className="p-2">Detoxifikation</td><td className="p-2">LE-3 (Taichong)</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           <h2 className="text-2xl font-semibold text-gray-800 mt-8 mb-4">5. Biophysikalische Messverfahren</h2>
 
