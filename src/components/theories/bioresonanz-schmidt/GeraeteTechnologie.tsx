@@ -172,7 +172,7 @@ const GeraeteTechnologie = () => {
                 <strong>Diagnostik-Module:</strong>
                 <ul className="list-disc pl-4 mt-1">
                   <li>Automatischer Frequenz-Scan</li>
-                  <li>Pathogen-Datenbank (>10.000 Einträge)</li>
+                  <li>Pathogen-Datenbank (&gt;10.000 Einträge)</li>
                   <li>Harmonische Analyse</li>
                   <li>Verlaufsdokumentation</li>
                 </ul>
