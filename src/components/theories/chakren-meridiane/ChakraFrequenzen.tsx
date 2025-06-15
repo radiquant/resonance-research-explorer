@@ -1,148 +1,276 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Atom, Music2, Waves, Star } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ChakraFrequenzen = () => {
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <Card>
+    <div className="space-y-6">
+      <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-2xl text-center text-blue-800">
-            Präzise Chakra-Frequenzen und Berechnungen
+          <CardTitle className="text-2xl text-white flex items-center gap-2">
+            <Atom className="h-6 w-6" />
+            Präzise Chakra-Frequenzen und Anwendungen
           </CardTitle>
         </CardHeader>
-        <CardContent className="prose prose-lg max-w-none">
+        <CardContent className="text-white space-y-6">
           
-          <h3 className="text-xl font-semibold text-gray-800 mt-6 mb-3">Mathematisch Berechnete Chakra-Frequenzen</h3>
-
-          <div className="bg-red-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">1. Muladhara (Wurzel-Chakra) - Präzise Berechnungen:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-red-400 my-3">
-              <strong>Grundfrequenz (Note C):</strong><br/>
-              f₁ = 261,626 Hz (C4, wissenschaftlich exakt)<br/>
-              Anatomische Berechnung: f = c/λ, λ = 4×L_becken = 4×0,32m<br/>
-              f = 343 m/s / 1,28 m = 268,0 Hz (akustische Resonanz)<br/><br/>
-              <strong>Planetenfrequenz-Ableitung:</strong><br/>
-              f_erde = 2π × (Erdumfang/86400s) / 2^n<br/>
-              f_erde = 194,18 Hz (Earth Day, n=18 Oktaven)<br/><br/>
-              <strong>Solfeggio-Korrelation:</strong><br/>
-              396 Hz = 3 × 132 Hz (Grundharmonische)<br/>
-              Verhältnis: 396/194,18 = 2,04 ≈ 2 (Oktav-Verwandtschaft)<br/><br/>
-              <strong>Binaural Beat Optimierung:</strong><br/>
-              Δf = 7,83 Hz (Schumann-Resonanz)<br/>
-              f_links = 194,18 Hz, f_rechts = 201,01 Hz<br/><br/>
-              <strong>Kristall-Resonanz (Hämatit):</strong><br/>
-              f_kristall = v_schall_hämatit / λ_gitter<br/>
-              v = 4200 m/s, λ = 2,1 nm → f = 2,0 THz (Infrarot)
+          <div className="bg-red-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3">Wurzelchakra (Muladhara) - Überlebenstrieb</h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-red-300 mb-2">Primärfrequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>194.18 Hz:</strong> Erdfrequenz (Platonisches Jahr)</li>
+                    <li><strong>256.0 Hz:</strong> C4 - Grundton der Stabilität</li>
+                    <li><strong>396.0 Hz:</strong> Solfeggio - Angstauflösung</li>
+                    <li><strong>126.22 Hz:</strong> Sonnenfrequenz (64 Oktaven)</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-red-300 mb-2">Therapeutische Anwendung:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Trauma-Heilung:</strong> 194.18 Hz, 15 Min täglich</li>
+                    <li><strong>Erdungs-Ritual:</strong> 7.83 Hz + 194.18 Hz</li>
+                    <li><strong>Existenzängste:</strong> 396.0 Hz, 2x täglich</li>
+                    <li><strong>Immunsystem:</strong> 256.0 Hz + 528.0 Hz</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-red-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Optimale Zeiten:</strong> Sonnenaufgang (6-7 Uhr), nach körperlicher Aktivität</p>
+                <p className="text-sm"><strong>Körperposition:</strong> Sitzend auf dem Boden, direkter Erdkontakt</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-orange-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">2. Svadhisthana (Sakral-Chakra) - Wissenschaftliche Ableitung:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-orange-400 my-3">
-              <strong>Grundfrequenz (Note D):</strong><br/>
-              f₂ = 293,665 Hz (D4, temperierte Stimmung)<br/>
-              Verhältnis zu Muladhara: 293,665/261,626 = 1,1225 ≈ 9/8 (große Sekunde)<br/><br/>
-              <strong>Anatomische Resonanz (Beckenbereich):</strong><br/>
-              L_sakral = 0,28 m (Kreuzbeinhöhe)<br/>
-              f = v_körperschall / (4×L) = 1540 m/s / 1,12 m = 1375 Hz<br/>
-              Heruntergerechnet auf Hörbereich: 1375/2^2 = 343,75 Hz<br/><br/>
-              <strong>Hormonelle Korrelation:</strong><br/>
-              Testosteron-Zyklus: 28 Tage → f = 1/(28×24×3600) = 4,13×10⁻⁷ Hz<br/>
-              Hochskaliert: 4,13×10⁻⁷ × 2^27 = 55,4 Hz (Subharmonische)<br/><br/>
-              <strong>Wasserfrequenz-Modell:</strong><br/>
-              Körper 60% Wasser, H₂O-Bending: 1595 cm⁻¹<br/>
-              f_wasser = 1595 × c/100 = 4,78×10¹³ Hz<br/>
-              Biologische Modulation: f_bio = f_wasser × 10⁻¹¹ = 478 Hz
+          <div className="bg-orange-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3">Sakralchakra (Svadhisthana) - Kreativität & Sexualität</h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-orange-300 mb-2">Kernfrequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>210.42 Hz:</strong> Synodischer Mond</li>
+                    <li><strong>288.0 Hz:</strong> D4 - Emotionale Fluidität</li>
+                    <li><strong>417.0 Hz:</strong> Solfeggio - Situationsveränderung</li>
+                    <li><strong>221.23 Hz:</strong> Venus - Sinnlichkeit</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-orange-300 mb-2">Spezifische Protokolle:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Kreativitäts-Boost:</strong> 288 + 432 Hz (Quinte)</li>
+                    <li><strong>Hormon-Balance:</strong> 210.42 Hz, Vollmond</li>
+                    <li><strong>Beziehungs-Heilung:</strong> 417 + 639 Hz</li>
+                    <li><strong>Fruchtbarkeit:</strong> 221.23 Hz, 28-Tage-Zyklus</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-orange-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Mondphasen-Synchronisation:</strong> Neumond (Reinigung), Vollmond (Aktivierung)</p>
+                <p className="text-sm"><strong>Wasserelement:</strong> Bei fließendem Wasser oder im Bad anwenden</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-yellow-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">3. Manipura (Solarplexus) - Energetische Berechnungen:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-yellow-400 my-3">
-              <strong>Grundfrequenz (Note E):</strong><br/>
-              f₃ = 329,628 Hz (E4, mathematisch exakt)<br/>
-              Goldener Schnitt zu Muladhara: 329,628/261,626 = 1,26 ≈ φ/2<br/><br/>
-              <strong>Solarkonstante-Ableitung:</strong><br/>
-              S = 1361 W/m² (Solarkonstante)<br/>
-              λ_max = 2,898×10⁻³/5778 = 501 nm (Wien'sches Gesetz)<br/>
-              f_solar = c/λ = 5,99×10¹⁴ Hz<br/>
-              Biologische Skalierung: f_bio = f_solar × 10⁻¹² × 2^(-10) = 584 Hz<br/><br/>
-              <strong>DNA-Resonanz (528 Hz Herleitung):</strong><br/>
-              528 Hz = 2⁹ × (33/64) Hz = 512 × 1,03125 Hz<br/>
-              Mathematische Perfektion: 528 = 16 × 33 = 2⁴ × 3 × 11
+          <div className="bg-yellow-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3">Solarplexus (Manipura) - Persönliche Macht</h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-yellow-300 mb-2">Macht-Frequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>528.0 Hz:</strong> DNA-Reparatur, Selbstheilung</li>
+                    <li><strong>324.0 Hz:</strong> E4 - Willenskraft</li>
+                    <li><strong>182.0 Hz:</strong> Jupiter - Expansion</li>
+                    <li><strong>126.22 Hz:</strong> Sonne - Vitalität</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-yellow-300 mb-2">Anwendungsbereiche:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Selbstvertrauen:</strong> 528 + 741 Hz</li>
+                    <li><strong>Verdauungsstörungen:</strong> 324 Hz, vor Mahlzeiten</li>
+                    <li><strong>Entscheidungsfindung:</strong> 182 Hz, 10 Min</li>
+                    <li><strong>Burn-out-Prävention:</strong> 126.22 + 432 Hz</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-yellow-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Sonnenrhythmus:</strong> Mittags (12-14 Uhr) für maximale Wirkung</p>
+                <p className="text-sm"><strong>Feuer-Element:</strong> Bei Kerzenlicht oder Sonnenschein</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-green-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">4. Anahata (Herz-Chakra) - Kardiovaskuläre Resonanz:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-green-400 my-3">
-              <strong>Grundfrequenz (Note F):</strong><br/>
-              f₄ = 349,228 Hz (F4, exakte Berechnung)<br/><br/>
-              <strong>Herzfrequenz-Harmonie:</strong><br/>
-              Ruhepuls: 60 bpm = 1 Hz<br/>
-              Harmonische: 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 Hz<br/>
-              Herzchakra liegt bei 8. Harmonische × 43,65 = 349,2 Hz<br/><br/>
-              <strong>HRV-Spektralanalyse:</strong><br/>
-              VLF: 0,003-0,04 Hz (Thermoregulation)<br/>
-              LF: 0,04-0,15 Hz (Sympathikus)<br/>
-              HF: 0,15-0,4 Hz (Parasympathikus)<br/>
-              Kohärenz-Frequenz: 0,1 Hz × 2^12 = 409,6 Hz
+          <div className="bg-green-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <Music2 className="h-5 w-5" />
+              Herzchakra (Anahata) - Bedingungslose Liebe
+            </h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-green-300 mb-2">Liebes-Frequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>341.3 Hz:</strong> F4 - Herzrhythmus (1.15 Hz × 297)</li>
+                    <li><strong>639.0 Hz:</strong> Solfeggio - Beziehungen</li>
+                    <li><strong>341.3 Hz:</strong> Venus-Rotation</li>
+                    <li><strong>136.1 Hz:</strong> OM-Ton (Erdenjahr)</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-green-300 mb-2">Heilungsprotokoll:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Herzschmerz:</strong> 639 → 341.3 Hz Übergang</li>
+                    <li><strong>Herz-Kohärenz:</strong> 0.1 Hz × 4096 = 409.6 Hz</li>
+                    <li><strong>Mitgefühl-Training:</strong> 136.1 + 341.3 Hz</li>
+                    <li><strong>Vergebung:</strong> 528 + 639 + 852 Hz</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-green-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Herz-Rhythmus-Synchronisation:</strong> 4-4-4-4 Atemtechnik während Anwendung</p>
+                <p className="text-sm"><strong>Grüne Farbe:</strong> Visualisierung verstärkt die Wirkung</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-blue-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">5. Vishuddha (Hals-Chakra) - Akustische Resonanz:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-blue-400 my-3">
-              <strong>Grundfrequenz (Note G):</strong><br/>
-              f₅ = 391,995 Hz (G4, physikalisch berechnet)<br/><br/>
-              <strong>Stimmband-Resonanz:</strong><br/>
-              Männliche Stimme: 85-180 Hz (Grundfrequenz)<br/>
-              Weibliche Stimme: 165-265 Hz<br/>
-              Formant F1: 270-730 Hz, F2: 840-2290 Hz<br/>
-              Chakra-Mittelwert: (270+730)/2 × 0,78 = 390 Hz<br/><br/>
-              <strong>Kehlkopf-Anatomie:</strong><br/>
-              Länge der Stimmlippen: 17-24 mm<br/>
-              Schallgeschwindigkeit in Gewebe: 1540 m/s<br/>
-              f = v/(4×L) = 1540/(4×0,021) = 18.333 Hz<br/>
-              Harmonische × 0,021 = 385 Hz (sehr nahe am Chakra-Wert)
+          <div className="bg-blue-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3">Halschakra (Vishuddha) - Wahrheit & Kommunikation</h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-blue-300 mb-2">Kommunikations-Frequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>741.0 Hz:</strong> Solfeggio - Selbstausdruck</li>
+                    <li><strong>384.0 Hz:</strong> G4 - Stimmband-Resonanz</li>
+                    <li><strong>141.27 Hz:</strong> Merkur - Kommunikation</li>
+                    <li><strong>192.0 Hz:</strong> C3 - Grundbass</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-blue-300 mb-2">Therapeutische Anwendung:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Stimmstörungen:</strong> 384 Hz + Summen</li>
+                    <li><strong>Wahrheitsfindung:</strong> 741 Hz vor Gesprächen</li>
+                    <li><strong>Schilddrüse:</strong> 141.27 Hz, 2x täglich</li>
+                    <li><strong>Halsschmerzen:</strong> 192 + 384 Hz gargelnd</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-blue-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Stimmaktivierung:</strong> Vor Präsentationen, Gesang oder wichtigen Gesprächen</p>
+                <p className="text-sm"><strong>Blaues Licht:</strong> LED-Therapie verstärkt Kehlkopf-Resonanz</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-indigo-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">6. Ajna (Drittes Auge) - Neuronale Oszillationen:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-indigo-400 my-3">
-              <strong>Grundfrequenz (Note A):</strong><br/>
-              f₆ = 440,000 Hz (A4, internationale Standardstimmung)<br/><br/>
-              <strong>Gehirnwellen-Korrelation:</strong><br/>
-              Gamma-Wellen: 30-100 Hz (Bewusstsein)<br/>
-              40 Hz (Binding-Problem) × 11 = 440 Hz (exakte Übereinstimmung)<br/><br/>
-              <strong>Zirbeldrüsen-Resonanz:</strong><br/>
-              Melatonin-Rhythmus: 24h = 1,16×10⁻⁵ Hz<br/>
-              Serotonin → Melatonin Konversion<br/>
-              Molekulare Schwingung: 10¹² Hz<br/>
-              Biologische Herunterskalierung: 10¹² × 4,4×10⁻¹⁰ = 440 Hz
+          <div className="bg-indigo-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <Waves className="h-5 w-5" />
+              Stirnchakra (Ajna) - Intuition & Klarheit
+            </h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-indigo-300 mb-2">Bewusstseins-Frequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>852.0 Hz:</strong> Solfeggio - Geistige Ordnung</li>
+                    <li><strong>426.7 Hz:</strong> A4 - Kosmische Oktave</li>
+                    <li><strong>183.58 Hz:</strong> Jupiter - Weisheit</li>
+                    <li><strong>40.0 Hz:</strong> Gamma - Höhere Bewusstseinszustände</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-indigo-300 mb-2">Meditations-Protokolle:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Zirbeldrüse-Aktivierung:</strong> 852 + 40 Hz</li>
+                    <li><strong>Astralprojektion:</strong> 426.7 Hz, 30 Min</li>
+                    <li><strong>Intuitions-Training:</strong> 183.58 Hz täglich</li>
+                    <li><strong>Klarträumen:</strong> 40 Hz vor dem Schlafen</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-indigo-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Dunkelheit erforderlich:</strong> Melatonin-Produktion für Zirbeldrüse</p>
+                <p className="text-sm"><strong>Binaurale Beats:</strong> 40 Hz ± 10 Hz für Gamma-Entrainment</p>
+              </div>
             </div>
           </div>
 
-          <div className="bg-purple-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold text-gray-800 mb-2">7. Sahasrara (Kronen-Chakra) - Bewusstseins-Frequenz:</h4>
-            <div className="bg-white p-3 rounded border-l-4 border-purple-400 my-3">
-              <strong>Grundfrequenz (Note H/B):</strong><br/>
-              f₇ = 493,883 Hz (H4/B4, reine Stimmung)<br/><br/>
-              <strong>Schumann-Resonanz-Korrelation:</strong><br/>
-              7,83 Hz × 2^6 = 501,12 Hz (sehr nahe am Chakra-Wert)<br/>
-              Kosmische Verbindung über Erd-Ionosphären-Resonanz<br/><br/>
-              <strong>Bewusstseins-Bindung:</strong><br/>
-              Gamma-Synchronisation: 40 Hz<br/>
-              Höhere Harmonische: 40 × 12,35 = 494 Hz<br/>
-              Fibonacci-Verhältnis in Bewusstseins-Zuständen<br/><br/>
-              <strong>Quantenbewusstsein (Penrose-Hameroff):</strong><br/>
-              Mikrotubuli-Schwingung: 5×10¹¹ Hz<br/>
-              Orchestrierte Reduktion: 5×10¹¹ × 10⁻⁹ = 500 Hz
+          <div className="bg-purple-500/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3 flex items-center gap-2">
+              <Star className="h-5 w-5" />
+              Kronenchakra (Sahasrara) - Spirituelle Verbindung
+            </h3>
+            <div className="bg-black/20 p-3 rounded space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-purple-300 mb-2">Transzendenz-Frequenzen:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>963.0 Hz:</strong> Solfeggio - Göttliche Verbindung</li>
+                    <li><strong>480.0 Hz:</strong> H4 - Kronenton</li>
+                    <li><strong>7.83 Hz:</strong> Schumann-Resonanz</li>
+                    <li><strong>108.0 Hz:</strong> Heiliger OM-Ton</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-purple-300 mb-2">Erleuchtungs-Praxis:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li><strong>Samadhi-Zustand:</strong> 963 Hz, 1+ Stunden</li>
+                    <li><strong>Kosmisches Bewusstsein:</strong> 7.83 + 480 Hz</li>
+                    <li><strong>Mantra-Verstärkung:</strong> 108 Hz mit AUM</li>
+                    <li><strong>Energieübertragung:</strong> 963 Hz, Gruppe</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="bg-purple-800/30 p-2 rounded">
+                <p className="text-sm"><strong>Gipfel-Erfahrungen:</strong> Nur bei tiefer Meditation und spiritueller Praxis</p>
+                <p className="text-sm"><strong>Schutzmaßnahmen:</strong> Erdung nach Kronenchakra-Arbeit essentiell</p>
+              </div>
             </div>
           </div>
 
+          <div className="bg-slate-600/20 p-4 rounded-lg">
+            <h3 className="text-xl font-semibold mb-3">Chakra-Balancing-Sequenzen</h3>
+            <div className="space-y-4">
+              <div className="bg-black/20 p-3 rounded">
+                <h4 className="font-semibold mb-2">Vollständige Chakra-Harmonisierung (60 Min):</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1 text-sm">
+                    <p><strong>1. Reinigung (10 Min):</strong> 174 Hz - Blockaden lösen</p>
+                    <p><strong>2. Wurzel (8 Min):</strong> 194.18 + 256 Hz</p>
+                    <p><strong>3. Sakral (7 Min):</strong> 210.42 + 288 Hz</p>
+                    <p><strong>4. Solar (8 Min):</strong> 324 + 528 Hz</p>
+                  </div>
+                  <div className="space-y-1 text-sm">
+                    <p><strong>5. Herz (10 Min):</strong> 341.3 + 639 Hz</p>
+                    <p><strong>6. Hals (7 Min):</strong> 384 + 741 Hz</p>
+                    <p><strong>7. Stirn (8 Min):</strong> 426.7 + 852 Hz</p>
+                    <p><strong>8. Krone (12 Min):</strong> 480 + 963 Hz</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-black/20 p-3 rounded">
+                <h4 className="font-semibold mb-2">Schnell-Balancing (15 Min):</h4>
+                <p className="text-sm">Alle Chakra-Grundtöne gleichzeitig: 194, 210, 324, 341, 384, 427, 480 Hz</p>
+                <p className="text-sm">Verstärkung durch Solfeggio-Overlay: 396, 417, 528, 639, 741, 852, 963 Hz</p>
+              </div>
+            </div>
+          </div>
+
+          <Alert className="bg-amber-500/20 border-amber-500/50">
+            <Star className="h-4 w-4" />
+            <AlertDescription className="text-white">
+              <strong>Wichtiger Sicherheitshinweis:</strong> Chakra-Frequenzen können intensive energetische 
+              Reaktionen auslösen. Beginnen Sie mit kurzen Sitzungen (5-10 Min) und niedriger Lautstärke. 
+              Trinken Sie viel Wasser und erden Sie sich nach der Anwendung.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     </div>
