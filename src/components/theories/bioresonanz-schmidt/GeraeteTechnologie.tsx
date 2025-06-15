@@ -37,7 +37,7 @@ const GeraeteTechnologie = () => {
                   <li><strong>Ausgangsleistung:</strong> 0,1-10 mW einstellbar</li>
                   <li><strong>Impedanz:</strong> 50 Ω / 75 Ω schaltbar</li>
                   <li><strong>Modulationen:</strong> AM (0,1-100 Hz), FM (±10 Hz)</li>
-                  <li><strong>Rauschunterdrückung:</strong> {'>'}60 dB</li>
+                  <li><strong>Rauschunterdrückung:</strong> &gt;60 dB</li>
                   <li><strong>Steuerung:</strong> 32-Bit Mikrocontroller</li>
                 </ul>
               </div>
@@ -58,7 +58,7 @@ const GeraeteTechnologie = () => {
                     <ul className="list-disc pl-4 mt-1">
                       <li>λ/4 Monopol bei Grundfrequenz</li>
                       <li>Automatische Anpassung 0,1 Hz - 10 MHz</li>
-                      <li>SWR {'<'} 1,2 über gesamten Bereich</li>
+                      <li>SWR &lt; 1,2 über gesamten Bereich</li>
                       <li>Abstrahlcharakteristik: Rundstrahl</li>
                     </ul>
                   </div>
@@ -78,8 +78,8 @@ const GeraeteTechnologie = () => {
                 <h4 className="font-semibold mb-2">Resonanz-Detektion:</h4>
                 <div className="font-mono text-sm space-y-1">
                   <div><strong>Reflexionsfaktor:</strong> Γ = (Z_L - Z_0)/(Z_L + Z_0)</div>
-                  <div><strong>Resonanz-Kriterium:</strong> |Γ| {'<'} 0,1 (SWR {'<'} 1,22)</div>
-                  <div><strong>Phasen-Messung:</strong> Genauigkeit ±0,1° bei f {'>'} 1 MHz</div>
+                  <div><strong>Resonanz-Kriterium:</strong> |Γ| &lt; 0,1 (SWR &lt; 1,22)</div>
+                  <div><strong>Phasen-Messung:</strong> Genauigkeit ±0,1° bei f &gt; 1 MHz</div>
                   <div><strong>Amplituden-Stabilität:</strong> ±0,1 dB über Temperaturbereich</div>
                 </div>
               </div>

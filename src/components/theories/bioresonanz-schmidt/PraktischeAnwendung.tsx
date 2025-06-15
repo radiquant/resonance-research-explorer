@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, Clock, Target, Zap } from "lucide-react";
@@ -145,7 +144,7 @@ const PraktischeAnwendung = () => {
           <div className="bg-yellow-500/20 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-2">Relative Kontraindikationen:</h3>
             <ul className="list-disc pl-6 space-y-1">
-              <li>Hohes Fieber (>38,5°C)</li>
+              <li>Hohes Fieber (&gt;38,5°C)</li>
               <li>Akute Infektionen</li>
               <li>Starke Medikation (besonders Psychopharmaka)</li>
               <li>Metallimplantate im Behandlungsbereich</li>
