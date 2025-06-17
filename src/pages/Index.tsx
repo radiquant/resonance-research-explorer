@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,7 @@ import WellengenetikGarjajev from "@/components/theories/WellengenetikGarjajev";
 import ChakrenMeridiane from "@/components/theories/ChakrenMeridiane";
 import TheorienBroers from "@/components/theories/TheorienBroers";
 import CopenAlgorithmVisualization from "@/components/CopenAlgorithmVisualization";
+import AdvancedTheories from "@/components/theories/AdvancedTheories";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -20,6 +20,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   const theories = [
+    {
+      id: "advanced-theories",
+      title: "Erweiterte Wissenschafts-Theorien",
+      description: "Lakhovsky, Rife, Tesla, Quantentheorie, Holographisches Universum, EMF-Detox",
+      icon: BookOpen,
+      component: AdvancedTheories
+    },
     {
       id: "copen-rate-generator",
       title: "Bruce Copen Raten-Generator",
