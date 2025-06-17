@@ -179,6 +179,98 @@ const TeslaTechnologies = () => {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-indigo-300">Authentische Tesla-Frequenzen</h3>
+              <div className="space-y-3">
+                <div className="bg-indigo-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-indigo-200">Heilungsfrequenzen (Hz)</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>Zellregeneration:</strong> 1.19, 7.83, 23.49 Hz</div>
+                    <div><strong>Nervensystem:</strong> 11.79, 35.37, 106.11 Hz</div>
+                    <div><strong>Herz-Kreislauf:</strong> 47.16, 141.48, 424.44 Hz</div>
+                    <div><strong>Immunsystem:</strong> 82.3, 246.9, 740.7 Hz</div>
+                    <div><strong>Hormondrüsen:</strong> 194.18, 582.54 Hz</div>
+                    <div><strong>Chakra-Harmonisierung:</strong> 3.5, 7, 14, 28 Hz</div>
+                  </div>
+                </div>
+                
+                <div className="bg-indigo-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-indigo-200">Erd-Resonanzen</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>Schumann-Grundfrequenz:</strong> 7.83 Hz</div>
+                    <div><strong>2. Harmonische:</strong> 14.3 Hz</div>
+                    <div><strong>3. Harmonische:</strong> 20.8 Hz</div>
+                    <div><strong>4. Harmonische:</strong> 27.3 Hz</div>
+                    <div><strong>Tesla-Modifikation:</strong> 11.79 Hz</div>
+                    <div><strong>Healing-Frequenz:</strong> 1.19 Hz</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-orange-300">Experimentelle Anordnungen</h3>
+              <div className="space-y-3">
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Colorado Springs Experimente</h4>
+                  <p className="text-gray-300 text-sm">
+                    Spulenhöhe: 61 Meter<br/>
+                    Resonanzfrequenz: 150 kHz<br/>
+                    Maximale Spannung: 12 MV<br/>
+                    Reichweite: 42 km (dokumentiert)
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Wardenclyffe-Turm</h4>
+                  <p className="text-gray-300 text-sm">
+                    Turmhöhe: 57 Meter<br/>
+                    Kupferkugel: 20 Meter Durchmesser<br/>
+                    Erdung: 36 Meter tief<br/>
+                    Geplante Leistung: 200 kW
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Moderne Reproduktionen</h4>
+                  <p className="text-gray-300 text-sm">
+                    Kapanadze-Generator: COP 5-10<br/>
+                    MEG (Motionless Generator)<br/>
+                    QEG (Quantum Energy Generator)<br/>
+                    Tesla-Switch-Konfigurationen
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="bg-violet-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-violet-200 mb-2">Therapeutische Tesla-Protokolle</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Entgiftung:</strong> 7.83 Hz, 15 Min täglich</div>
+                <div><strong>Zellreparatur:</strong> 1.19 Hz, 30 Min, 3× wöchentlich</div>
+                <div><strong>Immunstärkung:</strong> 82.3 Hz, 20 Min, täglich</div>
+                <div><strong>Nervenheilung:</strong> 11.79 Hz, 25 Min, 2× täglich</div>
+                <div><strong>Anti-Aging:</strong> 194.18 Hz, 15 Min, täglich</div>
+                <div><strong>Meditation:</strong> 3.5-7 Hz, 20-60 Min</div>
+              </div>
+            </div>
+            
+            <div className="bg-emerald-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-emerald-200 mb-2">Bauanleitungen Tesla-Spule</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Primär:</strong> 6-12 Windungen, 10mm² Cu-Rohr</div>
+                <div><strong>Sekundär:</strong> 1000 Windungen, 0.8mm Cu-Draht</div>
+                <div><strong>Kondensator:</strong> 20-100 nF bei 15-30 kV</div>
+                <div><strong>Funkenstrecke:</strong> 3-6mm, Wolfram-Elektroden</div>
+                <div><strong>Topload:</strong> 20-40cm Torus oder Kugel</div>
+                <div><strong>Erdung:</strong> Minimum 2m² Kupferplatte</div>
+              </div>
+            </div>
+          </div>
           
           <div className="mt-6 p-4 bg-indigo-900/30 rounded-lg">
             <h4 className="text-lg font-semibold text-indigo-200 mb-2">Tesla'sche Energie-Gleichung</h4>

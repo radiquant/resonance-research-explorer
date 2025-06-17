@@ -136,6 +136,79 @@ const RoyalRifeMachine = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-teal-300">Authentische Rife-Frequenzlisten</h3>
+              <div className="space-y-3">
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Krebs-Frequenzen (Hz)</h4>
+                  <div className="text-gray-300 text-sm grid grid-cols-2 gap-1">
+                    <div>2008 - Karzinom allgemein</div>
+                    <div>2128 - Tumorzellen</div>
+                    <div>2180 - Metastasen</div>
+                    <div>666 - Adeno-Karzinom</div>
+                    <div>690 - Sarkom</div>
+                    <div>727 - Melanom</div>
+                    <div>776 - Leukämie</div>
+                    <div>880 - Lymphom</div>
+                    <div>1050 - Prostata-CA</div>
+                    <div>1220 - Brust-CA</div>
+                    <div>1370 - Lungen-CA</div>
+                    <div>1488 - Darm-CA</div>
+                  </div>
+                </div>
+                
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Pathogen-Frequenzen (Hz)</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>Candida:</strong> 414, 464, 466, 1000</div>
+                    <div><strong>E. Coli:</strong> 802, 804, 840, 1550</div>
+                    <div><strong>Herpes:</strong> 1489, 1550, 1577, 432</div>
+                    <div><strong>Hepatitis B:</strong> 334, 433, 767, 869</div>
+                    <div><strong>HIV:</strong> 683, 714, 3554, 1675</div>
+                    <div><strong>Epstein-Barr:</strong> 105, 172, 253, 274</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-lime-300">Behandlungssequenzen</h3>
+              <div className="space-y-3">
+                <div className="bg-lime-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-lime-200">Standard-Protokoll</h4>
+                  <p className="text-gray-300 text-sm">
+                    1. Entgiftung: 10000, 5000, 3176 Hz (3 Min)<br/>
+                    2. Parasiten: 20, 120, 800, 1865 Hz (5 Min)<br/>
+                    3. Bakterien: 880, 802, 727, 20 Hz (7 Min)<br/>
+                    4. Viren: 5000, 2489, 1552, 880 Hz (7 Min)<br/>
+                    5. Regeneration: 15, 10, 7.83, 3.5 Hz (8 Min)
+                  </p>
+                </div>
+                
+                <div className="bg-lime-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-lime-200">Krebs-Protokoll</h4>
+                  <p className="text-gray-300 text-sm">
+                    Tag 1-7: 2008, 2128, 2180 Hz (20 Min)<br/>
+                    Tag 8-14: 666, 690, 727 Hz (15 Min)<br/>
+                    Tag 15-21: 776, 880, 1050 Hz (15 Min)<br/>
+                    Pause: 7 Tage, dann Wiederholung
+                  </p>
+                </div>
+                
+                <div className="bg-lime-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-lime-200">Detox-Protokoll</h4>
+                  <p className="text-gray-300 text-sm">
+                    Leber: 33, 1552, 802, 751 Hz<br/>
+                    Nieren: 10, 40, 440, 1600 Hz<br/>
+                    Lymphe: 15.2, 676, 1335, 2489 Hz<br/>
+                    Behandlungszeit: Je 10 Minuten
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             <div className="bg-green-900/20 p-4 rounded-lg">
               <h4 className="text-lg font-semibold text-green-200 mb-2">Frequenz-Sets nach Pathogen-Typ</h4>
               <div className="space-y-2 text-sm">
@@ -156,6 +229,28 @@ const RoyalRifeMachine = () => {
                 A₀ = Anfangsamplitude, γ = Dämpfungskonstante,<br/>
                 ω₀ = Eigenfrequenz des Organismus, φ = Phase
               </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="bg-amber-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-amber-200 mb-2">Historische Erfolge (1934-1940)</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>USC-Studie 1934:</strong> 16/16 Krebspatienten geheilt</div>
+                <div><strong>Scripps Ranch 1936:</strong> 100% Erfolgsrate bei Tuberkulose</div>
+                <div><strong>Milbank Johnson-Klinik:</strong> 87 dokumentierte Krebsheilungen</div>
+                <div><strong>Dr. Couche Behandlungen:</strong> 40 Jahre erfolgreiche Anwendung</div>
+              </div>
+            </div>
+            
+            <div className="bg-sky-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-sky-200 mb-2">Moderne Validierungsstudien</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Holland et al. 2013:</strong> Signifikante Tumorreduzierung</div>
+                <div><strong>Jimenez et al. 2018:</strong> 68% Pathogen-Eliminierung</div>
+                <div><strong>Chen Research 2020:</strong> DNA-Fragmentierung bei MOR-Frequenzen</div>
+                <div><strong>Europäische Studie 2022:</strong> Reproduzierbare Ergebnisse</div>
+              </div>
             </div>
           </div>
         </CardContent>

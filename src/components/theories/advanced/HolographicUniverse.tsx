@@ -196,6 +196,96 @@ const HolographicUniverse = () => {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-teal-300">Holographische Frequenzen</h3>
+              <div className="space-y-3">
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Universelle Harmonien (Hz)</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>432 Hz:</strong> Universelle Grundfrequenz</div>
+                    <div><strong>528 Hz:</strong> Göttliche Frequenz/Liebesfrequenz</div>
+                    <div><strong>7.23 Hz:</strong> Erd-Mond-Resonanz</div>
+                    <div><strong>7.83 Hz:</strong> Schumann-Resonanz</div>
+                    <div><strong>136.1 Hz:</strong> OM-Frequenz (erdrotations-basiert)</div>
+                    <div><strong>194.18 Hz:</strong> Erdfrequenz</div>
+                    <div><strong>221.23 Hz:</strong> Venus-Frequenz</div>
+                    <div><strong>272.2 Hz:</strong> Pluto-Frequenz</div>
+                  </div>
+                </div>
+                
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Kosmische Konstanten-Frequenzen</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>1.616 × 10³⁵ Hz:</strong> Planck-Frequenz (Raum-Zeit-Grenze)</div>
+                    <div><strong>6.24 × 10³⁴ Hz:</strong> Compton-Frequenz (Proton)</div>
+                    <div><strong>1.24 × 10²⁰ Hz:</strong> Gamma-Ray-Burst-Spektrum</div>
+                    <div><strong>2.45 × 10⁹ Hz:</strong> Mikrowellen-Hintergrund</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-violet-300">Holographische Healing-Protokolle</h3>
+              <div className="space-y-3">
+                <div className="bg-violet-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-violet-200">Universelle Harmonisierung</h4>
+                  <p className="text-gray-300 text-sm">
+                    Phase 1: 432 Hz (10 Min) - Grundkalibrierung<br/>
+                    Phase 2: 528 Hz (15 Min) - DNA-Aktivierung<br/>
+                    Phase 3: 7.83 Hz (20 Min) - Erd-Resonanz<br/>
+                    Phase 4: 136.1 Hz (5 Min) - OM-Integration
+                  </p>
+                </div>
+                
+                <div className="bg-violet-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-violet-200">Hologramm-Rekonstruktion</h4>
+                  <p className="text-gray-300 text-sm">
+                    Interferenz-Frequenz: 40 Hz (Gamma-Wellen)<br/>
+                    Carrier-Wave: 10 kHz - 1 MHz<br/>
+                    Modulation: 0.1-10 Hz (Schumann-Bereich)<br/>
+                    Behandlungsdauer: 30-60 Minuten
+                  </p>
+                </div>
+                
+                <div className="bg-violet-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-violet-200">Akasha-Feld-Zugang</h4>
+                  <p className="text-gray-300 text-sm">
+                    Theta-Frequenzen: 4-8 Hz<br/>
+                    Alpha-Brücke: 8-12 Hz<br/>
+                    Delta-Trance: 0.5-4 Hz<br/>
+                    Informations-Download: 10-40 Hz bursts
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="bg-indigo-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-indigo-200 mb-2">Experimentelle Validierung</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>LIGO-Detektionen:</strong> Gravitationswellen bestätigen Raumzeit-Holographie</div>
+                <div><strong>Quantum Error Correction:</strong> Holographische Codes in der Natur</div>
+                <div><strong>Black Hole Information:</strong> Hawking-Paradox durch Holographie gelöst</div>
+                <div><strong>Wormhole-Simulationen:</strong> ER=EPR-Korrespondenz bestätigt</div>
+                <div><strong>Cosmological Tests:</strong> CMB-Anomalien deuten auf 2D-Grenze</div>
+              </div>
+            </div>
+            
+            <div className="bg-emerald-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-emerald-200 mb-2">Praktische Anwendungen</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Consciousness Mapping:</strong> EEG-Holographie für Bewusstseinszustände</div>
+                <div><strong>Distant Healing:</strong> Non-lokale Korrelations-Therapie</div>
+                <div><strong>Memory Enhancement:</strong> Holographische Gedächtnis-Optimierung</div>
+                <div><strong>Pattern Recognition:</strong> Holographische Datenverarbeitung</div>
+                <div><strong>Quantum Communication:</strong> Verschränkungsbasierte Übertragung</div>
+              </div>
+            </div>
+          </div>
           
           <div className="mt-6 p-4 bg-indigo-900/30 rounded-lg">
             <h4 className="text-lg font-semibold text-indigo-200 mb-2">Holographische Fundamental-Gleichung</h4>
@@ -204,7 +294,7 @@ const HolographicUniverse = () => {
             </p>
             <p className="text-gray-300 text-sm">
               Diese holographische Entropie-Gleichung verbindet die Oberflächen-Information (A) 
-              mit dem Volumen-Inhalt über die Planck-Fläche (Aₚ) und Mikrozustände (Ω).
+              mit dem Volumen-Inhalt über die Planck-Fläche (Aₚ) un Mikrozustände (Ω).
             </p>
           </div>
         </CardContent>

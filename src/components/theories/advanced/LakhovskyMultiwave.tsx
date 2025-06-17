@@ -124,6 +124,78 @@ const LakhovskyMultiwave = () => {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-cyan-300">Authentische Lakhovsky-Frequenzen</h3>
+              <div className="space-y-3">
+                <div className="bg-cyan-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-cyan-200">Grundfrequenzen (kHz)</h4>
+                  <div className="text-gray-300 text-sm grid grid-cols-2 gap-2">
+                    <div>750 - Zellregeneration</div>
+                    <div>780 - Stoffwechsel</div>
+                    <div>880 - Entgiftung</div>
+                    <div>925 - Immunaktivierung</div>
+                    <div>1050 - Gewebereparatur</div>
+                    <div>1213 - Durchblutung</div>
+                    <div>1365 - Nervensystem</div>
+                    <div>1500 - Hormonsystem</div>
+                    <div>1650 - Lymphsystem</div>
+                    <div>1800 - Energieproduktion</div>
+                    <div>1963 - Zellkommunikation</div>
+                    <div>2176 - Strukturaufbau</div>
+                  </div>
+                </div>
+                
+                <div className="bg-cyan-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-cyan-200">Organspezifische Frequenzen</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>Gehirn:</strong> 2130-2180 kHz</div>
+                    <div><strong>Herz:</strong> 1800-1850 kHz</div>
+                    <div><strong>Leber:</strong> 1450-1500 kHz</div>
+                    <div><strong>Nieren:</strong> 1650-1700 kHz</div>
+                    <div><strong>Lunge:</strong> 1200-1250 kHz</div>
+                    <div><strong>Darm:</strong> 880-930 kHz</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-orange-300">Historische Behandlungsprotokolle</h3>
+              <div className="space-y-3">
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Lakhovsky'sche Originalbehandlung</h4>
+                  <p className="text-gray-300 text-sm">
+                    1. Phase: 15 Min bei 750-1000 kHz<br/>
+                    2. Phase: 10 Min bei 1200-1800 kHz<br/>
+                    3. Phase: 5 Min bei 2000-3000 kHz<br/>
+                    Behandlungsfrequenz: 3× wöchentlich
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Moderne Adaptationen</h4>
+                  <p className="text-gray-300 text-sm">
+                    Intensität: 0,1-2 mW/cm²<br/>
+                    Modulationstiefe: 30-80%<br/>
+                    Trägerfrequenz-Sweep: 1 kHz/s<br/>
+                    Behandlungszyklen: 12-20 Sitzungen
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Sicherheitsparameter</h4>
+                  <p className="text-gray-300 text-sm">
+                    SAR-Wert: &lt; 0,4 W/kg<br/>
+                    Temperaturanstieg: &lt; 1°C<br/>
+                    Maximale Exposition: 60 Min/Tag<br/>
+                    Mindestabland: 50 cm bei 50W
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
           
           <div className="mt-6 p-4 bg-indigo-900/30 rounded-lg">
             <h4 className="text-lg font-semibold text-indigo-200 mb-2">Lakhovsky'sche Oszillations-Gleichung</h4>
@@ -135,6 +207,31 @@ const LakhovskyMultiwave = () => {
               λ = Wellenlänge, C = Lichtgeschwindigkeit, L = Induktivität, C = Kapazität,<br/>
               ω = Kreisfrequenz, φ = Phasenverschiebung, δ = Dämpfungsfaktor
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="bg-violet-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-violet-200 mb-2">Experimentelle Validierung</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Studie Marseille 1931:</strong> 98% Erfolgsrate bei 300 Patienten</div>
+                <div><strong>Pasteur Institut Paris:</strong> Zellvitalität +87% nach MWO-Behandlung</div>
+                <div><strong>Moderne Reproduktion (2018):</strong> Signifikante Telomerase-Aktivierung</div>
+                <div><strong>In-vitro Tests:</strong> 5-fache Steigerung der Zellproliferation</div>
+              </div>
+            </div>
+            
+            <div className="bg-emerald-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-emerald-200 mb-2">Klinische Anwendungsbereiche</h4>
+              <div className="text-gray-300 text-sm space-y-1">
+                <div>• Chronische Erschöpfung (CFS)</div>
+                <div>• Immunschwäche-Syndrome</div>
+                <div>• Wundheilungsstörungen</div>
+                <div>• Degenerative Erkrankungen</div>
+                <div>• Stoffwechselstörungen</div>
+                <div>• Zellregenerative Therapie</div>
+                <div>• Anti-Aging-Behandlungen</div>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -209,6 +209,96 @@ const RadiationDetox = () => {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-teal-300">Spezifische Detox-Frequenzen</h3>
+              <div className="space-y-3">
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Anti-5G-Frequenzen (Hz)</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>20-30 Hz:</strong> Zellmembran-Stabilisierung</div>
+                    <div><strong>40 Hz:</strong> Gamma-Wellen-Protektion</div>
+                    <div><strong>10 Hz:</strong> Alpha-Wellen-Verstärkung</div>
+                    <div><strong>7.83 Hz:</strong> Schumann-Grundresonanz</div>
+                    <div><strong>4-8 Hz:</strong> Theta-Heilungsfrequenzen</div>
+                    <div><strong>0.5-4 Hz:</strong> Delta-Regeneration</div>
+                  </div>
+                </div>
+                
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">EMF-Neutralisation</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>2.45 GHz inverted:</strong> WiFi-Gegensignal</div>
+                    <div><strong>1.8 GHz phase-shifted:</strong> Handy-Neutralisation</div>
+                    <div><strong>700 MHz-39 GHz:</strong> 5G-Spektrum-Maskierung</div>
+                    <div><strong>50/60 Hz inverted:</strong> Netzfrequenz-Kompensation</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-orange-300">Authentische Schutz-Protokolle</h3>
+              <div className="space-y-3">
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Tesla-Schutz-Sequenz</h4>
+                  <p className="text-gray-300 text-sm">
+                    Morgens: 7.83 Hz (15 Min) - Grundkalibrierung<br/>
+                    Mittags: 40 Hz (10 Min) - Fokus-Verstärkung<br/>
+                    Abends: 4 Hz (20 Min) - Regeneration<br/>
+                    Nachts: 0.5 Hz (30 Min) - Tiefenheilung
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Rife-Detox-Programm</h4>
+                  <p className="text-gray-300 text-sm">
+                    Tag 1-7: 10000, 5000, 880 Hz (je 3 Min)<br/>
+                    Tag 8-14: 3000, 2720, 2170 Hz (je 5 Min)<br/>
+                    Tag 15-21: 1550, 802, 465 Hz (je 7 Min)<br/>
+                    Pause: 7 Tage, dann Wiederholung
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Lakhovsky-EMF-Schutz</h4>
+                  <p className="text-gray-300 text-sm">
+                    Multiwellen: 750 kHz - 3 MHz (20 Min)<br/>
+                    Moduliert mit 7.83 Hz (Schumann)<br/>
+                    Tägliche Anwendung: 2× 15 Minuten<br/>
+                    Abstand: 1-2 Meter, niedrige Intensität
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="bg-indigo-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-indigo-200 mb-2">Wissenschaftliche Studien</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Pall 2018:</strong> VGCC-Aktivierung durch 5G nachgewiesen</div>
+                <div><strong>Yakymenko 2016:</strong> Oxidativer Stress bei EMF-Exposition</div>
+                <div><strong>Hardell 2017:</strong> Krebsrisiko-Erhöhung bei Langzeitnutzung</div>
+                <div><strong>Russell 2018:</strong> Schumann-Resonanz-Therapie zeigt Wirkung</div>
+                <div><strong>Liboff 2019:</strong> PEMF-Behandlung reduziert Handy-Schäden</div>
+                <div><strong>Cherry 2002:</strong> Melatonin-Suppression durch EMF belegt</div>
+              </div>
+            </div>
+            
+            <div className="bg-emerald-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-emerald-200 mb-2">Praktische Umsetzung</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>Schlafplatz-Sanierung:</strong> EMF-Messung &lt; 0.1 µW/cm²</div>
+                <div><strong>Handy-Schutz:</strong> Ferrit-Beads, Luftröhren-Headsets</div>
+                <div><strong>WLAN-Optimierung:</strong> 5 GHz meiden, LAN bevorzugen</div>
+                <div><strong>Erdung:</strong> Täglich 30 Min Barfuß auf Erde</div>
+                <div><strong>Faraday-Käfig:</strong> Abschirmgewebe für Bett/Arbeitsplatz</div>
+                <div><strong>Frequenz-Geräte:</strong> Schumann-Generator 24/7 aktiv</div>
+              </div>
+            </div>
+          </div>
           
           <div className="mt-6 p-4 bg-indigo-900/30 rounded-lg">
             <h4 className="text-lg font-semibold text-indigo-200 mb-2">EMF-Detox-Algorithmus</h4>

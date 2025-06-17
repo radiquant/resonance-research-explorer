@@ -204,6 +204,96 @@ const QuantentheorieAdvanced = () => {
               </div>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-teal-300">Quantenheilungs-Frequenzen</h3>
+              <div className="space-y-3">
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Solfeggio-Quantenfrequenzen (Hz)</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>174 Hz:</strong> Quantenschmerz-Linderung</div>
+                    <div><strong>285 Hz:</strong> Zell-Quantenreparatur</div>
+                    <div><strong>396 Hz:</strong> Angst-Frequenz-Auflösung</div>
+                    <div><strong>417 Hz:</strong> Trauma-Quantenheilung</div>
+                    <div><strong>528 Hz:</strong> DNA-Reparatur-Frequenz</div>
+                    <div><strong>639 Hz:</strong> Beziehungs-Harmonisierung</div>
+                    <div><strong>741 Hz:</strong> Bewusstseins-Erweiterung</div>
+                    <div><strong>852 Hz:</strong> Intuitions-Aktivierung</div>
+                    <div><strong>963 Hz:</strong> Göttliche Verbindung</div>
+                  </div>
+                </div>
+                
+                <div className="bg-teal-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-teal-200">Planck-Frequenzen</h4>
+                  <div className="text-gray-300 text-sm space-y-1">
+                    <div><strong>1.855 × 10⁴³ Hz:</strong> Planck-Frequenz</div>
+                    <div><strong>4.34 × 10¹⁴ Hz:</strong> Rotes Licht (700 nm)</div>
+                    <div><strong>7.5 × 10¹⁴ Hz:</strong> Violettes Licht (400 nm)</div>
+                    <div><strong>2.42 × 10²³ Hz:</strong> Compton-Frequenz (Elektron)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-orange-300">Experimentelle Quanteneffekte</h3>
+              <div className="space-y-3">
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Josephson-Effekt</h4>
+                  <p className="text-gray-300 text-sm">
+                    Frequenz: f = 2eV/h = 483.6 MHz/µV<br/>
+                    Supraleitende Quanteninterferenz<br/>
+                    SQUID-Magnetometer: 10⁻¹⁸ T Sensitivität
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Quantum Dots</h4>
+                  <p className="text-gray-300 text-sm">
+                    Größen-abhängige Bandlücke<br/>
+                    2-10 nm Durchmesser<br/>
+                    Emission: 400-700 nm abstimmbar
+                  </p>
+                </div>
+                
+                <div className="bg-orange-900/20 p-3 rounded">
+                  <h4 className="font-semibold text-orange-200">Quantenteleportation</h4>
+                  <p className="text-gray-300 text-sm">
+                    Fidelity: 98-99.9%<br/>
+                    Maximale Distanz: 1400 km (Satelliten)<br/>
+                    No-Cloning-Theorem verifiziert
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            <div className="bg-indigo-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-indigo-200 mb-2">Therapeutische Quantenprotokolle</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>DNA-Reparatur:</strong> 528 Hz, 20 Min, 2× täglich</div>
+                <div><strong>Zellregeneration:</strong> 285 Hz, 30 Min, täglich</div>
+                <div><strong>Immunstärkung:</strong> 741 Hz, 15 Min, 3× wöchentlich</div>
+                <div><strong>Trauma-Heilung:</strong> 417 Hz, 25 Min, bei Bedarf</div>
+                <div><strong>Bewusstseinserweiterung:</strong> 963 Hz, 40 Min, 1× wöchentlich</div>
+                <div><strong>Quantenkohärenz:</strong> 432 Hz, 60 Min, Meditation</div>
+              </div>
+            </div>
+            
+            <div className="bg-purple-900/20 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-purple-200 mb-2">Quantenmesstechnik</h4>
+              <div className="text-gray-300 text-sm space-y-2">
+                <div><strong>EPR-Experimente:</strong> Bell-Ungleichung S ≤ 2 vs S = 2.8</div>
+                <div><strong>Delayed-Choice:</strong> Wheeler's Experiment (retrokausal)</div>
+                <div><strong>Quantum Eraser:</strong> Which-path Information löschbar</div>
+                <div><strong>Schrödinger's Cat:</strong> Makroskopische Superposition</div>
+                <div><strong>GHZ-State:</strong> Drei-Teilchen-Verschränkung</div>
+                <div><strong>Decoherence:</strong> Τ₂ = 1-1000 µs (Festkörper)</div>
+              </div>
+            </div>
+          </div>
           
           <div className="mt-6 p-4 bg-indigo-900/30 rounded-lg">
             <h4 className="text-lg font-semibold text-indigo-200 mb-2">Fundamentale Quantengleichung</h4>
