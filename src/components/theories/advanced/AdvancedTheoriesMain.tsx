@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Zap, Waves, Cpu, Globe, ShieldCheck, Microscope } from 'lucide-react';
+import { Zap, Waves, Cpu, Globe, ShieldCheck, Microscope, Activity } from 'lucide-react';
 
 import LakhovskyMultiwave from './LakhovskyMultiwave';
 import RoyalRifeMachine from './RoyalRifeMachine';
@@ -11,6 +11,7 @@ import TeslaTechnologies from './TeslaTechnologies';
 import QuantentheorieAdvanced from './QuantentheorieAdvanced';
 import HolographicUniverse from './HolographicUniverse';
 import RadiationDetox from './RadiationDetox';
+import ElectroMetaboGraph from './ElectroMetaboGraph';
 
 const AdvancedTheoriesMain = () => {
   const [activeTab, setActiveTab] = useState("lakhovsky");
@@ -63,6 +64,14 @@ const AdvancedTheoriesMain = () => {
       icon: ShieldCheck,
       color: "red",
       component: RadiationDetox
+    },
+    {
+      id: "emg",
+      title: "Electro Metabo Graph",
+      subtitle: "Bioelektrische Analyse",
+      icon: Activity,
+      color: "green",
+      component: ElectroMetaboGraph
     }
   ];
 
@@ -91,7 +100,7 @@ const AdvancedTheoriesMain = () => {
       </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 bg-white/10 border-white/20">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 bg-white/10 border-white/20">
           {theories.map((theory) => {
             const Icon = theory.icon;
             return (
