@@ -15,13 +15,17 @@ import {
   FileText,
   AlertCircle,
   CheckCircle,
-  Info
+  Info,
+  Settings,
+  BarChart3,
+  Waves
 } from 'lucide-react';
 
 const ElectroMetaboGraph = () => {
   const [selectedMeasurement, setSelectedMeasurement] = useState<string | null>(null);
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState<string | null>(null);
 
-  // EMG Messwerte und Referenzbereiche
+  // EMG Parameter und Referenzbereiche
   const emgParameters = [
     { name: "Basalstoffwechsel", normal: "1200-1800 kcal/Tag", unit: "kcal", icon: Activity },
     { name: "Zelluläre Respiration", normal: "95-105%", unit: "%", icon: Microscope },
@@ -41,25 +45,151 @@ const ElectroMetaboGraph = () => {
     { range: "10-100 kHz", description: "Hochfrequente Zellsignale", application: "Interzellulär Kommunikation" }
   ];
 
-  // EMG Algorithmen
-  const emgAlgorithms = [
+  // Detaillierte EMG Algorithmen
+  const detailedAlgorithms = [
     {
+      id: "metabolic-index",
       name: "Metabolischer Index (MI)",
       formula: "MI = (VO₂ × RQ × 4.825) / BSA",
-      variables: "VO₂=Sauerstoffverbrauch, RQ=Respiratorischer Quotient, BSA=Körperoberfläche",
-      normalRange: "0.8-1.2"
+      variables: {
+        "VO₂": "Sauerstoffverbrauch (ml/min)",
+        "RQ": "Respiratorischer Quotient (VCO₂/VO₂)",
+        "BSA": "Körperoberfläche (m²)",
+        "4.825": "Kalorischer Äquivalent für gemischte Substrate"
+      },
+      normalRange: "0.8-1.2",
+      calculation: `
+// Metabolischer Index Berechnung
+function calculateMetabolicIndex(vo2, rq, bsa) {
+  const caloricEquivalent = 4.825;
+  const mi = (vo2 * rq * caloricEquivalent) / bsa;
+  return mi;
+}
+
+// Beispiel:
+// VO₂ = 250 ml/min, RQ = 0.85, BSA = 1.8 m²
+// MI = (250 × 0.85 × 4.825) / 1.8 = 569.8 kcal/m²/Tag`
     },
     {
+      id: "bioenergetic-status",
       name: "Bioenergetischer Status (BES)",
       formula: "BES = (ATP/ADP) × Φₘ × log(NAD⁺/NADH)",
-      variables: "Φₘ=Mitochondriales Membranpotential, NAD=Nicotinamid-Adenin-Dinukleotid",
-      normalRange: "2.5-4.0"
+      variables: {
+        "ATP/ADP": "Adenosin-Triphosphat/Diphosphat-Verhältnis",
+        "Φₘ": "Mitochondriales Membranpotential (mV)",
+        "NAD⁺/NADH": "Oxidiertes/Reduziertes Nicotinamid-Adenin-Dinukleotid"
+      },
+      normalRange: "2.5-4.0",
+      calculation: `
+// Bioenergetischer Status Berechnung
+function calculateBioenergeticStatus(atpAdpRatio, membranePotential, nadRatio) {
+  const bes = atpAdpRatio * membranePotential * Math.log10(nadRatio);
+  return bes;
+}
+
+// Beispiel:
+// ATP/ADP = 3.2, Φₘ = -180 mV, NAD⁺/NADH = 700
+// BES = 3.2 × (-180) × log₁₀(700) = 3.2 × (-180) × 2.845 = -1639.68`
     },
     {
+      id: "redox-potential",
       name: "Redox-Potential (RP)",
       formula: "RP = E°' + (RT/nF) × ln([Ox]/[Red])",
-      variables: "E°'=Standard-Redox-Potential, R=Gaskonstante, T=Temperatur, n=Elektronenzahl, F=Faraday-Konstante",
-      normalRange: "-200 bis +50 mV"
+      variables: {
+        "E°'": "Standard-Redoxpotential bei pH 7.0 (mV)",
+        "R": "Universelle Gaskonstante (8.314 J/mol·K)",
+        "T": "Absolute Temperatur (K)",
+        "n": "Anzahl übertragener Elektronen",
+        "F": "Faraday-Konstante (96.485 C/mol)",
+        "[Ox]/[Red]": "Konzentrationsverhältnis oxidiert/reduziert"
+      },
+      normalRange: "-200 bis +50 mV",
+      calculation: `
+// Redox-Potential Berechnung
+function calculateRedoxPotential(standardPotential, temp, electrons, oxRedRatio) {
+  const R = 8.314; // J/mol·K
+  const F = 96485; // C/mol
+  const nernstTerm = (R * temp) / (electrons * F) * Math.log(oxRedRatio);
+  const rp = standardPotential + nernstTerm;
+  return rp;
+}
+
+// Beispiel NAD⁺/NADH System:
+// E°' = -320 mV, T = 310 K, n = 2, [NAD⁺]/[NADH] = 700
+// RP = -320 + (8.314 × 310)/(2 × 96485) × ln(700) = -320 + 84.1 = -235.9 mV`
+    },
+    {
+      id: "cole-cole-model",
+      name: "Cole-Cole-Modell für Zellmembranen",
+      formula: "Z(ω) = R∞ + (R₀ - R∞)/(1 + (jωτ)^α)",
+      variables: {
+        "R₀": "Niedrigfrequenz-Resistanz (Ω)",
+        "R∞": "Hochfrequenz-Resistanz (Ω)",
+        "τ": "Zeitkonstante (s)",
+        "α": "Dispersionsparameter (0 < α ≤ 1)",
+        "ω": "Kreisfrequenz (2πf) (rad/s)"
+      },
+      normalRange: "Frequenzabhängig",
+      calculation: `
+// Cole-Cole-Modell Implementation
+function coleColeImpedance(frequency, r0, rInf, tau, alpha) {
+  const omega = 2 * Math.PI * frequency;
+  const jOmegaTau = Math.pow(omega * tau, alpha);
+  const denominator = 1 + jOmegaTau * Math.cos(alpha * Math.PI / 2) + 
+                     jOmegaTau * Math.sin(alpha * Math.PI / 2) * 1j;
+  const impedance = rInf + (r0 - rInf) / denominator;
+  return impedance;
+}
+
+// Typische Werte für biologisches Gewebe:
+// R₀ = 500 Ω, R∞ = 50 Ω, τ = 10⁻⁶ s, α = 0.8`
+    },
+    {
+      id: "hanai-mixing",
+      name: "Hanai-Mischungstheorie",
+      formula: "εₘ = εₑ × [(1 + 2P × K)/(1 - P × K)]^(3/2)",
+      variables: {
+        "εₘ": "Effektive Permittivität der Mischung",
+        "εₑ": "Permittivität der externen Phase",
+        "P": "Volumenanteil der inneren Phase",
+        "K": "(εᵢ - εₑ)/(εᵢ + 2εₑ)",
+        "εᵢ": "Permittivität der inneren Phase"
+      },
+      normalRange: "Gewebeabhängig",
+      calculation: `
+// Hanai-Mischungstheorie
+function hanaiMixing(epsilonExternal, epsilonInternal, volumeFraction) {
+  const k = (epsilonInternal - epsilonExternal) / 
+            (epsilonInternal + 2 * epsilonExternal);
+  const numerator = 1 + 2 * volumeFraction * k;
+  const denominator = 1 - volumeFraction * k;
+  const epsilonMixture = epsilonExternal * Math.pow(numerator / denominator, 1.5);
+  return epsilonMixture;
+}
+
+// Beispiel Zellsuspension:
+// εₑ = 80 (Wasser), εᵢ = 10 (Zytoplasma), P = 0.3
+// K = (10-80)/(10+160) = -0.412
+// εₘ = 80 × [(1-0.247)/(1+0.124)]^1.5 = 80 × 0.623 = 49.8`
+    }
+  ];
+
+  // Erweiterte physiologische Algorithmen
+  const physiologicalAlgorithms = [
+    {
+      name: "Harris-Benedict BMR (Männer)",
+      formula: "BMR = 88.362 + (13.397 × Gewicht) + (4.799 × Größe) - (5.677 × Alter)",
+      example: "70kg, 175cm, 35 Jahre: BMR = 88.362 + 937.79 + 839.825 - 198.695 = 1667.3 kcal/Tag"
+    },
+    {
+      name: "Harris-Benedict BMR (Frauen)",
+      formula: "BMR = 447.593 + (9.247 × Gewicht) + (3.098 × Größe) - (4.330 × Alter)",
+      example: "60kg, 165cm, 30 Jahre: BMR = 447.593 + 554.82 + 511.17 - 129.9 = 1383.7 kcal/Tag"
+    },
+    {
+      name: "EMG-Korrektur",
+      formula: "BMR_korrigiert = BMR × (1 + (BES - 3.0)/10)",
+      example: "BES = 2.5: BMR_korrigiert = 1667.3 × (1 + (2.5-3.0)/10) = 1667.3 × 0.95 = 1583.9 kcal/Tag"
     }
   ];
 
@@ -73,7 +203,7 @@ const ElectroMetaboGraph = () => {
             Electro-Metabo-Graph (EMG)
           </CardTitle>
           <CardDescription className="text-green-200 text-lg">
-            Bioelektrische Analyse des Zellstoffwechsels und metabolischer Prozesse
+            Bioelektrische Analyse des Zellstoffwechsels mit detaillierten mathematischen Algorithmen
           </CardDescription>
           <div className="flex flex-wrap justify-center gap-2 mt-4">
             <Badge variant="outline" className="bg-green-900/30 border-green-500/50 text-green-200">
@@ -83,25 +213,28 @@ const ElectroMetaboGraph = () => {
               Bioelektrische Messung
             </Badge>
             <Badge variant="outline" className="bg-purple-900/30 border-purple-500/50 text-purple-200">
-              Zellenergetik
+              Mathematische Modellierung
             </Badge>
           </div>
         </CardHeader>
       </Card>
 
       <Tabs defaultValue="grundlagen" className="w-full">
-        <TabsList className="grid w-full grid-cols-6 bg-white/10 border-white/20">
+        <TabsList className="grid w-full grid-cols-7 bg-white/10 border-white/20">
           <TabsTrigger value="grundlagen" className="text-white data-[state=active]:bg-white/20">
             Grundlagen
-          </TabsTrigger>
-          <TabsTrigger value="technologie" className="text-white data-[state=active]:bg-white/20">
-            Technologie
           </TabsTrigger>
           <TabsTrigger value="algorithmen" className="text-white data-[state=active]:bg-white/20">
             Algorithmen
           </TabsTrigger>
+          <TabsTrigger value="formeln" className="text-white data-[state=active]:bg-white/20">
+            Detailformeln
+          </TabsTrigger>
           <TabsTrigger value="messwerte" className="text-white data-[state=active]:bg-white/20">
             Messwerte
+          </TabsTrigger>
+          <TabsTrigger value="signalverarbeitung" className="text-white data-[state=active]:bg-white/20">
+            Signalverarbeitung
           </TabsTrigger>
           <TabsTrigger value="anwendung" className="text-white data-[state=active]:bg-white/20">
             Anwendung
@@ -117,136 +250,70 @@ const ElectroMetaboGraph = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Brain className="h-6 w-6 text-green-400" />
-                Wissenschaftliche Grundlagen des EMG
+                EMG Messprinzip & Funktionalität
               </CardTitle>
             </CardHeader>
             <CardContent className="text-white space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <h4 className="text-xl font-semibold text-green-300">Historische Entwicklung</h4>
-                  <div className="space-y-3 text-sm">
-                    <div className="p-3 bg-green-900/20 rounded border-l-4 border-green-500">
-                      <strong>1920er Jahre:</strong> Erste bioelektrische Messungen durch Hans Berger
-                    </div>
-                    <div className="p-3 bg-blue-900/20 rounded border-l-4 border-blue-500">
-                      <strong>1960er Jahre:</strong> Entwicklung der Bioimpedanz-Analyse
-                    </div>
-                    <div className="p-3 bg-purple-900/20 rounded border-l-4 border-purple-500">
-                      <strong>1980er Jahre:</strong> Erste EMG-Prototypen in Deutschland
-                    </div>
-                    <div className="p-3 bg-yellow-900/20 rounded border-l-4 border-yellow-500">
-                      <strong>2000er Jahre:</strong> Digitalisierung und Computer-Integration
+                  <h4 className="text-xl font-semibold text-green-300">Bioelektrische Impedanz-Analyse (BIA)</h4>
+                  <div className="p-4 bg-green-900/20 rounded-lg border border-green-500/30">
+                    <h5 className="font-semibold text-green-300 mb-3">Grundprinzip:</h5>
+                    <ul className="space-y-2 text-sm text-gray-300">
+                      <li>• <strong>Schwacher Wechselstrom:</strong> 50-800 µA durch den Körper</li>
+                      <li>• <strong>Frequenzbereich:</strong> 0,1 Hz bis 100 kHz</li>
+                      <li>• <strong>Messung:</strong> Resistanz (R) und Reaktanz (X)</li>
+                      <li>• <strong>Impedanz:</strong> Z = √(R² + X²)</li>
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-500/30">
+                    <h5 className="font-semibold text-blue-300 mb-3">Frequenz-abhängige Effekte:</h5>
+                    <div className="space-y-2 text-sm">
+                      {frequencyRanges.map((freq, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span className="font-mono text-blue-200">{freq.range}</span>
+                          <span className="text-gray-300">{freq.application}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-4">
-                  <h4 className="text-xl font-semibold text-blue-300">Physikalische Prinzipien</h4>
+                  <h4 className="text-xl font-semibold text-blue-300">Bioelektrische Grundlagen</h4>
                   <div className="space-y-3">
                     <div className="p-4 bg-white/5 rounded-lg">
-                      <h5 className="font-semibold text-green-300 mb-2">Bioelektrische Impedanz</h5>
+                      <h5 ClassName="font-semibold text-green-300 mb-2">Extrazelluläre Flüssigkeit</h5>
                       <p className="text-sm text-gray-300">
-                        Messung des elektrischen Widerstands biologischer Gewebe zur Bestimmung 
-                        der Zusammensetzung und metabolischen Aktivität von Zellen.
+                        Niedriger Widerstand aufgrund hoher Ionenkonzentration (Na⁺, Cl⁻). 
+                        Dominiert bei niedrigen Frequenzen (< 1 kHz).
                       </p>
                       <div className="mt-2 p-2 bg-green-900/20 rounded font-mono text-xs">
-                        Z = √(R² + X²) wobei R = Resistanz, X = Reaktanz
+                        R_extrazellulär ≈ 50-100 Ω
                       </div>
                     </div>
 
                     <div className="p-4 bg-white/5 rounded-lg">
-                      <h5 className="font-semibold text-blue-300 mb-2">Metabolische Signale</h5>
+                      <h5 className="font-semibold text-blue-300 mb-2">Zellmembranen</h5>
                       <p className="text-sm text-gray-300">
-                        Bioelektrische Aktivität korreliert direkt mit zellulären Stoffwechselprozessen, 
-                        ATP-Synthese und mitochondrialer Funktion.
+                        Hoher Widerstand, Kondensator-Verhalten durch Lipiddoppelschicht. 
+                        Frequenz-abhängige Durchlässigkeit.
                       </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-6 p-4 bg-gradient-to-r from-green-900/20 to-blue-900/20 rounded-lg border border-green-500/30">
-                <h4 className="text-xl font-semibold text-white mb-3">EMG Grundprinzip</h4>
-                <p className="text-gray-200 leading-relaxed">
-                  Der Electro-Metabo-Graph basiert auf der Erkenntnis, dass jede Zelle des menschlichen Körpers 
-                  charakteristische bioelektrische Signale aussendet, die direkt mit ihrem metabolischen Zustand 
-                  korrelieren. Durch präzise Messung dieser Signale können Stoffwechselstörungen, 
-                  Energiedefizite und zelluläre Dysfunktionen frühzeitig erkannt werden.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Technologie */}
-        <TabsContent value="technologie" className="space-y-6">
-          <Card className="bg-white/10 border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Zap className="h-6 w-6 text-yellow-400" />
-                EMG Technologie & Hardware
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-white space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="text-xl font-semibold text-yellow-300">Messaufbau</h4>
-                  <div className="space-y-3">
-                    <div className="p-4 bg-yellow-900/20 rounded-lg border border-yellow-500/30">
-                      <h5 className="font-semibold text-yellow-300 mb-2">Elektroden-System</h5>
-                      <ul className="text-sm space-y-1 text-gray-300">
-                        <li>• 8 Hautelektroden (Hände/Füße)</li>
-                        <li>• Ag/AgCl-Beschichtung</li>
-                        <li>• Impedanz: &lt; 5 kΩ bei 1 kHz</li>
-                        <li>• Automatische Kontaktkontrolle</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-4 bg-blue-900/20 rounded-lg border border-blue-500/30">
-                      <h5 className="font-semibold text-blue-300 mb-2">Messfrequenzen</h5>
-                      <div className="space-y-2 text-sm">
-                        {frequencyRanges.map((freq, index) => (
-                          <div key={index} className="flex justify-between">
-                            <span className="font-mono text-blue-200">{freq.range}</span>
-                            <span className="text-gray-300">{freq.application}</span>
-                          </div>
-                        ))}
+                      <div className="mt-2 p-2 bg-blue-900/20 rounded font-mono text-xs">
+                        C_membran ≈ 1 µF/cm²
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                <div className="space-y-4">
-                  <h4 className="text-xl font-semibold text-green-300">Signalverarbeitung</h4>
-                  <div className="space-y-3">
-                    <div className="p-4 bg-green-900/20 rounded-lg border border-green-500/30">
-                      <h5 className="font-semibold text-green-300 mb-2">ADC-Spezifikationen</h5>
-                      <ul className="text-sm space-y-1 text-gray-300">
-                        <li>• 24-Bit Auflösung</li>
-                        <li>• 1 MHz Sampling-Rate</li>
-                        <li>• SNR: &gt; 120 dB</li>
-                        <li>• THD: &lt; 0.001%</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-4 bg-purple-900/20 rounded-lg border border-purple-500/30">
-                      <h5 className="font-semibold text-purple-300 mb-2">Filter-System</h5>
-                      <ul className="text-sm space-y-1 text-gray-300">
-                        <li>• Hochpass: 0.05 Hz</li>
-                        <li>• Tiefpass: 100 kHz</li>
-                        <li>• Notch: 50/60 Hz</li>
-                        <li>• Adaptive Rauschunterdrückung</li>
-                      </ul>
-                    </div>
-
-                    <div className="p-4 bg-red-900/20 rounded-lg border border-red-500/30">
-                      <h5 className="font-semibold text-red-300 mb-2">Kalibrierung</h5>
-                      <ul className="text-sm space-y-1 text-gray-300">
-                        <li>• Automatische Nullpunkt-Kalibrierung</li>
-                        <li>• Referenz-Impedanz: 500 Ω ±0.1%</li>
-                        <li>• Temperatur-Kompensation</li>
-                        <li>• Tägliche Selbstdiagnose</li>
-                      </ul>
+                    <div className="p-4 bg-white/5 rounded-lg">
+                      <h5 className="font-semibold text-purple-300 mb-2">Intrazelluläre Flüssigkeit</h5>
+                      <p className="text-sm text-gray-300">
+                        Mittlerer Widerstand durch K⁺, Mg²⁺, Proteine. 
+                        Messbar bei hohen Frequenzen (> 50 kHz).
+                      </p>
+                      <div className="mt-2 p-2 bg-purple-900/20 rounded font-mono text-xs">
+                        R_intrazellulär ≈ 200-500 Ω
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -261,12 +328,12 @@ const ElectroMetaboGraph = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Calculator className="h-6 w-6 text-purple-400" />
-                EMG Berechnungs-Algorithmen
+                Hauptalgorithmen des EMG
               </CardTitle>
             </CardHeader>
             <CardContent className="text-white space-y-6">
               <div className="space-y-6">
-                {emgAlgorithms.map((algorithm, index) => (
+                {detailedAlgorithms.slice(0, 3).map((algorithm, index) => (
                   <div key={index} className="p-6 bg-white/5 rounded-lg border border-purple-500/30">
                     <div className="flex items-center justify-between mb-4">
                       <h4 className="text-xl font-semibold text-purple-300">{algorithm.name}</h4>
@@ -285,26 +352,94 @@ const ElectroMetaboGraph = () => {
                       
                       <div className="p-4 bg-blue-900/20 rounded-lg">
                         <h5 className="font-semibold text-blue-200 mb-2">Variablen:</h5>
-                        <p className="text-sm text-gray-300">{algorithm.variables}</p>
+                        <div className="grid gap-2 text-sm">
+                          {Object.entries(algorithm.variables).map(([key, value]) => (
+                            <div key={key} className="flex items-start gap-2">
+                              <span className="font-mono font-semibold text-blue-300 min-w-[4rem]">{key}:</span>
+                              <span className="text-gray-300">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-green-900/20 rounded-lg">
+                        <h5 className="font-semibold text-green-200 mb-2">Berechnung & Beispiel:</h5>
+                        <pre className="text-xs text-gray-300 bg-black/30 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                          {algorithm.calculation}
+                        </pre>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Detailformeln */}
+        <TabsContent value="formeln" className="space-y-6">
+          <Card className="bg-white/10 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Settings className="h-6 w-6 text-cyan-400" />
+                Erweiterte Mathematische Modelle
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-white space-y-6">
+              <div className="space-y-6">
+                {detailedAlgorithms.slice(3).map((algorithm, index) => (
+                  <div key={index} className="p-6 bg-white/5 rounded-lg border border-cyan-500/30">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-xl font-semibold text-cyan-300">{algorithm.name}</h4>
+                      <Badge variant="outline" className="bg-cyan-900/30 border-cyan-500/50 text-cyan-200">
+                        {algorithm.normalRange}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="p-4 bg-cyan-900/20 rounded-lg">
+                        <h5 className="font-semibold text-cyan-200 mb-2">Mathematische Formel:</h5>
+                        <div className="font-mono text-lg text-white bg-black/30 p-3 rounded">
+                          {algorithm.formula}
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-blue-900/20 rounded-lg">
+                        <h5 className="font-semibold text-blue-200 mb-2">Parameter:</h5>
+                        <div className="grid gap-2 text-sm">
+                          {Object.entries(algorithm.variables).map(([key, value]) => (
+                            <div key={key} className="flex items-start gap-2">
+                              <span className="font-mono font-semibold text-blue-300 min-w-[4rem]">{key}:</span>
+                              <span className="text-gray-300">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-4 bg-green-900/20 rounded-lg">
+                        <h5 className="font-semibold text-green-200 mb-2">Implementation & Beispiel:</h5>
+                        <pre className="text-xs text-gray-300 bg-black/30 p-3 rounded overflow-x-auto whitespace-pre-wrap">
+                          {algorithm.calculation}
+                        </pre>
                       </div>
                     </div>
                   </div>
                 ))}
 
-                <div className="p-6 bg-gradient-to-r from-green-900/20 to-purple-900/20 rounded-lg border border-green-500/30">
-                  <h4 className="text-xl font-semibold text-white mb-4">Fourier-Transform-Analyse</h4>
-                  <div className="space-y-3">
-                    <div className="p-3 bg-black/30 rounded font-mono text-sm">
-                      <div className="text-green-300">// EMG Frequenz-Spektrum-Analyse</div>
-                      <div className="text-white mt-2">
-                        X(f) = ∫ x(t) × e^(-j2πft) dt<br/>
-                        PSD(f) = |X(f)|² / T<br/>
-                        Metabolic_Index = Σ PSD(f) × W(f)
+                <div className="p-6 bg-gradient-to-r from-yellow-900/20 to-orange-900/20 rounded-lg border border-yellow-500/30">
+                  <h4 className="text-xl font-semibold text-yellow-300 mb-4">Physiologische Berechnungen</h4>
+                  <div className="space-y-4">
+                    {physiologicalAlgorithms.map((alg, index) => (
+                      <div key={index} className="p-4 bg-white/5 rounded-lg">
+                        <h5 className="font-semibold text-yellow-200 mb-2">{alg.name}</h5>
+                        <div className="font-mono text-sm text-white bg-black/30 p-2 rounded mb-2">
+                          {alg.formula}
+                        </div>
+                        <p className="text-xs text-gray-300">
+                          <strong>Beispiel:</strong> {alg.example}
+                        </p>
                       </div>
-                    </div>
-                    <p className="text-sm text-gray-300">
-                      Wo W(f) die metabolischen Gewichtungsfaktoren für verschiedene Frequenzbereiche darstellt.
-                    </p>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -346,19 +481,35 @@ const ElectroMetaboGraph = () => {
                       
                       {selectedMeasurement === param.name && (
                         <div className="mt-4 p-4 bg-blue-900/20 rounded-lg">
-                          <h5 className="font-semibold text-blue-200 mb-2">Detaillierte Informationen:</h5>
+                          <h5 className="font-semibold text-blue-200 mb-2">Detaillierte Messverfahren:</h5>
                           {param.name === "Basalstoffwechsel" && (
                             <div className="space-y-2 text-sm text-gray-300">
-                              <p>• Harris-Benedict-Formel: BMR = 88.362 + (13.397 × Gewicht) + (4.799 × Größe) - (5.677 × Alter)</p>
-                              <p>• Mifflin-St Jeor: BMR = (10 × Gewicht) + (6.25 × Größe) - (5 × Alter) + 5</p>
-                              <p>• EMG-Korrektur: ±15% basierend auf metabolischer Effizienz</p>
+                              <p>• <strong>Indirekte Kalorimetrie:</strong> VO₂ und VCO₂ Messung über Spirometrie</p>
+                              <p>• <strong>Bioimpedanz-Analyse:</strong> Körperzusammensetzung und Stoffwechselrate</p>
+                              <p>• <strong>EMG-Korrektur:</strong> ±15% basierend auf bioenergetischem Status (BES)</p>
+                              <div className="mt-2 p-2 bg-green-900/20 rounded font-mono text-xs">
+                                BMR_korrigiert = BMR_Harris-Benedict × (1 + (BES - 3.0)/10)
+                              </div>
                             </div>
                           )}
                           {param.name === "Mitochondriale Aktivität" && (
                             <div className="space-y-2 text-sm text-gray-300">
-                              <p>• Gemessen über Cytochrom c Oxidase Aktivität</p>
-                              <p>• Korrelation mit ATP/ADP Verhältnis</p>
-                              <p>• Referenz: Gesunde 25-jährige = 100%</p>
+                              <p>• <strong>Cytochrom c Oxidase:</strong> Komplex IV der Atmungskette</p>
+                              <p>• <strong>ATP/ADP Verhältnis:</strong> Energieladung der Zelle</p>
+                              <p>• <strong>Polarographische O₂-Messung:</strong> Mitochondriale Respiration</p>
+                              <div className="mt-2 p-2 bg-green-900/20 rounded font-mono text-xs">
+                                Aktivität(%) = (O₂-Verbrauch_Patient / O₂-Verbrauch_Normal) × 100
+                              </div>
+                            </div>
+                          )}
+                          {param.name === "ATP-Synthese Rate" && (
+                            <div className="space-y-2 text-sm text-gray-300">
+                              <p>• <strong>Luciferase-Assay:</strong> Biolumineszenz-basierte ATP-Quantifizierung</p>
+                              <p>• <strong>³¹P-NMR Spektroskopie:</strong> Non-invasive ATP-Messung in vivo</p>
+                              <p>• <strong>Enzymatische Kopplung:</strong> Hexokinase/Glucose-6-phosphat-Dehydrogenase</p>
+                              <div className="mt-2 p-2 bg-green-900/20 rounded font-mono text-xs">
+                                ATP-Rate = k × [ADP] × [Pi] × Φₘ / (Km_ADP + [ADP])
+                              </div>
                             </div>
                           )}
                         </div>
@@ -367,31 +518,86 @@ const ElectroMetaboGraph = () => {
                   );
                 })}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div className="mt-6 p-4 bg-gradient-to-r from-yellow-900/20 to-red-900/20 rounded-lg border border-yellow-500/30">
-                <h4 className="text-xl font-semibold text-white mb-3 flex items-center gap-2">
-                  <AlertCircle className="h-6 w-6 text-yellow-400" />
-                  Pathologische Bereiche
-                </h4>
-                <div className="grid md:grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <div className="p-3 bg-red-900/30 rounded border-l-4 border-red-500">
-                      <strong className="text-red-300">Metabolisches Syndrom:</strong>
-                      <br/>BMR &lt; 80%, Oxidativer Stress &gt; 4.0 mV
+        {/* Signalverarbeitung */}
+        <TabsContent value="signalverarbeitung" className="space-y-6">
+          <Card className="bg-white/10 border-white/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Waves className="h-6 w-6 text-indigo-400" />
+                Signalverarbeitungs-Algorithmen
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-white space-y-6">
+              <div className="space-y-6">
+                <div className="p-6 bg-indigo-900/20 rounded-lg border border-indigo-500/30">
+                  <h4 className="text-xl font-semibold text-indigo-300 mb-4">Fourier-Transform für Frequenzanalyse</h4>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-indigo-200 mb-2">Kontinuierliche Fourier-Transform:</h5>
+                      <div className="font-mono text-lg text-white">
+                        X(f) = ∫₋∞^∞ x(t) × e^(-j2πft) dt
+                      </div>
                     </div>
-                    <div className="p-3 bg-orange-900/30 rounded border-l-4 border-orange-500">
-                      <strong className="text-orange-300">Mitochondriopathie:</strong>
-                      <br/>Mitochondriale Aktivität &lt; 60%
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-green-200 mb-2">Leistungsspektraldichte:</h5>
+                      <div className="font-mono text-lg text-white">
+                        PSD(f) = |X(f)|² / T
+                      </div>
+                    </div>
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-blue-200 mb-2">Metabolischer Index aus Spektrum:</h5>
+                      <div className="font-mono text-lg text-white">
+                        MI_spektral = Σ PSD(f) × W(f)
+                      </div>
+                      <p className="text-sm text-gray-300 mt-2">
+                        Wobei W(f) die metabolischen Gewichtungsfaktoren für verschiedene Frequenzbereiche darstellt.
+                      </p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="p-3 bg-yellow-900/30 rounded border-l-4 border-yellow-500">
-                      <strong className="text-yellow-300">Chronic Fatigue:</strong>
-                      <br/>ATP-Synthese &lt; 2.0 mmol/min
+                </div>
+
+                <div className="p-6 bg-purple-900/20 rounded-lg border border-purple-500/30">
+                  <h4 className="text-xl font-semibold text-purple-300 mb-4">Digitale Filter-Algorithmen</h4>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-purple-200 mb-2">Butterworth-Hochpass (0.05 Hz):</h5>
+                      <div className="font-mono text-sm text-white">
+                        H(s) = s^n / (s^n + aₙ₋₁s^(n-1) + ... + a₁s + a₀)
+                      </div>
                     </div>
-                    <div className="p-3 bg-purple-900/30 rounded border-l-4 border-purple-500">
-                      <strong className="text-purple-300">Azidose:</strong>
-                      <br/>pH &lt; 7.30, Puffersystem überlastet
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-yellow-200 mb-2">Notch-Filter (50/60 Hz):</h5>
+                      <div className="font-mono text-sm text-white">
+                        H(z) = (1 - 2cos(ω₀)z⁻¹ + z⁻²) / (1 - 2rcos(ω₀)z⁻¹ + r²z⁻²)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-cyan-900/20 rounded-lg border border-cyan-500/30">
+                  <h4 className="text-xl font-semibold text-cyan-300 mb-4">Adaptive Algorithmen</h4>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-cyan-200 mb-2">Wiener-Filter für Rauschunterdrückung:</h5>
+                      <div className="font-mono text-sm text-white mb-2">
+                        H(f) = |S(f)|² / (|S(f)|² + |N(f)|²)
+                      </div>
+                      <p className="text-xs text-gray-300">
+                        S(f) = Signal-Spektrum, N(f) = Rausch-Spektrum
+                      </p>
+                    </div>
+                    <div className="p-4 bg-black/30 rounded">
+                      <h5 className="font-semibold text-green-200 mb-2">Bewegungsartefakt-Korrektur:</h5>
+                      <div className="font-mono text-sm text-white">
+                        if |dZ/dt| &gt; Threshold:<br/>
+                        &nbsp;&nbsp;Z_korrigiert = Median_Filter(Z_roh, Fenster = 5)<br/>
+                        else:<br/>
+                        &nbsp;&nbsp;Z_korrigiert = Z_roh
+                      </div>
                     </div>
                   </div>
                 </div>
