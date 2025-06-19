@@ -144,7 +144,6 @@ const Dashboard = () => {
             color={stat.color}
             description="gegenüber letztem Monat"
             className="animate-slide-up"
-            style={{ animationDelay: `${index * 100}ms` }}
           />
         ))}
       </div>
@@ -198,7 +197,7 @@ const Dashboard = () => {
         </Card>
 
         {/* Algorithm Status */}
-        <Card className="glass animate-scale-in" style={{ animationDelay: "200ms" }}>
+        <Card className="glass animate-scale-in">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-radionik-frequency" />
@@ -239,7 +238,7 @@ const Dashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card className="glass animate-fade-in" style={{ animationDelay: "400ms" }}>
+      <Card className="glass animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Waves className="h-5 w-5 text-radionik-energy" />
