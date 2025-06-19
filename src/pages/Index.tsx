@@ -19,6 +19,7 @@ import QuantentheorieAdvanced from "@/components/theories/advanced/Quantentheori
 import HolographicUniverse from "@/components/theories/advanced/HolographicUniverse";
 import RadiationDetox from "@/components/theories/advanced/RadiationDetox";
 import ElectroMetaboGraph from "@/components/theories/advanced/ElectroMetaboGraph";
+import PetrovWeltenformel from "@/components/theories/PetrovWeltenformel";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +27,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   const theories = [
+    {
+      id: "petrov-weltenformel",
+      title: "Petrov Zahlenreihen & Weltenformel",
+      description: "Numerische Heilcodes, Bewusstseins-Steuerung und Quanteninformations-Therapie",
+      icon: Calculator,
+      component: PetrovWeltenformel
+    },
     {
       id: "lakhovsky",
       title: "Lakhovsky Multiwaveoszillator",
