@@ -14,8 +14,10 @@ import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 // Lazy load all pages for optimal performance
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ClientManagement = lazy(() => import("./pages/ClientManagement"));
+const ClientGroups = lazy(() => import("./pages/ClientGroups"));
 const DatabaseManagement = lazy(() => import("./pages/DatabaseManagement"));
 const AlgorithmCenter = lazy(() => import("./pages/AlgorithmCenter"));
+const CopenAlgorithms = lazy(() => import("./pages/CopenAlgorithms"));
 const AnalysisCenter = lazy(() => import("./pages/AnalysisCenter"));
 const HarmonizationCenter = lazy(() => import("./pages/HarmonizationCenter"));
 const Workspace = lazy(() => import("./pages/Workspace"));
@@ -53,8 +55,10 @@ const App = () => (
                     <Routes>
                       <Route path="/" element={<Dashboard />} />
                       <Route path="/clients" element={<ClientManagement />} />
+                      <Route path="/clients/groups" element={<ClientGroups />} />
                       <Route path="/databases" element={<DatabaseManagement />} />
                       <Route path="/algorithms" element={<AlgorithmCenter />} />
+                      <Route path="/algorithms/copen" element={<CopenAlgorithms />} />
                       <Route path="/analysis" element={<AnalysisCenter />} />
                       <Route path="/harmonization" element={<HarmonizationCenter />} />
                       <Route path="/workspace" element={<Workspace />} />
