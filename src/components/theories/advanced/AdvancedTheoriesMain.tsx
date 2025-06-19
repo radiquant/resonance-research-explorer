@@ -1,130 +1,62 @@
+import { useState } from "react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Zap, Waves, Cpu, Globe, ShieldCheck, Microscope, Activity } from 'lucide-react';
-
-import LakhovskyMultiwave from './LakhovskyMultiwave';
-import RoyalRifeMachine from './RoyalRifeMachine';
-import TeslaTechnologies from './TeslaTechnologies';
-import QuantentheorieAdvanced from './QuantentheorieAdvanced';
-import HolographicUniverse from './HolographicUniverse';
-import RadiationDetox from './RadiationDetox';
-import ElectroMetaboGraph from './ElectroMetaboGraph';
+import HolographicUniverse from "./HolographicUniverse";
+import QuantentheorieAdvanced from "./QuantentheorieAdvanced";
+import TeslaTechnologies from "./TeslaTechnologies";
+import RoyalRifeMachine from "./RoyalRifeMachine";
+import LakhovskyMultiwave from "./LakhovskyMultiwave";
+import RadiationDetox from "./RadiationDetox";
+import ElectroMetaboGraph from "./ElectroMetaboGraph";
+import TheoriesCommonalities from "./TheoriesCommonalities";
 
 const AdvancedTheoriesMain = () => {
-  const [activeTab, setActiveTab] = useState("lakhovsky");
+  const [activeSection, setActiveSection] = useState("holographicUniverse");
 
-  const theories = [
-    {
-      id: "lakhovsky",
-      title: "Lakhovsky",
-      subtitle: "Multiwaveoszillator",
-      icon: Waves,
-      color: "blue",
-      component: LakhovskyMultiwave
-    },
-    {
-      id: "rife",
-      title: "Royal R. Rife",
-      subtitle: "Frequenztherapie",
-      icon: Microscope,
-      color: "green",
-      component: RoyalRifeMachine
-    },
-    {
-      id: "tesla",
-      title: "Nikola Tesla",
-      subtitle: "Energie & Spulen",
-      icon: Zap,
-      color: "yellow",
-      component: TeslaTechnologies
-    },
-    {
-      id: "quantum",
-      title: "Quantentheorie",
-      subtitle: "Fundamentale Physik",
-      icon: Cpu,
-      color: "purple",
-      component: QuantentheorieAdvanced
-    },
-    {
-      id: "holographic",
-      title: "Holographisches Universum",
-      subtitle: "Realitäts-Struktur",
-      icon: Globe,
-      color: "cyan",
-      component: HolographicUniverse
-    },
-    {
-      id: "detox",
-      title: "Strahlungs-Detox",
-      subtitle: "5G/6G/EMF-Schutz",
-      icon: ShieldCheck,
-      color: "red",
-      component: RadiationDetox
-    },
-    {
-      id: "emg",
-      title: "Electro Metabo Graph",
-      subtitle: "Bioelektrische Analyse",
-      icon: Activity,
-      color: "green",
-      component: ElectroMetaboGraph
-    }
+  const sections = [
+    { id: "holographicUniverse", label: "Holographisches Universum", component: HolographicUniverse },
+    { id: "quantentheorie", label: "Quantentheorie Advanced", component: QuantentheorieAdvanced },
+    { id: "teslatech", label: "Tesla-Technologien", component: TeslaTechnologies },
+    { id: "rifemachine", label: "Royal Rife Machine", component: RoyalRifeMachine },
+    { id: "lakhovskyMWO", label: "Lakhovsky MWO", component: LakhovskyMultiwave },
+    { id: "radiationDetox", label: "Strahlung Detox 5G/6G", component: RadiationDetox },
+    { id: "electrometabo", label: "Elektro-Metabolograph", component: ElectroMetaboGraph },
+    { id: "commonalities", label: "Gemeinsamkeiten & Konsolidierung", component: TheoriesCommonalities }
   ];
 
   return (
-    <div className="space-y-6">
-      <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-white text-3xl mb-2">
-            Erweiterte Wissenschafts-Theorien
-          </CardTitle>
-          <CardDescription className="text-blue-200 text-lg">
-            Detaillierte Analyse fundamentaler Prinzipien, Algorithmen und wissenschaftlicher Zusammenhänge
-          </CardDescription>
-          <div className="flex flex-wrap justify-center gap-2 mt-4">
-            {theories.map((theory) => (
-              <Badge 
-                key={theory.id} 
-                variant="outline" 
-                className={`bg-${theory.color}-900/30 border-${theory.color}-500/50 text-${theory.color}-200`}
+    <div className="flex h-full w-full space-x-2">
+      <Card className="w-64 flex-none">
+        <CardHeader>
+          <CardTitle>Theorien</CardTitle>
+        </CardHeader>
+        <ScrollArea className="h-[calc(100vh-8rem)] px-2">
+          <div className="flex flex-col space-y-1">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                className={`flex items-center justify-start rounded-md px-2 py-1.5 text-sm font-medium hover:bg-secondary hover:text-secondary-foreground focus:bg-secondary focus:text-secondary-foreground ${
+                  activeSection === section.id ? "bg-secondary text-secondary-foreground" : "text-muted-foreground"
+                }`}
+                onClick={() => setActiveSection(section.id)}
               >
-                {theory.title}
-              </Badge>
+                {section.label}
+              </button>
             ))}
           </div>
-        </CardHeader>
+        </ScrollArea>
       </Card>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 bg-white/10 border-white/20">
-          {theories.map((theory) => {
-            const Icon = theory.icon;
-            return (
-              <TabsTrigger 
-                key={theory.id}
-                value={theory.id} 
-                className="text-white data-[state=active]:bg-white/20 data-[state=active]:text-white flex flex-col gap-1 p-3"
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{theory.title}</span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-        
-        {theories.map((theory) => {
-          const Component = theory.component;
-          return (
-            <TabsContent key={theory.id} value={theory.id} className="mt-6">
-              <Component />
-            </TabsContent>
-          );
-        })}
-      </Tabs>
+      <Separator orientation="vertical" />
+      <div className="flex-1 overflow-y-auto">
+        {sections.map(
+          (section) =>
+            activeSection === section.id && (
+              <section.component key={section.id} />
+            )
+        )}
+      </div>
     </div>
   );
 };
