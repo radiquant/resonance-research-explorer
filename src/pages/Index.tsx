@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu, Atom } from "lucide-react";
+import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu, Atom, Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import RadionikGeneral from "@/components/theories/RadionikGeneral";
 import RadionikCopen from "@/components/theories/RadionikCopen";
@@ -19,6 +19,7 @@ import QuantentheorieAdvanced from "@/components/theories/advanced/Quantentheori
 import HolographicUniverse from "@/components/theories/advanced/HolographicUniverse";
 import RadiationDetox from "@/components/theories/advanced/RadiationDetox";
 import ElectroMetaboGraph from "@/components/theories/advanced/ElectroMetaboGraph";
+import TheoriesCommonalities from "@/components/theories/advanced/TheoriesCommonalities";
 import PetrovWeltenformel from "@/components/theories/PetrovWeltenformel";
 import GrigoriGrabovoi from "@/components/theories/GrigoriGrabovoi";
 
@@ -28,6 +29,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   const theories = [
+    {
+      id: "theories-commonalities",
+      title: "Gemeinsamkeiten & Konsolidierung aller Theorien",
+      description: "Universelle Prinzipien, Frequenz-Matrix und konsolidierte Erkenntnisse aus allen Theorien",
+      icon: Network,
+      component: TheoriesCommonalities
+    },
     {
       id: "grigori-grabovoi",
       title: "Grigori Grabovoi - Universelle Steuerung",
