@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ImportPage from "./pages/ImportPage";
 import CopenGeneratorPage from "./pages/CopenGeneratorPage";
+import FormulasPage from "./pages/FormulasPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/import" element={<ImportPage />} />
           <Route path="/copen-generator" element={<CopenGeneratorPage />} />
+          <Route path="/formulas" element={<FormulasPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
