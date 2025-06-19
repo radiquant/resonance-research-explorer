@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu } from "lucide-react";
+import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu, Atom } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import RadionikGeneral from "@/components/theories/RadionikGeneral";
 import RadionikCopen from "@/components/theories/RadionikCopen";
@@ -20,6 +20,7 @@ import HolographicUniverse from "@/components/theories/advanced/HolographicUnive
 import RadiationDetox from "@/components/theories/advanced/RadiationDetox";
 import ElectroMetaboGraph from "@/components/theories/advanced/ElectroMetaboGraph";
 import PetrovWeltenformel from "@/components/theories/PetrovWeltenformel";
+import GrigoriGrabovoi from "@/components/theories/GrigoriGrabovoi";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -27,6 +28,13 @@ const Index = () => {
   const navigate = useNavigate();
 
   const theories = [
+    {
+      id: "grigori-grabovoi",
+      title: "Grigori Grabovoi - Universelle Steuerung",
+      description: "Bewusstseins-basierte Realitätssteuerung, Zahlenreihen-Codes und geometrische Heilungsverfahren",
+      icon: Atom,
+      component: GrigoriGrabovoi
+    },
     {
       id: "petrov-weltenformel",
       title: "Petrov Zahlenreihen & Weltenformel",
