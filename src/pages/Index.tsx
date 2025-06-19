@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload } from "lucide-react";
+import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import RadionikGeneral from "@/components/theories/RadionikGeneral";
 import RadionikCopen from "@/components/theories/RadionikCopen";
@@ -12,7 +12,13 @@ import WellengenetikGarjajev from "@/components/theories/WellengenetikGarjajev";
 import ChakrenMeridiane from "@/components/theories/ChakrenMeridiane";
 import TheorienBroers from "@/components/theories/TheorienBroers";
 import CopenAlgorithmVisualization from "@/components/CopenAlgorithmVisualization";
-import AdvancedTheories from "@/components/theories/AdvancedTheories";
+import LakhovskyMultiwave from "@/components/theories/advanced/LakhovskyMultiwave";
+import RoyalRifeMachine from "@/components/theories/advanced/RoyalRifeMachine";
+import TeslaTechnologies from "@/components/theories/advanced/TeslaTechnologies";
+import QuantentheorieAdvanced from "@/components/theories/advanced/QuantentheorieAdvanced";
+import HolographicUniverse from "@/components/theories/advanced/HolographicUniverse";
+import RadiationDetox from "@/components/theories/advanced/RadiationDetox";
+import ElectroMetaboGraph from "@/components/theories/advanced/ElectroMetaboGraph";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,11 +27,53 @@ const Index = () => {
 
   const theories = [
     {
-      id: "advanced-theories",
-      title: "Erweiterte Wissenschafts-Theorien",
-      description: "Lakhovsky, Rife, Tesla, Quantentheorie, Holographisches Universum, EMF-Detox",
-      icon: BookOpen,
-      component: AdvancedTheories
+      id: "lakhovsky",
+      title: "Lakhovsky Multiwaveoszillator",
+      description: "Multiwellen-Therapie und Zellregeneration durch elektromagnetische Schwingungen",
+      icon: Waves,
+      component: LakhovskyMultiwave
+    },
+    {
+      id: "rife",
+      title: "Royal R. Rife Frequenztherapie",
+      description: "Präzisions-Frequenzen zur gezielten Pathogen-Elimination und Heilung",
+      icon: Microscope,
+      component: RoyalRifeMachine
+    },
+    {
+      id: "tesla",
+      title: "Nikola Tesla Technologien",
+      description: "Freie Energie, Tesla-Spulen und elektromagnetische Heilungsverfahren",
+      icon: Zap,
+      component: TeslaTechnologies
+    },
+    {
+      id: "quantum",
+      title: "Erweiterte Quantentheorie",
+      description: "Quantenverschränkung, Bewusstseinsfeld und Realitätsmanipulation",
+      icon: Cpu,
+      component: QuantentheorieAdvanced
+    },
+    {
+      id: "holographic",
+      title: "Holographisches Universum",
+      description: "Realität als Hologramm, Informationsmatrix und multidimensionale Heilung",
+      icon: Globe,
+      component: HolographicUniverse
+    },
+    {
+      id: "radiation-detox",
+      title: "Strahlungs-Detox Protokolle",
+      description: "5G/6G/EMF-Schutz, Entgiftung und biologische Abschirmverfahren",
+      icon: ShieldCheck,
+      component: RadiationDetox
+    },
+    {
+      id: "emg",
+      title: "Electro Metabo Graph",
+      description: "Bioelektrische Körperanalyse und metabolische Optimierung",
+      icon: Activity,
+      component: ElectroMetaboGraph
     },
     {
       id: "copen-rate-generator",
