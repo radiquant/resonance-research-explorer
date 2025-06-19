@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu, Atom, Network, Function } from "lucide-react";
+import { Search, BookOpen, Waves, Zap, Dna, Sparkles, Heart, Brain, Calculator, FileText, Upload, Microscope, Globe, ShieldCheck, Activity, Cpu, Atom, Network } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import RadionikGeneral from "@/components/theories/RadionikGeneral";
 import RadionikCopen from "@/components/theories/RadionikCopen";
@@ -40,7 +40,7 @@ const Index = () => {
       id: "formulas-compendium",
       title: "Formeln & Algorithmen Kompendium",
       description: "Strukturierte Sammlung aller mathematischen Grundlagen und Schlüssel-Resultate",
-      icon: Function,
+      icon: Calculator,
       isRoute: true,
       route: "/formulas"
     },
