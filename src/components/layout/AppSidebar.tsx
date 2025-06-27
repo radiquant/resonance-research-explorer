@@ -1,4 +1,3 @@
-
 import {
   Sidebar,
   SidebarContent,
@@ -56,6 +55,7 @@ const navigationItems = [
     url: "/algorithms",
     items: [
       { title: "Copen-Raten", url: "/algorithms/copen" },
+      { title: "Copen Reverse Engineering V2", url: "/algorithms/copen-v2" },
       { title: "Rife-Frequenzen", url: "/algorithms/rife" },
       { title: "Tesla-Formeln", url: "/algorithms/tesla" },
       { title: "Custom-Algorithmen", url: "/algorithms/custom" },

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,6 +19,7 @@ const ClientGroups = lazy(() => import("./pages/ClientGroups"));
 const DatabaseManagement = lazy(() => import("./pages/DatabaseManagement"));
 const AlgorithmCenter = lazy(() => import("./pages/AlgorithmCenter"));
 const CopenAlgorithms = lazy(() => import("./pages/CopenAlgorithms"));
+const CopenAlgorithmV2 = lazy(() => import("./components/CopenAlgorithmVisualizationV2"));
 const AnalysisCenter = lazy(() => import("./pages/AnalysisCenter"));
 const HarmonizationCenter = lazy(() => import("./pages/HarmonizationCenter"));
 const Workspace = lazy(() => import("./pages/Workspace"));
@@ -60,6 +62,7 @@ const App = () => (
                         <Route path="/databases" element={<DatabaseManagement />} />
                         <Route path="/algorithms" element={<AlgorithmCenter />} />
                         <Route path="/algorithms/copen" element={<CopenAlgorithms />} />
+                        <Route path="/algorithms/copen-v2" element={<CopenAlgorithmV2 />} />
                         <Route path="/analysis" element={<AnalysisCenter />} />
                         <Route path="/harmonization" element={<HarmonizationCenter />} />
                         <Route path="/workspace" element={<Workspace />} />
