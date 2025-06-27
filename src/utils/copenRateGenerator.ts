@@ -99,26 +99,85 @@ export const batchCalculateCopenRates = (inputs: WordEnergyInput[]): CopenRateRe
 };
 
 export const parseWordEnergyData = (csvData: string): WordEnergyInput[] => {
-  const lines = csvData.trim().split('\n');
+  const lines = csvData.trim().split('\n').filter(line => line.trim().length > 0);
   const results: WordEnergyInput[] = [];
   
+  console.log('Parsing lines:', lines.length);
+  
   for (const line of lines) {
-    const parts = line.split(',').map(part => part.trim());
-    if (parts.length >= 3) {
-      const [word, potencyStr, potencyType, alphabetType] = parts;
+    const cleanLine = line.trim();
+    if (!cleanLine) continue;
+    
+    console.log('Processing line:', cleanLine);
+    
+    // Format 1: CSV mit Kommas (Wort,Potenz,Typ,Alphabet)
+    if (cleanLine.includes(',')) {
+      const parts = cleanLine.split(',').map(part => part.trim());
+      if (parts.length >= 3) {
+        const [word, potencyStr, potencyType, alphabetType] = parts;
+        const potency = parseInt(potencyStr);
+        
+        if (!isNaN(potency) && ['D', 'C', 'LM', 'M'].includes(potencyType)) {
+          results.push({
+            word,
+            potency,
+            potencyType: potencyType as 'D' | 'C' | 'LM' | 'M',
+            alphabetType: (alphabetType as AlphabetType) || 'latin'
+          });
+          console.log('Added CSV format:', word);
+          continue;
+        }
+      }
+    }
+    
+    // Format 2: Wort mit Potenz (z.B. "Arnica 6D", "Belladonna C12")
+    const wordPotencyMatch = cleanLine.match(/^([a-zA-ZäöüÄÖÜß\s]+?)\s*([0-9]*)\s*([DCM]|LM)([0-9]*)$/i);
+    if (wordPotencyMatch) {
+      const [, word, potency1, type, potency2] = wordPotencyMatch;
+      const potency = parseInt(potency1 || potency2 || '6');
+      const potencyType = type.toUpperCase() as 'D' | 'C' | 'LM' | 'M';
+      
+      results.push({
+        word: word.trim(),
+        potency: isNaN(potency) ? 6 : potency,
+        potencyType,
+        alphabetType: 'latin'
+      });
+      console.log('Added word+potency format:', word.trim());
+      continue;
+    }
+    
+    // Format 3: Nur Wortname (Standard: 6D)
+    if (cleanLine.length > 1 && cleanLine.length < 50 && /^[a-zA-ZäöüÄÖÜß\s\-\.]+$/.test(cleanLine)) {
+      results.push({
+        word: cleanLine,
+        potency: 6,
+        potencyType: 'D',
+        alphabetType: 'latin'
+      });
+      console.log('Added simple word format:', cleanLine);
+      continue;
+    }
+    
+    // Format 4: Zeilen mit Tabs oder Semikolons
+    const altSeparators = cleanLine.split(/[\t;]/);
+    if (altSeparators.length >= 3) {
+      const [word, potencyStr, potencyType] = altSeparators.map(s => s.trim());
       const potency = parseInt(potencyStr);
       
-      if (!isNaN(potency) && ['D', 'C', 'LM', 'M'].includes(potencyType)) {
+      if (!isNaN(potency) && ['D', 'C', 'LM', 'M'].includes(potencyType.toUpperCase())) {
         results.push({
           word,
           potency,
-          potencyType: potencyType as 'D' | 'C' | 'LM' | 'M',
-          alphabetType: (alphabetType as AlphabetType) || 'latin'
+          potencyType: potencyType.toUpperCase() as 'D' | 'C' | 'LM' | 'M',
+          alphabetType: 'latin'
         });
+        console.log('Added tab/semicolon format:', word);
       }
     }
   }
   
+  console.log('Total results found:', results.length);
   return results;
 };
 
