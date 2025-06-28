@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ interface FileImportFormProps {
   onDataExtracted: (extractedData: string) => void;
 }
 
-const MAX_FILE_SIZE_PDF = 20 * 1024 * 1024; // 20 MB (erhöht von 10 MB)
+const MAX_FILE_SIZE_PDF = 10 * 1024 * 1024; // 10 MB
 const MAX_FILE_SIZE_IMAGE = 5 * 1024 * 1024; // 5 MB
 
 const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
@@ -374,7 +375,7 @@ Ruta,30,C,latin`;
           </div>
           <div className="flex items-center gap-2">
             <AlertCircle className="h-3 w-3 text-orange-600" />
-            <span>Dateigrößen: PDF max. 20MB, Bilder max. 5MB</span>
+            <span>Dateigrößen: PDF max. 10MB, Bilder max. 5MB</span>
           </div>
         </div>
       </CardContent>
