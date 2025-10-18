@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw, StopCircle, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw, StopCircle, Plus, Trash2, Archive } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Patient, ActiveHarmonization, HarmonizationSession } from '@/types/patient';
 import PatientManager from './PatientManager';
@@ -185,44 +185,61 @@ const CopenAlgorithmVisualization: React.FC = () => {
   // Harmonisierungs-Timer Logic für parallele Sessions
   useEffect(() => {
     const interval = setInterval(() => {
-      setHarmonizations(prev => prev.map(harm => {
-        if (harm.status !== 'active') return harm;
+      setHarmonizations(prev => {
+        const updated = prev.map(harm => {
+          if (harm.status !== 'active') return harm;
 
-        const durationInSeconds = harm.durationUnit === 'hours' 
-          ? harm.duration * 3600 
-          : harm.durationUnit === 'minutes' 
-            ? harm.duration * 60 
-            : harm.duration;
+          const durationInSeconds = harm.durationUnit === 'hours' 
+            ? harm.duration * 3600 
+            : harm.durationUnit === 'minutes' 
+              ? harm.duration * 60 
+              : harm.duration;
 
-        const newElapsedTime = harm.elapsedTime + 0.1;
-        
-        if (newElapsedTime >= durationInSeconds) {
-          // Session abgeschlossen - ins Archiv verschieben
-          const completedSession: HarmonizationSession = {
+          const newElapsedTime = harm.elapsedTime + 0.1;
+          
+          if (newElapsedTime >= durationInSeconds) {
+            // Session abgeschlossen - ins Archiv verschieben
+            const completedSession: HarmonizationSession = {
+              id: harm.id,
+              patientId: harm.patientId,
+              word: harm.word,
+              potency: harm.potency,
+              potencyType: harm.potencyType,
+              wordRate: harm.wordRate,
+              clientRate: harm.clientRate,
+              duration: harm.duration,
+              durationUnit: harm.durationUnit,
+              status: 'completed',
+              completedAt: new Date().toISOString()
+            };
+            archiveSession(completedSession);
+            
+            toast({
+              title: "Harmonisierung abgeschlossen",
+              description: `${harm.word} für ${selectedPatient?.firstName} ${selectedPatient?.lastName}`,
+            });
+            
+            return { ...harm, status: 'completed' as const, elapsedTime: durationInSeconds, progress: 100 };
+          }
+
+          return {
             ...harm,
-            status: 'completed',
-            completedAt: new Date().toISOString()
+            elapsedTime: newElapsedTime,
+            progress: (newElapsedTime / durationInSeconds) * 100
           };
-          archiveSession(completedSession);
-          
-          toast({
-            title: "Harmonisierung abgeschlossen",
-            description: `${harm.word} für ${selectedPatient?.firstName} ${selectedPatient?.lastName}`,
-          });
-          
-          return { ...harm, status: 'completed', elapsedTime: durationInSeconds, progress: 100 };
-        }
-
-        return {
-          ...harm,
-          elapsedTime: newElapsedTime,
-          progress: (newElapsedTime / durationInSeconds) * 100
-        };
-      }));
+        });
+        
+        // Entferne abgeschlossene Sessions nach 3 Sekunden
+        setTimeout(() => {
+          setHarmonizations(current => current.filter(h => h.status !== 'completed'));
+        }, 3000);
+        
+        return updated;
+      });
     }, 100);
 
     return () => clearInterval(interval);
-  }, [harmonizations]);
+  }, [selectedPatient, toast]);
 
   const archiveSession = (session: HarmonizationSession) => {
     const stored = localStorage.getItem('copen-harmonization-archive');
@@ -279,7 +296,15 @@ const CopenAlgorithmVisualization: React.FC = () => {
     const session = harmonizations.find(h => h.id === id);
     if (session) {
       const stoppedSession: HarmonizationSession = {
-        ...session,
+        id: session.id,
+        patientId: session.patientId,
+        word: session.word,
+        potency: session.potency,
+        potencyType: session.potencyType,
+        wordRate: session.wordRate,
+        clientRate: session.clientRate,
+        duration: session.duration,
+        durationUnit: session.durationUnit,
         status: 'stopped',
         completedAt: new Date().toISOString()
       };
@@ -291,6 +316,73 @@ const CopenAlgorithmVisualization: React.FC = () => {
         description: "Session wurde archiviert",
       });
     }
+  };
+
+  const exportAllData = () => {
+    const data = {
+      patients: JSON.parse(localStorage.getItem('copen-patients') || '[]'),
+      archive: JSON.parse(localStorage.getItem('copen-harmonization-archive') || '[]'),
+      exportDate: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `copen-daten-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export erfolgreich",
+      description: "Alle Daten wurden exportiert"
+    });
+  };
+
+  const exportAllDataTxt = () => {
+    const patients = JSON.parse(localStorage.getItem('copen-patients') || '[]');
+    const archive = JSON.parse(localStorage.getItem('copen-harmonization-archive') || '[]');
+    
+    let txt = '=== BRUCE COPEN DATENBANK EXPORT ===\n';
+    txt += `Export-Datum: ${new Date().toLocaleString('de-DE')}\n\n`;
+    
+    txt += '=== PATIENTEN ===\n';
+    patients.forEach((p: Patient) => {
+      txt += `\nID: ${p.id}\n`;
+      txt += `Name: ${p.firstName} ${p.lastName}\n`;
+      txt += `Geburtsdatum: ${p.birthDate}\n`;
+      txt += `Geburtsort: ${p.birthPlace}\n`;
+      txt += `Erstellt: ${new Date(p.createdAt).toLocaleString('de-DE')}\n`;
+    });
+    
+    txt += '\n\n=== HARMONISIERUNGS-ARCHIV ===\n';
+    archive.forEach((s: HarmonizationSession) => {
+      const patient = patients.find((p: Patient) => p.id === s.patientId);
+      txt += `\nWortenergie: ${s.word} ${s.potencyType}${s.potency}\n`;
+      txt += `Patient: ${patient?.firstName} ${patient?.lastName}\n`;
+      txt += `Wortenergie-Rate: ${s.wordRate.toLocaleString()}\n`;
+      txt += `Klienten-Rate: ${s.clientRate.toLocaleString()}\n`;
+      txt += `Dauer: ${s.duration} ${s.durationUnit}\n`;
+      txt += `Status: ${s.status}\n`;
+      txt += `Abgeschlossen: ${s.completedAt ? new Date(s.completedAt).toLocaleString('de-DE') : '-'}\n`;
+    });
+    
+    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `copen-daten-${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Export erfolgreich",
+      description: "Daten als TXT exportiert"
+    });
   };
 
   const removeHarmonization = (id: string) => {
@@ -546,6 +638,37 @@ const CopenAlgorithmVisualization: React.FC = () => {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Datenbank Export */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Archive className="h-5 w-5" />
+            Datenbank-Export
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Exportieren Sie alle Patienten und Harmonisierungs-Archive als Datei
+          </p>
+          <div className="flex gap-2">
+            <Button onClick={exportAllDataTxt} variant="outline" className="flex-1">
+              📄 TXT Export
+            </Button>
+            <Button onClick={exportAllData} variant="outline" className="flex-1">
+              📊 JSON Export
+            </Button>
+          </div>
+          
+          <div className="mt-4 p-3 bg-muted rounded-lg text-xs space-y-1">
+            <div className="font-semibold">Zahlenberechnung in Wortenergie:</div>
+            <div>✓ Zahlen werden direkt extrahiert (z.B. "Lade 800 Hertz" → 800)</div>
+            <div>✓ Buchstabensumme + Zahlenwert = Gesamtsumme</div>
+            <div>✓ Beispiel: "CALCIUM 800" → C(3)+A(1)+L(12)+C(3)+I(9)+U(21)+M(13) = 62 Buchstaben + 800 Zahl = <strong>862</strong></div>
+            <div>✓ Diese Summe geht in die Copen-Formel ein (×Position, ×1000, Fibonacci, Potenz)</div>
+          </div>
         </CardContent>
       </Card>
 
