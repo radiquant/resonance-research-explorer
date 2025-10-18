@@ -49,6 +49,14 @@ export const alphabetSystems: Record<AlphabetType, AlphabetSystem> = {
 
 export const calculateLetterSum = (word: string, alphabetType: AlphabetType = 'latin'): number => {
   const system = alphabetSystems[alphabetType];
+  
+  // Erweiterte Verarbeitung: Extrahiere Zahlenwerte aus dem Text (z.B. "Lade 800 Hertz")
+  const numberMatches = word.match(/\d+/g);
+  let numberSum = 0;
+  if (numberMatches) {
+    numberSum = numberMatches.reduce((sum, num) => sum + parseInt(num), 0);
+  }
+  
   const cleanWord = word.toUpperCase().replace(/[^A-ZÜÄÖ]/g, '');
   
   let sum = 0;
@@ -59,5 +67,6 @@ export const calculateLetterSum = (word: string, alphabetType: AlphabetType = 'l
     }
   }
   
-  return sum;
+  // Kombiniere Buchstabensumme mit Zahlenwerten
+  return sum + numberSum;
 };

@@ -11,6 +11,7 @@ export interface CopenRateResult {
     letterSum: number;
     baseRate: number;
     fibonacciRate: number;
+    numberSum?: number;
   };
 }
 
@@ -64,6 +65,10 @@ export const calculateCopenRate = (
 ): CopenRateResult => {
   const letterSum = calculateLetterSum(word, alphabetType);
   
+  // Extrahiere Zahlenwerte für separate Anzeige
+  const numberMatches = word.match(/\d+/g);
+  const numberSum = numberMatches ? numberMatches.reduce((sum, num) => sum + parseInt(num), 0) : 0;
+  
   const potencyMultipliers = {
     'D': 1,
     'C': 100,
@@ -84,7 +89,8 @@ export const calculateCopenRate = (
     calculation: {
       letterSum,
       baseRate,
-      fibonacciRate
+      fibonacciRate,
+      numberSum
     }
   };
 };
