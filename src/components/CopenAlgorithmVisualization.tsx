@@ -28,35 +28,27 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
   const { toast } = useToast();
 
-  // Modernisierte Wortenergie-Normalisierung (ohne Zahlen zu entfernen)
-  const normalizeWordEnergy = (word: string, keepNumbers = false): string => {
-    let processed = word
+  // Wortenergie-Normalisierung (nur Buchstaben)
+  const normalizeWordEnergy = (word: string): string => {
+    return word
       .toUpperCase()
       .replace(/Ä/g, 'AE')
       .replace(/Ö/g, 'OE') 
       .replace(/Ü/g, 'UE')
       .replace(/ß/g, 'SS')
-      .replace(/\s*[DCLM]+\d+/g, '');
-
-    if (!keepNumbers) {
-      processed = processed.replace(/\d+/g, '');
-    }
-    
-    return processed
-      .replace(/[^A-Z0-9\s]/g, '')
+      .replace(/\s*[DCLM]+\d+/g, '')
+      .replace(/\d+/g, '')
+      .replace(/[^A-Z\s]/g, '')
       .replace(/\s+/g, ' ')
       .trim();
   };
 
   // Buchstabenwerte A=1, B=2, etc.
   const getLetterValue = (letter: string): number => {
-    if (/\d/.test(letter)) {
-      return parseInt(letter);
-    }
     return letter.toUpperCase().charCodeAt(0) - 64;
   };
 
-  const cleanWord = normalizeWordEnergy(word, true);
+  const cleanWord = normalizeWordEnergy(word);
 
   // Automatische Potenzermittlung basierend auf Klientendaten + Wortenergie
   const calculateAutoPotency = (): number => {
@@ -66,12 +58,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
     const combinedData = `${cleanWord} ${clientData}`;
     
     let sum = 0;
-    for (const char of combinedData.toUpperCase().replace(/[^A-Z0-9]/g, '')) {
-      if (/\d/.test(char)) {
-        sum += parseInt(char);
-      } else {
-        sum += char.charCodeAt(0) - 64;
-      }
+    for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
+      sum += char.charCodeAt(0) - 64;
     }
 
     // Potenz basierend auf Typ berechnen
@@ -90,7 +78,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
   const effectivePotency = autoPotency ? calculateAutoPotency() : potency;
 
-  // Schritt 1: Buchstabenwerte berechnen (mit Zahlenunterstützung)
+  // Schritt 1: Buchstabenwerte berechnen
   const letterValues = [];
   let position = 1;
   
@@ -107,7 +95,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
       continue;
     }
     
-    const value = /\d/.test(char) ? parseInt(char) : getLetterValue(char);
+    const value = getLetterValue(char);
     
     letterValues.push({
       letter: char,
@@ -119,7 +107,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
     position++;
   }
 
-  // Schritt 2: Primärsumme (nur Buchstaben und Zahlen, keine Leerzeichen)
+  // Schritt 2: Primärsumme (nur Buchstaben, keine Leerzeichen)
   const primarySum = letterValues
     .filter(item => !item.isSpace)
     .reduce((sum, item) => sum + item.weighted, 0);
@@ -389,6 +377,38 @@ const CopenAlgorithmVisualization: React.FC = () => {
     setHarmonizations(prev => prev.filter(h => h.id !== id));
   };
 
+  const reactivateSession = (session: HarmonizationSession) => {
+    if (!selectedPatient || session.patientId !== selectedPatient.id) {
+      toast({
+        title: "Fehler",
+        description: "Bitte wählen Sie den zugehörigen Patienten aus",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const reactivatedHarmonization: ActiveHarmonization = {
+      id: Date.now().toString(),
+      patientId: session.patientId,
+      word: session.word,
+      potency: session.potency,
+      potencyType: session.potencyType,
+      wordRate: session.wordRate,
+      clientRate: session.clientRate,
+      duration: session.duration,
+      durationUnit: session.durationUnit,
+      status: 'active',
+      elapsedTime: 0,
+      progress: 0
+    };
+
+    setHarmonizations(prev => [...prev, reactivatedHarmonization]);
+    toast({
+      title: "Harmonisierung reaktiviert",
+      description: `${session.word} ${session.potencyType}${session.potency}`,
+    });
+  };
+
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -415,12 +435,12 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
+            <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
             <Zap className="h-6 w-6" />
-            Bruce Copen Algorithmus mit Zahlenunterstützung
+            Bruce Copen Algorithmus
           </CardTitle>
           <p className="text-center text-sm text-muted-foreground mt-2">
-            ✓ Zahlen in Wortenergie (z.B. "Lade 800 Hertz") • ✓ Automatische Potenzermittlung • ✓ Parallele Harmonisierungen
+            ✓ Authentischer Algorithmus • ✓ Automatische Potenzermittlung • ✓ Parallele Harmonisierungen
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -431,7 +451,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 id="word"
                 value={word}
                 onChange={(e) => setWord(e.target.value)}
-                placeholder="z.B. Nux vomica, Lade 800 Hertz"
+                placeholder="z.B. Nux vomica"
               />
               <div className="text-xs text-muted-foreground mt-1">
                 Normalisiert: "{cleanWord}"
@@ -662,19 +682,15 @@ const CopenAlgorithmVisualization: React.FC = () => {
             </Button>
           </div>
           
-          <div className="mt-4 p-3 bg-muted rounded-lg text-xs space-y-1">
-            <div className="font-semibold">Zahlenberechnung in Wortenergie:</div>
-            <div>✓ Zahlen werden direkt extrahiert (z.B. "Lade 800 Hertz" → 800)</div>
-            <div>✓ Buchstabensumme + Zahlenwert = Gesamtsumme</div>
-            <div>✓ Beispiel: "CALCIUM 800" → C(3)+A(1)+L(12)+C(3)+I(9)+U(21)+M(13) = 62 Buchstaben + 800 Zahl = <strong>862</strong></div>
-            <div>✓ Diese Summe geht in die Copen-Formel ein (×Position, ×1000, Fibonacci, Potenz)</div>
-          </div>
         </CardContent>
       </Card>
 
       {/* Archiv */}
       {selectedPatient && (
-        <HarmonizationArchive patientId={selectedPatient.id} />
+        <HarmonizationArchive 
+          patientId={selectedPatient.id} 
+          onReactivate={reactivateSession}
+        />
       )}
 
       {showCalculation && (
@@ -682,7 +698,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">
-                Schritt 1: Buchstaben- und Zahlenwerte
+                Schritt 1: Buchstabenwerte
               </CardTitle>
             </CardHeader>
             <CardContent>

@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Archive, Trash2, Eye } from 'lucide-react';
+import { Archive, Trash2, Eye, Play } from 'lucide-react';
 import { HarmonizationSession } from '@/types/patient';
 import { useToast } from '@/hooks/use-toast';
 
 interface HarmonizationArchiveProps {
   patientId?: string;
+  onReactivate?: (session: HarmonizationSession) => void;
 }
 
-const HarmonizationArchive: React.FC<HarmonizationArchiveProps> = ({ patientId }) => {
+const HarmonizationArchive: React.FC<HarmonizationArchiveProps> = ({ patientId, onReactivate }) => {
   const [sessions, setSessions] = useState<HarmonizationSession[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -117,6 +118,16 @@ const HarmonizationArchive: React.FC<HarmonizationArchiveProps> = ({ patientId }
                     )}
                   </div>
                   <div className="flex gap-1">
+                    {onReactivate && (
+                      <Button
+                        onClick={() => onReactivate(session)}
+                        variant="ghost"
+                        size="sm"
+                        title="Harmonisierung reaktivieren"
+                      >
+                        <Play className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
                       variant="ghost"
