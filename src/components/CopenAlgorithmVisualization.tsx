@@ -1,17 +1,30 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowDown, Calculator, Zap } from 'lucide-react';
+import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 
 const CopenAlgorithmVisualization: React.FC = () => {
   const [word, setWord] = useState('NUX VOMICA');
   const [potency, setPotency] = useState(6);
   const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M'>('D');
   const [showCalculation, setShowCalculation] = useState(false);
+
+  // Klientendaten
+  const [clientFirstName, setClientFirstName] = useState('');
+  const [clientLastName, setClientLastName] = useState('');
+  const [clientBirthDate, setClientBirthDate] = useState('');
+  const [clientBirthPlace, setClientBirthPlace] = useState('');
+
+  // Harmonisierungs-Timer
+  const [harmonizationDuration, setHarmonizationDuration] = useState(60); // Sekunden
+  const [isHarmonizing, setIsHarmonizing] = useState(false);
+  const [harmonizationProgress, setHarmonizationProgress] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
 
   // Modernisierte Wortenergie-Normalisierung
   const normalizeWordEnergy = (word: string): string => {
@@ -103,8 +116,73 @@ const CopenAlgorithmVisualization: React.FC = () => {
   // HIER WAR DER FEHLER: Die finale Rate wurde nicht korrekt berechnet
   const finalRate = fibonacciRate + potencyModifier;
 
+  // Klienten-Rate berechnen
+  const calculateClientRate = () => {
+    const clientData = `${clientFirstName} ${clientLastName} ${clientBirthDate} ${clientBirthPlace}`;
+    const cleanClientData = normalizeWordEnergy(clientData);
+    
+    let position = 1;
+    let clientSum = 0;
+    
+    for (let i = 0; i < cleanClientData.length; i++) {
+      const char = cleanClientData[i];
+      if (char === ' ') continue;
+      
+      const value = getLetterValue(char);
+      clientSum += value * position;
+      position++;
+    }
+    
+    const clientBaseRate = clientSum * 1000;
+    const clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
+    
+    return clientFibonacciRate;
+  };
+
+  const clientRate = calculateClientRate();
+
   const handleCalculate = () => {
     setShowCalculation(true);
+  };
+
+  // Harmonisierungs-Timer Logic
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isHarmonizing && elapsedTime < harmonizationDuration) {
+      interval = setInterval(() => {
+        setElapsedTime(prev => {
+          const newTime = prev + 0.1;
+          if (newTime >= harmonizationDuration) {
+            setIsHarmonizing(false);
+            return harmonizationDuration;
+          }
+          return newTime;
+        });
+        setHarmonizationProgress(prev => {
+          const newProgress = (elapsedTime / harmonizationDuration) * 100;
+          return Math.min(newProgress, 100);
+        });
+      }, 100);
+    }
+    
+    return () => clearInterval(interval);
+  }, [isHarmonizing, elapsedTime, harmonizationDuration]);
+
+  const startHarmonization = () => {
+    setElapsedTime(0);
+    setHarmonizationProgress(0);
+    setIsHarmonizing(true);
+  };
+
+  const pauseHarmonization = () => {
+    setIsHarmonizing(false);
+  };
+
+  const resetHarmonization = () => {
+    setIsHarmonizing(false);
+    setElapsedTime(0);
+    setHarmonizationProgress(0);
   };
 
   return (
@@ -179,6 +257,181 @@ const CopenAlgorithmVisualization: React.FC = () => {
               Live-Vorschau der Bruce Copen Rate
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Klientendaten Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl text-center text-purple-800 flex items-center justify-center gap-2">
+            <User className="h-6 w-6" />
+            Klientendaten & Personalisierte Rate
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="firstName">Vorname</Label>
+              <Input
+                id="firstName"
+                value={clientFirstName}
+                onChange={(e) => setClientFirstName(e.target.value)}
+                placeholder="z.B. Max"
+              />
+            </div>
+            <div>
+              <Label htmlFor="lastName">Nachname</Label>
+              <Input
+                id="lastName"
+                value={clientLastName}
+                onChange={(e) => setClientLastName(e.target.value)}
+                placeholder="z.B. Mustermann"
+              />
+            </div>
+            <div>
+              <Label htmlFor="birthDate">Geburtsdatum</Label>
+              <Input
+                id="birthDate"
+                type="date"
+                value={clientBirthDate}
+                onChange={(e) => setClientBirthDate(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="birthPlace">Geburtsort</Label>
+              <Input
+                id="birthPlace"
+                value={clientBirthPlace}
+                onChange={(e) => setClientBirthPlace(e.target.value)}
+                placeholder="z.B. Berlin"
+              />
+            </div>
+          </div>
+
+          {/* Klienten-Rate Anzeige */}
+          {(clientFirstName || clientLastName || clientBirthDate || clientBirthPlace) && (
+            <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg text-center border-2 border-purple-300 mt-4">
+              <div className="text-lg text-gray-700 mb-2">
+                Persönliche Rate: {clientFirstName} {clientLastName}
+              </div>
+              <div className="text-3xl font-bold text-purple-800">
+                {clientRate.toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600 mt-2">
+                Berechnet aus Klientendaten nach Copen-Algorithmus
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Harmonisierungs-Timer Card */}
+      <Card className="border-2 border-blue-400">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center text-blue-800 flex items-center justify-center gap-2">
+            <Zap className="h-6 w-6" />
+            Zeitgesteuerte Harmonisierung
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="duration">Harmonisierungsdauer (Sekunden)</Label>
+              <Input
+                id="duration"
+                type="number"
+                value={harmonizationDuration}
+                onChange={(e) => setHarmonizationDuration(parseInt(e.target.value) || 60)}
+                min={1}
+                max={3600}
+                disabled={isHarmonizing}
+              />
+            </div>
+            <div className="flex items-end gap-2">
+              <Button 
+                onClick={startHarmonization} 
+                disabled={isHarmonizing}
+                className="flex-1"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Start
+              </Button>
+              <Button 
+                onClick={pauseHarmonization} 
+                disabled={!isHarmonizing}
+                variant="outline"
+                className="flex-1"
+              >
+                <Pause className="h-4 w-4 mr-2" />
+                Pause
+              </Button>
+              <Button 
+                onClick={resetHarmonization}
+                variant="outline"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Fortschrittsanzeige */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>{elapsedTime.toFixed(1)}s / {harmonizationDuration}s</span>
+              <span>{harmonizationProgress.toFixed(1)}%</span>
+            </div>
+            <Progress value={harmonizationProgress} className="h-3" />
+          </div>
+
+          {/* Aktive Harmonisierung - Raten-Anzeige */}
+          {(isHarmonizing || elapsedTime > 0) && (
+            <div className="mt-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Wortenergie-Rate */}
+                <div className="bg-gradient-to-br from-green-100 to-green-50 p-4 rounded-lg border-2 border-green-400">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">Wortenergie-Rate</div>
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      {cleanWord} {potencyType}{potency}
+                    </div>
+                    <div className={`text-2xl font-bold text-green-800 ${isHarmonizing ? 'animate-pulse' : ''}`}>
+                      {finalRate.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Klienten-Rate */}
+                <div className="bg-gradient-to-br from-purple-100 to-purple-50 p-4 rounded-lg border-2 border-purple-400">
+                  <div className="text-center">
+                    <div className="text-sm text-gray-600 mb-1">Klienten-Rate</div>
+                    <div className="text-sm font-medium text-gray-700 mb-2">
+                      {clientFirstName} {clientLastName}
+                    </div>
+                    <div className={`text-2xl font-bold text-purple-800 ${isHarmonizing ? 'animate-pulse' : ''}`}>
+                      {clientRate.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div className={`text-center p-3 rounded-lg ${
+                isHarmonizing 
+                  ? 'bg-blue-100 border-2 border-blue-400' 
+                  : elapsedTime >= harmonizationDuration 
+                    ? 'bg-green-100 border-2 border-green-400'
+                    : 'bg-yellow-100 border-2 border-yellow-400'
+              }`}>
+                <div className="font-semibold">
+                  {isHarmonizing 
+                    ? '⚡ Harmonisierung läuft...' 
+                    : elapsedTime >= harmonizationDuration 
+                      ? '✅ Harmonisierung abgeschlossen'
+                      : '⏸️ Harmonisierung pausiert'}
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
