@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calculator } from 'lucide-react';
 import { alphabetSystems, type AlphabetType } from '@/utils/alphabetSystems';
+import { Badge } from '@/components/ui/badge';
 
 interface SingleCalculationFormProps {
   word: string;
@@ -18,6 +19,8 @@ interface SingleCalculationFormProps {
   onPotencyTypeChange: (type: 'D' | 'C' | 'LM' | 'M') => void;
   onAlphabetTypeChange: (type: AlphabetType) => void;
   onCalculate: () => void;
+  calculatedRate?: number;
+  highestLevel?: { level: number; value: number };
 }
 
 const SingleCalculationForm: React.FC<SingleCalculationFormProps> = ({
@@ -29,7 +32,9 @@ const SingleCalculationForm: React.FC<SingleCalculationFormProps> = ({
   onPotencyChange,
   onPotencyTypeChange,
   onAlphabetTypeChange,
-  onCalculate
+  onCalculate,
+  calculatedRate,
+  highestLevel
 }) => {
   return (
     <div className="space-y-6">
@@ -108,6 +113,23 @@ const SingleCalculationForm: React.FC<SingleCalculationFormProps> = ({
         <Calculator className="h-4 w-4 mr-2" />
         Copen-Rate berechnen
       </Button>
+
+      {calculatedRate !== undefined && highestLevel && (
+        <div className="mt-4 p-4 bg-white/10 rounded-lg border border-white/20">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-white font-medium">Berechnete Copen-Rate:</span>
+              <Badge className="bg-blue-600 text-white">{calculatedRate.toLocaleString('de-DE')}</Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white font-medium">Höchste Resonanzebene:</span>
+              <Badge className="bg-purple-600 text-white">
+                Ebene {highestLevel.level} ({highestLevel.value.toFixed(2)}%)
+              </Badge>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

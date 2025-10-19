@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, validateWordEnergy, exportCopenRatesToCSV, type CopenRateResult } from '@/utils/copenRateGenerator';
 import { type AlphabetType } from '@/utils/alphabetSystems';
+import { calculateLevelResonance, findHighestResonanceLevel } from '@/utils/levelResonance';
 import SingleCalculationForm from '@/components/forms/SingleCalculationForm';
 import ResultsTable from '@/components/tables/ResultsTable';
 import PatientManagerCloud from '@/components/PatientManagerCloud';
@@ -35,6 +36,8 @@ const CopenGeneratorPage: React.FC = () => {
   const [singleAlphabetType, setSingleAlphabetType] = useState<AlphabetType>('latin');
   const [results, setResults] = useState<CopenRateResult[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
+  const [currentCalculatedRate, setCurrentCalculatedRate] = useState<number | undefined>(undefined);
+  const [currentHighestLevel, setCurrentHighestLevel] = useState<{ level: number; value: number } | undefined>(undefined);
 
   const handleSingleCalculation = () => {
     const validation = validateWordEnergy(singleWord);
@@ -48,11 +51,20 @@ const CopenGeneratorPage: React.FC = () => {
     }
 
     const result = calculateCopenRate(singleWord, singlePotency, singlePotencyType, singleAlphabetType);
+    
+    // Berechne Ebenen-Resonanz
+    const levelResonance = calculateLevelResonance(result.rate, result.word);
+    const highestLevel = findHighestResonanceLevel(levelResonance);
+    
+    // Speichere für Anzeige
+    setCurrentCalculatedRate(result.rate);
+    setCurrentHighestLevel(highestLevel);
+    
     setResults(prev => [result, ...prev]);
     
     toast({
       title: 'Rate berechnet',
-      description: `${result.word} ${result.potencyType}${result.potency}: ${result.rate}`
+      description: `${result.word} ${result.potencyType}${result.potency}: ${result.rate.toLocaleString('de-DE')} (Ebene ${highestLevel.level})`
     });
   };
 
@@ -127,6 +139,8 @@ const CopenGeneratorPage: React.FC = () => {
                 onPotencyTypeChange={setSinglePotencyType}
                 onAlphabetTypeChange={setSingleAlphabetType}
                 onCalculate={handleSingleCalculation}
+                calculatedRate={currentCalculatedRate}
+                highestLevel={currentHighestLevel}
               />
             </CardContent>
           </Card>

@@ -256,20 +256,31 @@ const FileImportForm: React.FC<FileImportFormProps> = ({ onDataExtracted }) => {
       .filter(line => line.length > 0)
       .filter(line => /[a-zA-ZäöüÄÖÜß]/.test(line));
     
-    // Versuche, Muster wie "Mittelname Potenz" zu erkennen
+    // Versuche, Muster wie "Kategorie: Wortenergie" zu erkennen und zu trennen
     const csvLines: string[] = [];
     
     for (const line of lines) {
-      // Erkenne Muster wie "Arnica 6D" oder "Belladonna C12"
-      const remedyPattern = /([a-zA-ZäöüÄÖÜß\s]+)\s*([0-9]+)?\s*([DCM])/i;
-      const match = line.match(remedyPattern);
-      
-      if (match) {
-        const [, remedy, potency, type] = match;
-        csvLines.push(`${remedy.trim()},${potency || '6'},${type.toUpperCase()},latin`);
-      } else if (line.length > 2 && line.length < 50) {
-        // Fallback: einfache Mittelname mit Standardwerten
-        csvLines.push(`${line},6,D,latin`);
+      // Erkenne Muster wie "Kategorie: Wortenergie" und extrahiere nur die Wortenergie
+      if (line.includes(':')) {
+        const parts = line.split(':');
+        if (parts.length >= 2) {
+          const wordEnergy = parts.slice(1).join(':').trim();
+          if (wordEnergy.length > 2) {
+            csvLines.push(`${wordEnergy},6,D,latin`);
+          }
+        }
+      } else {
+        // Erkenne Muster wie "Arnica 6D" oder "Belladonna C12"
+        const remedyPattern = /([a-zA-ZäöüÄÖÜß\s]+)\s*([0-9]+)?\s*([DCM])/i;
+        const match = line.match(remedyPattern);
+        
+        if (match) {
+          const [, remedy, potency, type] = match;
+          csvLines.push(`${remedy.trim()},${potency || '6'},${type.toUpperCase()},latin`);
+        } else if (line.length > 2 && line.length < 200) {
+          // Fallback: einfache Wortenergie mit Standardwerten (erweiterte Länge für lange Sätze)
+          csvLines.push(`${line},6,D,latin`);
+        }
       }
     }
     
