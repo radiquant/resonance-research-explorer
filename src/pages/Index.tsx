@@ -22,6 +22,7 @@ import ElectroMetaboGraph from "@/components/theories/advanced/ElectroMetaboGrap
 import TheoriesCommonalities from "@/components/theories/advanced/TheoriesCommonalities";
 import PetrovWeltenformel from "@/components/theories/PetrovWeltenformel";
 import GrigoriGrabovoi from "@/components/theories/GrigoriGrabovoi";
+import UserMenu from "@/components/UserMenu";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -218,6 +219,9 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       <div className="container mx-auto px-4 py-8">
+        <div className="absolute top-4 right-4">
+          <UserMenu />
+        </div>
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-6 text-white">
             Resonanz Forschungs-Explorer

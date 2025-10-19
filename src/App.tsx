@@ -8,7 +8,9 @@ import Index from "./pages/Index";
 import ImportPage from "./pages/ImportPage";
 import CopenGeneratorPage from "./pages/CopenGeneratorPage";
 import FormulasPage from "./pages/FormulasPage";
+import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -19,10 +21,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/import" element={<ImportPage />} />
-          <Route path="/copen-generator" element={<CopenGeneratorPage />} />
-          <Route path="/formulas" element={<FormulasPage />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+          <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
+          <Route path="/copen-generator" element={<ProtectedRoute><CopenGeneratorPage /></ProtectedRoute>} />
+          <Route path="/formulas" element={<ProtectedRoute><FormulasPage /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
