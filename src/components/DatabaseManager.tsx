@@ -4,12 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2 } from 'lucide-react';
+import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2, Archive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, type CopenRateResult } from '@/utils/copenRateGenerator';
 import { analyzeImageWithOllama, compareImageSignatures, checkOllamaConnection } from '@/utils/ollamaClient';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { calculateLevelResonance, findHighestResonanceLevel } from '@/utils/levelResonance';
 
 interface CloudPatient {
   id: string;
@@ -32,6 +33,9 @@ interface ResonanceResult {
   rate: number;
   resonanceScore: number;
   clientResonance: number;
+  levelResonance?: Record<string, number>;
+  highestLevel?: number;
+  highestLevelValue?: number;
 }
 
 const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) => {
@@ -113,6 +117,65 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     return Math.min(100, Math.round(morphicResonance));
   };
 
+  const saveToArchive = async (result: ResonanceResult) => {
+    if (!user || !selectedPatient) {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: 'Kein Benutzer oder Patient ausgewählt'
+      });
+      return;
+    }
+
+    try {
+      const archiveData: any = {
+        user_id: user.id,
+        patient_id: selectedPatient.id,
+        word: result.word,
+        copen_rate: result.rate.toString(),
+        tested_potency: `${result.potencyType}${result.potency}`,
+        highest_resonance_level: result.highestLevel,
+        highest_resonance_value: result.highestLevelValue,
+        patient_data: selectedPatient,
+        database_entries: parseImportData(importData)
+      };
+
+      // Füge Ebenen-Resonanzwerte hinzu
+      if (result.levelResonance) {
+        archiveData.level_1_physical_particles = result.levelResonance.level_1;
+        archiveData.level_2_physical_structure = result.levelResonance.level_2;
+        archiveData.level_3_etheric_prana = result.levelResonance.level_3;
+        archiveData.level_4_etheric_meridians = result.levelResonance.level_4;
+        archiveData.level_5_astral_emotions = result.levelResonance.level_5;
+        archiveData.level_6_astral_thoughts = result.levelResonance.level_6;
+        archiveData.level_7_mental_time = result.levelResonance.level_7;
+        archiveData.level_8_mental_constructs = result.levelResonance.level_8;
+        archiveData.level_9_causal_blueprints = result.levelResonance.level_9;
+        archiveData.level_10_causal_alchemy = result.levelResonance.level_10;
+        archiveData.level_11_atmic_identity = result.levelResonance.level_11;
+        archiveData.level_12_atmic_love = result.levelResonance.level_12;
+        archiveData.level_13_creator = result.levelResonance.level_13;
+      }
+
+      const { error } = await supabase
+        .from('analysis_archives')
+        .insert(archiveData);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Erfolg',
+        description: 'Analyse im Archiv gespeichert'
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: error.message
+      });
+    }
+  };
+
   const handleAnalyzeDatabase = () => {
     if (!selectedPatient) {
       toast({
@@ -153,13 +216,20 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         const result = calculateCopenRate(word, pot.value, pot.type);
         const resonanceScore = analyzeResonance(result.rate, clientRate);
         
+        // Berechne Ebenen-Resonanz
+        const levelResonance = calculateLevelResonance(result.rate, word);
+        const { level: highestLevel, value: highestLevelValue } = findHighestResonanceLevel(levelResonance);
+        
         results.push({
           word,
           potency: pot.value,
           potencyType: pot.type,
           rate: result.rate,
           resonanceScore,
-          clientResonance: clientRate
+          clientResonance: clientRate,
+          levelResonance,
+          highestLevel,
+          highestLevelValue
         });
       }
     }
@@ -456,6 +526,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                       <th className="p-2 text-left">Potenz</th>
                       <th className="p-2 text-right">Copen-Rate</th>
                       <th className="p-2 text-right">Resonanz</th>
+                      <th className="p-2 text-left">Höchste Ebene</th>
+                      <th className="p-2 text-right">Aktionen</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -476,6 +548,23 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                           }`}>
                             {result.resonanceScore}%
                           </span>
+                        </td>
+                        <td className="p-2 text-xs">
+                          {result.highestLevel && (
+                            <span className="text-primary font-semibold">
+                              Ebene {result.highestLevel} ({result.highestLevelValue?.toFixed(0)}%)
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-2 text-right">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => saveToArchive(result)}
+                            title="In Analysearchiv speichern"
+                          >
+                            <Archive className="h-3 w-3" />
+                          </Button>
                         </td>
                       </tr>
                     ))}

@@ -14,6 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_archives: {
+        Row: {
+          analysis_timestamp: string
+          copen_rate: string
+          created_at: string
+          database_entries: string[] | null
+          highest_resonance_level: number | null
+          highest_resonance_value: number | null
+          id: string
+          level_1_physical_particles: number | null
+          level_10_causal_alchemy: number | null
+          level_11_atmic_identity: number | null
+          level_12_atmic_love: number | null
+          level_13_creator: number | null
+          level_2_physical_structure: number | null
+          level_3_etheric_prana: number | null
+          level_4_etheric_meridians: number | null
+          level_5_astral_emotions: number | null
+          level_6_astral_thoughts: number | null
+          level_7_mental_time: number | null
+          level_8_mental_constructs: number | null
+          level_9_causal_blueprints: number | null
+          patient_data: Json | null
+          patient_id: string | null
+          tested_potency: string | null
+          updated_at: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          analysis_timestamp?: string
+          copen_rate: string
+          created_at?: string
+          database_entries?: string[] | null
+          highest_resonance_level?: number | null
+          highest_resonance_value?: number | null
+          id?: string
+          level_1_physical_particles?: number | null
+          level_10_causal_alchemy?: number | null
+          level_11_atmic_identity?: number | null
+          level_12_atmic_love?: number | null
+          level_13_creator?: number | null
+          level_2_physical_structure?: number | null
+          level_3_etheric_prana?: number | null
+          level_4_etheric_meridians?: number | null
+          level_5_astral_emotions?: number | null
+          level_6_astral_thoughts?: number | null
+          level_7_mental_time?: number | null
+          level_8_mental_constructs?: number | null
+          level_9_causal_blueprints?: number | null
+          patient_data?: Json | null
+          patient_id?: string | null
+          tested_potency?: string | null
+          updated_at?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          analysis_timestamp?: string
+          copen_rate?: string
+          created_at?: string
+          database_entries?: string[] | null
+          highest_resonance_level?: number | null
+          highest_resonance_value?: number | null
+          id?: string
+          level_1_physical_particles?: number | null
+          level_10_causal_alchemy?: number | null
+          level_11_atmic_identity?: number | null
+          level_12_atmic_love?: number | null
+          level_13_creator?: number | null
+          level_2_physical_structure?: number | null
+          level_3_etheric_prana?: number | null
+          level_4_etheric_meridians?: number | null
+          level_5_astral_emotions?: number | null
+          level_6_astral_thoughts?: number | null
+          level_7_mental_time?: number | null
+          level_8_mental_constructs?: number | null
+          level_9_causal_blueprints?: number | null
+          patient_data?: Json | null
+          patient_id?: string | null
+          tested_potency?: string | null
+          updated_at?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
       harmonization_sessions: {
         Row: {
           completed_at: string | null

@@ -11,6 +11,7 @@ import SingleCalculationForm from '@/components/forms/SingleCalculationForm';
 import ResultsTable from '@/components/tables/ResultsTable';
 import PatientManagerCloud from '@/components/PatientManagerCloud';
 import HarmonizationArchiveCloud from '@/components/HarmonizationArchiveCloud';
+import AnalysisArchiveCloud from '@/components/AnalysisArchiveCloud';
 import UserMenu from '@/components/UserMenu';
 
 // Cloud Patient Type (from database)
@@ -146,6 +147,9 @@ const CopenGeneratorPage: React.FC = () => {
               patientId={selectedPatient?.id}
             />
           </div>
+
+          {/* Analysearchiv (12+1 Ebenen) */}
+          <AnalysisArchiveCloud />
         </div>
       </div>
     </div>

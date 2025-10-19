@@ -228,7 +228,11 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       const { error } = await supabase
         .from('patients')
         .update({
-          ...formData,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          birth_date: formData.birth_date,
+          birth_place: formData.birth_place,
+          image_signature: formData.image_signature || null,
           image_signature_active: imageSignatureActive,
         })
         .eq('id', editingId);
