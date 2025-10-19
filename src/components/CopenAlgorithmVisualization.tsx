@@ -45,6 +45,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const [potency, setPotency] = useState(6);
   const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
   const [autoPotency, setAutoPotency] = useState(false);
+  const [autoCalculatedType, setAutoCalculatedType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
+  const [autoCalculatedPotency, setAutoCalculatedPotency] = useState(6);
   const [kozyrevEnabled, setKozyrevEnabled] = useState(false);
   const [showCalculation, setShowCalculation] = useState(false);
 
@@ -108,8 +110,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const cleanWord = normalizeWordEnergy(word);
 
   // Auto-Potenz-Berechnung: Intelligente Ermittlung basierend auf Klientendaten
-  const calculateAutoPotency = (): number => {
-    if (!selectedPatient) return 6;
+  const calculateAutoPotency = (): { type: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3', potency: number } => {
+    if (!selectedPatient) return { type: 'D', potency: 6 };
 
     // Kombinierte Datengrundlage: Wortenergie + Klientendaten
     const combinedData = `${word} ${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
@@ -162,15 +164,20 @@ const CopenAlgorithmVisualization: React.FC = () => {
       }
     }
     
-    // Typ und Potenz setzen
-    if (autoPotency) {
-      setPotencyType(bestMatch.type);
-    }
-    
-    return bestMatch.potency;
+    return bestMatch;
   };
 
-  const effectivePotency = autoPotency ? calculateAutoPotency() : potency;
+  // useEffect zur automatischen Typ- und Potenz-Berechnung
+  useEffect(() => {
+    if (autoPotency && selectedPatient) {
+      const result = calculateAutoPotency();
+      setAutoCalculatedType(result.type);
+      setAutoCalculatedPotency(result.potency);
+    }
+  }, [autoPotency, selectedPatient, word, kozyrevEnabled]);
+
+  const effectivePotency = autoPotency ? autoCalculatedPotency : potency;
+  const effectiveType = autoPotency ? autoCalculatedType : potencyType;
 
   // Schritt 1: Buchstabenwerte berechnen
   const letterValues = [];
@@ -216,7 +223,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const getPotencyModifier = () => {
     if (effectivePotency === 0) return 0;
     
-    switch (potencyType) {
+    switch (effectiveType) {
       case 'D':
         return Math.floor(fibonacciRate * (effectivePotency / 10));
       case 'C':
@@ -225,6 +232,12 @@ const CopenAlgorithmVisualization: React.FC = () => {
         return Math.floor(fibonacciRate * (effectivePotency / 2));
       case 'M':
         return Math.floor(fibonacciRate * effectivePotency);
+      case 'F1':
+        return Math.floor(fibonacciRate * (effectivePotency / 6));
+      case 'F2':
+        return Math.floor(fibonacciRate * (effectivePotency / 4));
+      case 'F3':
+        return Math.floor(fibonacciRate * (effectivePotency / 3));
       default:
         return 0;
     }
@@ -699,7 +712,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
           {/* LIVE PREVIEW der finalen Rate */}
           <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-lg text-center border-2">
             <div className="text-lg mb-2">
-              "{cleanWord}" {potencyType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
+              "{cleanWord}" {effectiveType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
               {kozyrevEnabled && ' • Kozyrev aktiv'}
             </div>
             <div className="text-3xl font-bold">
