@@ -52,33 +52,50 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const { toast } = useToast();
   const { user } = useAuth();
 
+  const [savedDatabases, setSavedDatabases] = useState<Array<{ id: string; name: string; entries: string[] }>>([]);
+  const [loadingDatabases, setLoadingDatabases] = useState(false);
+
+  useEffect(() => {
+    if (user) loadSavedDatabases();
+  }, [user]);
   useEffect(() => {
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
 
   const parseImportData = (data: string): string[] => {
-    // Auto-detect format: CSV or TXT
-    // WICHTIG: Ganze Sätze werden als EIN Datensatz behandelt
+    // Auto-detect format: CSV (mit Potenz/Typ) oder TXT (eine Zeile = ein Datensatz)
+    // WICHTIG: Ganze Sätze werden als EIN Datensatz behandelt – Kommata in Sätzen werden NICHT getrennt
     const lines = data.trim().split('\n');
     const entries: string[] = [];
 
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.length === 0) continue;
+    // Helper: Erkennen, ob eine Zeile wie unser CSV-Format aussieht: Wort,Potenz,Typ,(Alphabet?)
+    const looksLikeCsvRecord = (line: string) => {
+      const parts = line.split(',').map(p => p.trim());
+      if (parts.length < 3) return false;
+      const potencyNum = parseInt(parts[1], 10);
+      const type = (parts[2] || '').toUpperCase();
+      const validType = ['D', 'C', 'LM', 'M'].includes(type);
+      return !isNaN(potencyNum) && validType;
+    };
 
-      if (trimmedLine.includes(',')) {
-        // CSV format - Split bei Komma, jeder Teil ist ein Datensatz (kann Satz sein)
-        const parts = trimmedLine.split(',').map(p => p.trim());
-        entries.push(...parts.filter(p => p.length > 0));
+    // Wenn mindestens eine Zeile nach CSV aussieht, verarbeiten wir NUR zeilenweise CSV, sonst zeilenweise TXT
+    const anyCsv = lines.some(l => looksLikeCsvRecord(l));
+
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (line.length === 0) continue;
+
+      if (anyCsv) {
+        // CSV-Modus: jede Zeile ist ein Datensatz (auch wenn sie Kommata enthält)
+        entries.push(line);
       } else {
-        // TXT format - eine Zeile = ein Datensatz (kann ganzer Satz sein)
-        entries.push(trimmedLine);
+        // TXT-Modus: eine Zeile = ein Datensatz (Sätze bleiben zusammen, Kommata werden NICHT aufgetrennt)
+        entries.push(line);
       }
     }
 
-    return [...new Set(entries)]; // Remove duplicates
+    return [...new Set(entries)]; // Deduplizieren
   };
-
   const calculateClientRate = (patient: CloudPatient): number => {
     let clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
     
@@ -417,6 +434,41 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       setIsSaving(false);
     }
   };
+  
+  // Gespeicherte Datenbanken laden/verwalten
+  async function loadSavedDatabases() {
+    try {
+      setLoadingDatabases(true);
+      const { data, error } = await supabase
+        .from('word_databases')
+        .select('id,name,entries')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setSavedDatabases(data || []);
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Fehler', description: e.message });
+    } finally {
+      setLoadingDatabases(false);
+    }
+  }
+
+  const handleLoadDatabase = (db: { id: string; name: string; entries: string[] }) => {
+    setImportData((db.entries || []).join('\n'));
+    setDatabaseName(db.name || '');
+    toast({ title: 'Geladen', description: `Datenbank "${db.name}" geladen` });
+  };
+
+  const handleDeleteDatabase = async (id: string) => {
+    if (!confirm('Datenbank wirklich löschen?')) return;
+    try {
+      const { error } = await supabase.from('word_databases').delete().eq('id', id);
+      if (error) throw error;
+      toast({ title: 'Erfolg', description: 'Datenbank gelöscht' });
+      await loadSavedDatabases();
+    } catch (e: any) {
+      toast({ variant: 'destructive', title: 'Fehler', description: e.message });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -443,9 +495,36 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             <Textarea
               value={importData}
               onChange={(e) => setImportData(e.target.value)}
-              placeholder="Fügen Sie Ihre Datenbank ein (Wortenergien oder ganze Sätze)&#10;TXT: Eine Zeile = Ein Datensatz&#10;Beispiel:&#10;ARNICA&#10;Chronische Schmerzen im Kopf&#10;BELLADONNA&#10;&#10;CSV: Komma-getrennt&#10;Beispiel:&#10;ARNICA, Chronische Schmerzen, BELLADONNA"
+              placeholder="Fügen Sie Ihre Datenbank ein (Wortenergien oder ganze Sätze)&#10;TXT: Eine Zeile = Ein Datensatz&#10;Beispiel:&#10;ARNICA&#10;Chronische Schmerzen im Kopf&#10;BELLADONNA&#10;&#10;CSV: Eine Zeile pro Datensatz im Format Wort,Potenz,Typ,Alphabet"
               className="min-h-32 font-mono text-sm"
             />
+          </div>
+
+          <div className="border-t pt-4 space-y-2">
+            <Label>Gespeicherte Datenbanken</Label>
+            <div className="flex gap-2 mb-2">
+              <Button size="sm" variant="outline" onClick={loadSavedDatabases}>Aktualisieren</Button>
+            </div>
+            {loadingDatabases ? (
+              <p className="text-sm text-muted-foreground">Lade Datenbanken...</p>
+            ) : savedDatabases.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Keine Datenbanken gespeichert</p>
+            ) : (
+              <div className="max-h-40 overflow-y-auto space-y-2">
+                {savedDatabases.map((db) => (
+                  <div key={db.id} className="flex items-center justify-between p-2 border rounded">
+                    <div>
+                      <p className="font-medium text-sm">{db.name}</p>
+                      <p className="text-xs text-muted-foreground">{db.entries?.length || 0} Einträge</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="secondary" onClick={() => handleLoadDatabase(db)}>Laden</Button>
+                      <Button size="sm" variant="destructive" onClick={() => handleDeleteDatabase(db.id)}>Löschen</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Bild-Upload für Resonanzanalyse */}
@@ -515,6 +594,13 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 <Button onClick={() => exportResults('txt')} variant="outline" size="sm">
                   <FileText className="h-4 w-4 mr-2" />
                   TXT Export
+                </Button>
+                <Button
+                  onClick={() => { setResonanceResults([]); toast({ title: 'Gelöscht', description: 'Alle Analyse-Ergebnisse wurden entfernt' }); }}
+                  variant="destructive"
+                  size="sm"
+                >
+                  Alle löschen
                 </Button>
               </div>
 

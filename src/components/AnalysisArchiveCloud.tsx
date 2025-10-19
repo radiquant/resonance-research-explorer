@@ -145,9 +145,33 @@ export const AnalysisArchiveCloud = () => {
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="h-5 w-5" />
-            Analysearchiv (12+1 Ebenen)
+          <CardTitle className="flex items-center justify-between gap-2">
+            <span className="flex items-center gap-2">
+              <Archive className="h-5 w-5" />
+              Analysearchiv (12+1 Ebenen)
+            </span>
+            {archives.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={async () => {
+                  if (!confirm('Alle Archiveinträge löschen?')) return;
+                  try {
+                    const { error } = await supabase
+                      .from('analysis_archives')
+                      .delete()
+                      .eq('user_id', user!.id);
+                    if (error) throw error;
+                    toast({ title: 'Erfolg', description: 'Alle Archiveinträge gelöscht' });
+                    loadArchives();
+                  } catch (e: any) {
+                    toast({ variant: 'destructive', title: 'Fehler', description: e.message });
+                  }
+                }}
+              >
+                Alle löschen
+              </Button>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>

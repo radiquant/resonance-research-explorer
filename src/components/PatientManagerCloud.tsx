@@ -225,16 +225,19 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
 
     setSubmitting(true);
     try {
+      const updateData: any = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        birth_date: formData.birth_date,
+        birth_place: formData.birth_place,
+        image_signature_active: imageSignatureActive,
+      };
+      if (formData.image_signature && formData.image_signature.trim() !== '') {
+        updateData.image_signature = formData.image_signature;
+      }
       const { error } = await supabase
         .from('patients')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          birth_date: formData.birth_date,
-          birth_place: formData.birth_place,
-          image_signature: formData.image_signature || null,
-          image_signature_active: imageSignatureActive,
-        })
+        .update(updateData)
         .eq('id', editingId);
 
       if (error) throw error;
@@ -245,11 +248,14 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       // Update selectedPatient wenn er editiert wurde
       if (selectedPatient?.id === editingId) {
         const updated = patients.find(p => p.id === editingId);
-        if (updated) onSelectPatient({ 
-          ...updated, 
-          ...formData, 
-          image_signature_active: imageSignatureActive 
-        });
+        if (updated) {
+          onSelectPatient({
+            ...updated,
+            ...formData,
+            image_signature: (formData.image_signature && formData.image_signature.trim() !== '') ? formData.image_signature : updated.image_signature,
+            image_signature_active: imageSignatureActive 
+          });
+        }
       }
 
       toast({
