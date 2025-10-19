@@ -86,6 +86,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours'>('minutes');
 
   const { toast } = useToast();
+  const restoredToastShownRef = React.useRef(false);
 
   // Wortenergie-Normalisierung (nur Buchstaben)
   const normalizeWordEnergy = (word: string): string => {
@@ -176,8 +177,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
     }
   }, [autoPotency, selectedPatient, word, kozyrevEnabled]);
 
-  const effectivePotency = autoPotency ? autoCalculatedPotency : potency;
-  const effectiveType = autoPotency ? autoCalculatedType : potencyType;
+  const effectivePotency = potency;
+  const effectiveType = potencyType;
 
   // Schritt 1: Buchstabenwerte berechnen
   const letterValues = [];
@@ -357,10 +358,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
           
           setHarmonizations(activeHarms);
           
-          toast({
-            title: "Harmonisierungen geladen",
-            description: `${activeHarms.length} aktive Session(s) wiederhergestellt`,
-          });
+          if (!restoredToastShownRef.current) {
+            toast({
+              title: "Harmonisierungen geladen",
+              description: `${activeHarms.length} aktive Session(s) wiederhergestellt`,
+            });
+            restoredToastShownRef.current = true;
+          }
         }
       } catch (err) {
         console.error('Fehler:', err);
@@ -416,10 +420,15 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 const elapsedTime = totalDuration - remainingTime;
                 const progress = totalDuration > 0 ? (elapsedTime / totalDuration) * 100 : 0;
                 
+                const prevElapsed = harm.elapsedTime || 0;
+                const serverElapsed = elapsedTime;
+                const syncedElapsed = Math.max(prevElapsed, serverElapsed);
+                const syncedProgress = totalDuration > 0 ? (syncedElapsed / totalDuration) * 100 : 0;
+                
                 return {
                   ...harm,
-                  elapsedTime: elapsedTime,
-                  progress: progress,
+                  elapsedTime: syncedElapsed,
+                  progress: syncedProgress,
                   remainingSeconds: remainingTime
                 };
               }
@@ -740,11 +749,10 @@ const CopenAlgorithmVisualization: React.FC = () => {
               <Input
                 id="potency"
                 type="number"
-                value={autoPotency ? effectivePotency : potency}
+                value={potency}
                 onChange={(e) => setPotency(parseInt(e.target.value) || 0)}
                 min={0}
                 max={50000}
-                disabled={autoPotency}
               />
               <div className="text-xs text-muted-foreground mt-1">
                 <label className="flex items-center gap-1 cursor-pointer">
@@ -760,7 +768,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
             </div>
             <div>
               <Label htmlFor="potencyType">Typ {autoPotency && '(Auto)'}</Label>
-              <Select value={potencyType} onValueChange={(value) => setPotencyType(value as any)} disabled={autoPotency}>
+              <Select value={potencyType} onValueChange={(value) => setPotencyType(value as any)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
