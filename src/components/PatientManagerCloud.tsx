@@ -410,19 +410,28 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
                   </p>
                 )}
                 {formData.image_signature && (
-                  <div className="mt-2 space-y-2">
-                    <div className="p-2 bg-primary/5 rounded text-xs">
-                      <strong>Bildsignatur:</strong> {formData.image_signature.substring(0, 150)}...
+                  <div className="mt-2 p-3 bg-primary/10 rounded-lg border border-primary/30 space-y-2">
+                    <div className="text-xs text-muted-foreground">
+                      <strong className="text-foreground">Bildsignatur:</strong>
+                      <div className="mt-1 p-2 bg-background/50 rounded font-mono text-xs break-all">
+                        {formData.image_signature.substring(0, 200)}...
+                      </div>
                     </div>
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={imageSignatureActive}
-                        onChange={(e) => setImageSignatureActive(e.target.checked)}
-                        className="w-4 h-4"
-                      />
-                      <span>Bildsignatur in Resonanzanalyse aktiv</span>
-                    </label>
+                    <div className="flex items-center justify-between p-2 bg-background/30 rounded">
+                      <span className="text-sm font-medium">Bildsignatur in Resonanzanalyse verwenden:</span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={imageSignatureActive}
+                          onChange={(e) => setImageSignatureActive(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                        <span className="ml-3 text-sm font-medium">
+                          {imageSignatureActive ? 'Aktiv' : 'Inaktiv'}
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>

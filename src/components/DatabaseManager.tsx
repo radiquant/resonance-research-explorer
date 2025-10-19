@@ -11,6 +11,7 @@ import { analyzeImageWithOllama, compareImageSignatures, checkOllamaConnection }
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { calculateLevelResonance, findHighestResonanceLevel } from '@/utils/levelResonance';
+import { analyzeRates, DEFAULT_ANALYSIS_CONFIG, type RateObject } from '@/utils/resonanceAnalysis';
 
 interface CloudPatient {
   id: string;
@@ -215,71 +216,51 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     setIsAnalyzing(true);
     const words = parseImportData(importData);
     const clientRate = calculateClientRate(selectedPatient);
-    const results: ResonanceResult[] = [];
+    
+    // Erstelle Rates-Array für den Java-Algorithmus
+    const useImgSig = selectedPatient.image_signature_active ?? true;
+    const imgSig = selectedPatient.image_signature ?? undefined;
+    
+    const ratesInput = words.map(word => {
+      // Berechne Copen-Rate für jedes Wort (mit D30 als Standard-Potenz)
+      const result = calculateCopenRate(word, 30, 'D', 'latin', imgSig, useImgSig);
+      return {
+        name: word,
+        copenRate: result.rate
+      };
+    });
 
-    const potencies: Array<{ type: 'D' | 'C' | 'LM' | 'M', value: number }> = [
-      { type: 'D', value: 6 },
-      { type: 'D', value: 12 },
-      { type: 'D', value: 30 },
-      { type: 'C', value: 30 },
-      { type: 'C', value: 200 },
-      { type: 'LM', value: 6 },
-      { type: 'M', value: 1 }
-    ];
-
-    // Für jedes Wort: Finde die optimale Potenz
-    for (const word of words) {
-      let bestPotency = potencies[0];
-      let bestResonance = 0;
-      
-      // Teste alle Potenzen und finde die beste
-      for (const pot of potencies) {
-        const useImgSig = selectedPatient.image_signature_active ?? true;
-        const imgSig = selectedPatient.image_signature ?? undefined;
-        const result = calculateCopenRate(word, pot.value, pot.type, 'latin', imgSig, useImgSig);
-        const levelResonance = calculateLevelResonance(result.rate, word);
-        const { value: levelValue } = findHighestResonanceLevel(levelResonance);
-        const resonanceScore = analyzeResonance(result.rate, clientRate);
-        
-        // Kombiniere beide Resonanzwerte für optimale Auswahl
-        const combinedScore = (resonanceScore + levelValue) / 2;
-        
-        if (combinedScore > bestResonance) {
-          bestResonance = combinedScore;
-          bestPotency = pot;
-        }
-      }
-
-      // Berechne finale Werte mit bester Potenz (mit/ohne Bildsignatur je nach Klient-Einstellung)
-      const useImgSig = selectedPatient.image_signature_active ?? true;
-      const imgSig = selectedPatient.image_signature ?? undefined;
-      const result = calculateCopenRate(word, bestPotency.value, bestPotency.type, 'latin', imgSig, useImgSig);
-      const levelResonance = calculateLevelResonance(result.rate, word);
+    // Führe Resonanzanalyse nach Java-Algorithmus durch
+    const analysisResult = analyzeRates(ratesInput, DEFAULT_ANALYSIS_CONFIG);
+    
+    // Konvertiere zu ResonanceResult-Format
+    const results: ResonanceResult[] = analysisResult.rateObjects.map((rateObj: RateObject) => {
+      // Berechne Level-Resonanz mit dem originalen Algorithmus
+      const levelResonance = calculateLevelResonance(rateObj.copenRate, rateObj.rateName);
       const { level: highestLevel, value: highestLevelValue } = findHighestResonanceLevel(levelResonance);
-      const resonanceScore = analyzeResonance(result.rate, clientRate);
       
-      results.push({
-        word,
-        potency: bestPotency.value,
-        potencyType: bestPotency.type,
-        rate: result.rate,
+      // Resonanz-Score aus energeticValue normalisieren
+      const resonanceScore = Math.min(100, Math.round((rateObj.energeticValue / 100) * 100));
+      
+      return {
+        word: rateObj.rateName,
+        potency: rateObj.potency,
+        potencyType: 'D' as const,
+        rate: rateObj.copenRate,
         resonanceScore,
         clientResonance: clientRate,
         levelResonance,
         highestLevel,
-        highestLevelValue
-      });
-    }
-
-    // Sortiere nach Resonanz-Score
-    results.sort((a, b) => b.resonanceScore - a.resonanceScore);
+        highestLevelValue: rateObj.levelDistribution[rateObj.dominantLevel] || 0,
+      };
+    });
     
     setResonanceResults(results);
     setIsAnalyzing(false);
     
     toast({
       title: "Analyse abgeschlossen",
-      description: `${results.length} Wortenergien mit optimalen Potenzen analysiert`,
+      description: `${results.length} Einträge analysiert (${analysisResult.numberOfTrials} Durchläufe) - Java-Algorithmus`,
     });
   };
 
