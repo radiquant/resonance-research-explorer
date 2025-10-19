@@ -32,6 +32,7 @@ interface Patient {
   birth_date: string;
   birth_place: string;
   image_signature?: string | null;
+  image_signature_active?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -182,6 +183,7 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
         .insert({
           user_id: user.id,
           ...formData,
+          image_signature_active: imageSignatureActive,
         })
         .select()
         .single();
@@ -215,6 +217,7 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       birth_place: patient.birth_place,
       image_signature: patient.image_signature || ''
     });
+    setImageSignatureActive(patient.image_signature_active ?? true);
   };
 
   const handleUpdate = async () => {
@@ -224,7 +227,10 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
     try {
       const { error } = await supabase
         .from('patients')
-        .update(formData)
+        .update({
+          ...formData,
+          image_signature_active: imageSignatureActive,
+        })
         .eq('id', editingId);
 
       if (error) throw error;
@@ -235,7 +241,11 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       // Update selectedPatient wenn er editiert wurde
       if (selectedPatient?.id === editingId) {
         const updated = patients.find(p => p.id === editingId);
-        if (updated) onSelectPatient({ ...updated, ...formData });
+        if (updated) onSelectPatient({ 
+          ...updated, 
+          ...formData, 
+          image_signature_active: imageSignatureActive 
+        });
       }
 
       toast({

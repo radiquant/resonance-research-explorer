@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, type CopenRateResult } from '@/utils/copenRateGenerator';
 import { analyzeImageWithOllama, compareImageSignatures, checkOllamaConnection } from '@/utils/ollamaClient';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CloudPatient {
   id: string;
@@ -33,16 +35,19 @@ interface ResonanceResult {
 
 const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) => {
   const [importData, setImportData] = useState('');
+  const [databaseName, setDatabaseName] = useState('');
   const [resonanceResults, setResonanceResults] = useState<ResonanceResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
   const [analyzingImage, setAnalyzingImage] = useState(false);
   const [imageResonanceResults, setImageResonanceResults] = useState<Array<{word: string; score: number; analysis: string}>>([]);
   const [ollamaConnected, setOllamaConnected] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  React.useEffect(() => {
+  useEffect(() => {
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
 
@@ -274,6 +279,64 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     });
   };
 
+  const handleSaveDatabase = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Sie müssen angemeldet sein",
+      });
+      return;
+    }
+
+    if (!importData.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Keine Daten zum Speichern vorhanden",
+      });
+      return;
+    }
+
+    if (!databaseName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Bitte geben Sie einen Datenbanknamen ein",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const entries = parseImportData(importData);
+      
+      const { error } = await supabase
+        .from('word_databases')
+        .insert({
+          user_id: user.id,
+          name: databaseName,
+          entries: entries,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Datenbank gespeichert",
+        description: `${entries.length} Einträge gespeichert als "${databaseName}"`,
+      });
+      setDatabaseName('');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: error.message,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -284,6 +347,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="md:col-span-2">
+              <Label>Datenbank-Name (für Speicherung)</Label>
+              <Input
+                value={databaseName}
+                onChange={(e) => setDatabaseName(e.target.value)}
+                placeholder="z.B. Homöopathie Hauptmittel"
+              />
+            </div>
+          </div>
           <div>
             <Label>Datenbank importieren (.txt oder .csv)</Label>
             <Textarea
@@ -325,7 +398,15 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             )}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={handleSaveDatabase} disabled={isSaving} variant="secondary">
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Datenbank speichern
+            </Button>
             <Button onClick={handleAnalyzeDatabase} disabled={isAnalyzing || !selectedPatient} className="flex-1">
               <Database className="h-4 w-4 mr-2" />
               {isAnalyzing ? 'Analysiere...' : 'Text-Resonanzen analysieren'}
