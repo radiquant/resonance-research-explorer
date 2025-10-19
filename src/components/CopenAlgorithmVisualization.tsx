@@ -39,6 +39,8 @@ import DatabaseManager from './DatabaseManager';
 import KozyrevIndicators from './KozyrevIndicators';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { applyQuantumFluctuation } from '@/utils/copenRateGenerator';
+import { useWordEnergyHistory } from '@/hooks/useWordEnergyHistory';
 
 const CopenAlgorithmVisualization: React.FC = () => {
   const [word, setWord] = useState('NUX VOMICA');
@@ -49,6 +51,10 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const [autoCalculatedPotency, setAutoCalculatedPotency] = useState(6);
   const [kozyrevEnabled, setKozyrevEnabled] = useState(false);
   const [showCalculation, setShowCalculation] = useState(false);
+  const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
+
+  // Wortenergie-Historie
+  const { history, addToHistory } = useWordEnergyHistory();
 
   // Ausgewählter Patient
   const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
@@ -275,25 +281,26 @@ const CopenAlgorithmVisualization: React.FC = () => {
     return clientFibonacciRate;
   };
 
-  // Hardware-Quantum-Seed (CPU-Jitter)
-  const getQuantumSeed = (): number => {
-    const t1 = performance.now();
-    const t2 = performance.now();
-    const jitter = Math.abs(t2 - t1);
-    return jitter * 1000000;
-  };
-
+  // Hardware-Quantum-Effekt: Nutzt CPU-Jitter wenn Kozyrev aktiviert
   const applyQuantumFluctuations = (baseRate: number): number => {
-    const quantumSeed = getQuantumSeed();
-    const fluctuation = (quantumSeed % 100) / 1000;
-    const modulatedRate = baseRate * (1 + fluctuation - 0.05);
-    return Math.round(modulatedRate);
+    if (!kozyrevEnabled) return baseRate;
+    return applyQuantumFluctuation(baseRate, true);
   };
 
   const clientRate = calculateClientRate();
 
   const handleCalculate = () => {
     setShowCalculation(true);
+    // Speichere Wortenergie in Historie
+    if (word.trim()) {
+      addToHistory(word);
+    }
+  };
+
+  // Historie-Auswahl Handler
+  const handleHistorySelect = (historyWord: string) => {
+    setWord(historyWord);
+    setShowHistoryDropdown(false);
   };
 
   // Cloud-Persistenz: Harmonisierungen laden beim Mount UND bei Rückkehr zur App
@@ -740,16 +747,35 @@ const CopenAlgorithmVisualization: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="md:col-span-2">
+            <div className="md:col-span-2 relative">
               <Label htmlFor="word">Wortenergie</Label>
-              <Input
-                id="word"
-                value={word}
-                onChange={(e) => setWord(e.target.value)}
-                placeholder="z.B. Nux vomica"
-              />
+              <div className="relative">
+                <Input
+                  id="word"
+                  value={word}
+                  onChange={(e) => setWord(e.target.value)}
+                  onFocus={() => setShowHistoryDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowHistoryDropdown(false), 200)}
+                  placeholder="z.B. Nux vomica"
+                />
+                {showHistoryDropdown && history.length > 0 && (
+                  <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    {history.map((item, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => handleHistorySelect(item)}
+                        className="w-full px-3 py-2 text-left hover:bg-accent hover:text-accent-foreground text-sm"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="text-xs text-muted-foreground mt-1">
                 Normalisiert: "{cleanWord}"
+                {history.length > 0 && ' • Klick für Historie'}
               </div>
             </div>
             <div>
@@ -803,8 +829,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
                     onChange={(e) => setKozyrevEnabled(e.target.checked)}
                     className="rounded"
                   />
-                  Kozyrev-Modulation
+                  Kozyrev-Hardware
                 </label>
+                {kozyrevEnabled && (
+                  <div className="text-xs text-blue-700 mt-1 font-semibold">
+                    ⚡ Quanten-Sensor aktiv
+                  </div>
+                )}
               </div>
             </div>
           </div>
