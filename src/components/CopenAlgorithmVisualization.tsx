@@ -6,9 +6,35 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw, StopCircle, Plus, Trash2, Archive } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { Patient, ActiveHarmonization, HarmonizationSession } from '@/types/patient';
-import PatientManager from './PatientManager';
-import HarmonizationArchive from './HarmonizationArchive';
+import type { ActiveHarmonization } from '@/types/patient';
+
+interface CloudPatient {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  birth_date: string;
+  birth_place: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface CloudHarmonizationSession {
+  id: string;
+  user_id: string;
+  patient_id: string;
+  word: string;
+  tested_potency: string | null;
+  status: string;
+  duration_seconds: number;
+  progress: number;
+  started_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+import PatientManagerCloud from './PatientManagerCloud';
+import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
 import { useToast } from '@/hooks/use-toast';
 
 const CopenAlgorithmVisualization: React.FC = () => {
@@ -19,7 +45,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const [showCalculation, setShowCalculation] = useState(false);
 
   // Ausgewählter Patient
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
 
   // Mehrere parallele Harmonisierungen
   const [harmonizations, setHarmonizations] = useState<ActiveHarmonization[]>([]);
@@ -54,7 +80,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const calculateAutoPotency = (): number => {
     if (!selectedPatient || !autoPotency) return potency;
 
-    const clientData = `${selectedPatient.firstName} ${selectedPatient.lastName} ${selectedPatient.birthDate}`;
+    const clientData = `${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date}`;
     const combinedData = `${cleanWord} ${clientData}`;
     
     let sum = 0;
@@ -143,7 +169,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const calculateClientRate = () => {
     if (!selectedPatient) return 0;
 
-    const clientData = `${selectedPatient.firstName} ${selectedPatient.lastName} ${selectedPatient.birthDate} ${selectedPatient.birthPlace}`;
+    const clientData = `${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
     const cleanClientData = normalizeWordEnergy(clientData);
     
     let position = 1;
@@ -189,7 +215,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
             // Automatische Potenz-Abtestung nach Harmonisierung
             const patient = selectedPatient;
             if (patient) {
-              const combinedData = `${harm.word} ${patient.firstName} ${patient.lastName} ${patient.birthDate}`;
+              const combinedData = `${harm.word} ${patient.first_name} ${patient.last_name} ${patient.birth_date}`;
               let sum = 0;
               for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
                 sum += char.charCodeAt(0) - 64;
@@ -271,11 +297,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
     return () => clearInterval(interval);
   }, [selectedPatient, toast]);
 
-  const archiveSession = (session: HarmonizationSession) => {
-    const stored = localStorage.getItem('copen-harmonization-archive');
-    const archive: HarmonizationSession[] = stored ? JSON.parse(stored) : [];
-    archive.push(session);
-    localStorage.setItem('copen-harmonization-archive', JSON.stringify(archive));
+  const archiveSession = async (session: any) => {
+    // Cloud-Persistenz wird über HarmonizationArchiveCloud gehandhabt
   };
 
   const startNewHarmonization = () => {
@@ -348,79 +371,16 @@ const CopenAlgorithmVisualization: React.FC = () => {
     }
   };
 
-  const exportAllData = () => {
-    const data = {
-      patients: JSON.parse(localStorage.getItem('copen-patients') || '[]'),
-      archive: JSON.parse(localStorage.getItem('copen-harmonization-archive') || '[]'),
-      exportDate: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `copen-daten-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Export erfolgreich",
-      description: "Alle Daten wurden exportiert"
-    });
-  };
+  // Export erfolgt über Cloud-Komponenten
 
-  const exportAllDataTxt = () => {
-    const patients = JSON.parse(localStorage.getItem('copen-patients') || '[]');
-    const archive = JSON.parse(localStorage.getItem('copen-harmonization-archive') || '[]');
-    
-    let txt = '=== BRUCE COPEN DATENBANK EXPORT ===\n';
-    txt += `Export-Datum: ${new Date().toLocaleString('de-DE')}\n\n`;
-    
-    txt += '=== PATIENTEN ===\n';
-    patients.forEach((p: Patient) => {
-      txt += `\nID: ${p.id}\n`;
-      txt += `Name: ${p.firstName} ${p.lastName}\n`;
-      txt += `Geburtsdatum: ${p.birthDate}\n`;
-      txt += `Geburtsort: ${p.birthPlace}\n`;
-      txt += `Erstellt: ${new Date(p.createdAt).toLocaleString('de-DE')}\n`;
-    });
-    
-    txt += '\n\n=== HARMONISIERUNGS-ARCHIV ===\n';
-    archive.forEach((s: HarmonizationSession) => {
-      const patient = patients.find((p: Patient) => p.id === s.patientId);
-      txt += `\nWortenergie: ${s.word} ${s.potencyType}${s.potency}\n`;
-      txt += `Patient: ${patient?.firstName} ${patient?.lastName}\n`;
-      txt += `Wortenergie-Rate: ${s.wordRate.toLocaleString()}\n`;
-      txt += `Klienten-Rate: ${s.clientRate.toLocaleString()}\n`;
-      txt += `Dauer: ${s.duration} ${s.durationUnit}\n`;
-      txt += `Status: ${s.status}\n`;
-      txt += `Abgeschlossen: ${s.completedAt ? new Date(s.completedAt).toLocaleString('de-DE') : '-'}\n`;
-    });
-    
-    const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `copen-daten-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    toast({
-      title: "Export erfolgreich",
-      description: "Daten als TXT exportiert"
-    });
-  };
+  // Export erfolgt über Cloud-Komponenten
 
   const removeHarmonization = (id: string) => {
     setHarmonizations(prev => prev.filter(h => h.id !== id));
   };
 
-  const reactivateSession = (session: HarmonizationSession) => {
-    if (!selectedPatient || session.patientId !== selectedPatient.id) {
+  const reactivateSession = (session: any) => {
+    if (!selectedPatient || session.patient_id !== selectedPatient.id) {
       toast({
         title: "Fehler",
         description: "Bitte wählen Sie den zugehörigen Patienten aus",
@@ -431,14 +391,14 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
     const reactivatedHarmonization: ActiveHarmonization = {
       id: Date.now().toString(),
-      patientId: session.patientId,
+      patientId: session.patient_id,
       word: session.word,
-      potency: session.potency,
-      potencyType: session.potencyType,
-      wordRate: session.wordRate,
-      clientRate: session.clientRate,
-      duration: session.duration,
-      durationUnit: session.durationUnit,
+      potency: parseInt(session.tested_potency || '0'),
+      potencyType: 'D',
+      wordRate: 0,
+      clientRate: 0,
+      duration: Math.floor(session.duration_seconds / 60),
+      durationUnit: 'minutes',
       status: 'active',
       elapsedTime: 0,
       progress: 0
@@ -470,7 +430,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Patientenverwaltung */}
-      <PatientManager 
+      <PatientManagerCloud 
         onSelectPatient={setSelectedPatient}
         selectedPatient={selectedPatient}
       />
@@ -703,33 +663,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Datenbank Export */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Archive className="h-5 w-5" />
-            Datenbank-Export
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Exportieren Sie alle Patienten und Harmonisierungs-Archive als Datei
-          </p>
-          <div className="flex gap-2">
-            <Button onClick={exportAllDataTxt} variant="outline" className="flex-1">
-              📄 TXT Export
-            </Button>
-            <Button onClick={exportAllData} variant="outline" className="flex-1">
-              📊 JSON Export
-            </Button>
-          </div>
-          
-        </CardContent>
-      </Card>
-
       {/* Archiv */}
       {selectedPatient && (
-        <HarmonizationArchive 
+        <HarmonizationArchiveCloud 
           patientId={selectedPatient.id} 
           onReactivate={reactivateSession}
         />
