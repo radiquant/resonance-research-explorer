@@ -18,6 +18,7 @@ interface CloudPatient {
   birth_date: string;
   birth_place: string;
   image_signature?: string | null;
+  image_signature_active?: boolean;
 }
 
 interface DatabaseManagerProps {
@@ -75,11 +76,21 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   };
 
   const calculateClientRate = (patient: CloudPatient): number => {
-    const clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
+    let clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
+    
+    // Bildsignatur nur einbeziehen wenn aktiv
+    if (patient.image_signature_active && patient.image_signature) {
+      clientData += ` ${patient.image_signature}`;
+    }
+    
     let sum = 0;
     
-    for (const char of clientData.toUpperCase().replace(/[^A-Z]/g, '')) {
-      sum += char.charCodeAt(0) - 64;
+    for (const char of clientData.toUpperCase().replace(/[^A-Z0-9]/g, '')) {
+      if (char >= 'A' && char <= 'Z') {
+        sum += char.charCodeAt(0) - 64;
+      } else {
+        sum += parseInt(char);
+      }
     }
     
     const clientBaseRate = sum * 1000;

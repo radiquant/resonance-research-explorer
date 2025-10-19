@@ -87,6 +87,7 @@ export type Database = {
           first_name: string
           id: string
           image_signature: string | null
+          image_signature_active: boolean | null
           last_name: string
           updated_at: string
           user_id: string | null
@@ -98,6 +99,7 @@ export type Database = {
           first_name: string
           id?: string
           image_signature?: string | null
+          image_signature_active?: boolean | null
           last_name: string
           updated_at?: string
           user_id?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           first_name?: string
           id?: string
           image_signature?: string | null
+          image_signature_active?: boolean | null
           last_name?: string
           updated_at?: string
           user_id?: string | null
