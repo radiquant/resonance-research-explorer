@@ -67,15 +67,19 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   };
 
   const analyzeResonance = (wordRate: number, clientRate: number): number => {
-    // Harmonische Resonanz-Analyse nach Fibonacci-Verhältnis
+    // KOZYREV-ERWEITERTE Harmonische Resonanz-Analyse
     const ratio = wordRate / clientRate;
     const phi = 1.618033988749895; // Goldener Schnitt
     
-    // Nähe zum Goldenen Schnitt = höhere Resonanz
+    // Nähe zum Goldenen Schnitt = höhere Resonanz (Fibonacci/Kozyrev)
     const deviation = Math.abs(ratio - phi) + Math.abs(ratio - (1/phi));
-    const resonanceScore = Math.max(0, 100 - (deviation * 10));
+    const baseResonance = Math.max(0, 100 - (deviation * 10));
     
-    return Math.round(resonanceScore);
+    // Morphische Feld-Verstärkung (Sheldrake/Kozyrev)
+    const harmonicMultiplier = Math.cos(ratio * Math.PI / 2);
+    const morphicResonance = baseResonance * (1 + 0.2 * harmonicMultiplier);
+    
+    return Math.min(100, Math.round(morphicResonance));
   };
 
   const handleAnalyzeDatabase = () => {

@@ -36,6 +36,7 @@ interface CloudHarmonizationSession {
 import PatientManagerCloud from './PatientManagerCloud';
 import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
 import DatabaseManager from './DatabaseManager';
+import KozyrevIndicators from './KozyrevIndicators';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -114,7 +115,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
   const cleanWord = normalizeWordEnergy(word);
 
-  // Automatische Potenzermittlung basierend auf Klientendaten + Wortenergie
+  // KOZYREV-ERWEITERTE Automatische Potenzermittlung
   const calculateAutoPotency = (): number => {
     if (!selectedPatient || !autoPotency) return potency;
 
@@ -126,6 +127,22 @@ const CopenAlgorithmVisualization: React.FC = () => {
       sum += char.charCodeAt(0) - 64;
     }
 
+    // KOZYREV-ZEITFLUSS-MODULATION
+    const birthDate = new Date(selectedPatient.birth_date);
+    const now = new Date();
+    const ageInDays = (now.getTime() - birthDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    // 7-Jahres-Rhythmus (Steiner/Kozyrev)
+    const sevenYearCycle = (ageInDays / 365.25) / 7;
+    const timeFlowFactor = 1 + (0.15 * Math.sin(2 * Math.PI * sevenYearCycle));
+    
+    // Tageszeit-Modulation (Kozyrev-Effekt)
+    const hourOfDay = now.getHours();
+    const diurnalFactor = 1 + (0.1 * Math.sin(2 * Math.PI * (hourOfDay / 24)));
+    
+    // Kombinierte Zeitfluss-Modulation
+    const modulatedSum = Math.round(sum * timeFlowFactor * diurnalFactor);
+
     // Potenz-Spektrum nach Bruce Copen MK12
     const ranges = {
       'D': { min: 1, max: 100, divisor: 3 },
@@ -135,7 +152,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
     };
 
     const range = ranges[potencyType];
-    const calculated = Math.max(range.min, Math.min(range.max, Math.floor(sum / range.divisor)));
+    const calculated = Math.max(range.min, Math.min(range.max, 
+      Math.floor(modulatedSum / range.divisor)));
     
     return calculated;
   };
@@ -203,7 +221,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const potencyModifier = getPotencyModifier();
   const finalRate = fibonacciRate + potencyModifier;
 
-  // Klienten-Rate berechnen
+  // KOZYREV-ERWEITERTE Klienten-Rate berechnen
   const calculateClientRate = () => {
     if (!selectedPatient) return 0;
 
@@ -223,9 +241,27 @@ const CopenAlgorithmVisualization: React.FC = () => {
     }
     
     const clientBaseRate = clientSum * 1000;
-    const clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
+    let clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
+    
+    // KOZYREV-HARDWARE-QUANTENEFFEKTE
+    clientFibonacciRate = applyQuantumFluctuations(clientFibonacciRate);
     
     return clientFibonacciRate;
+  };
+
+  // Hardware-Quantum-Seed (CPU-Jitter)
+  const getQuantumSeed = (): number => {
+    const t1 = performance.now();
+    const t2 = performance.now();
+    const jitter = Math.abs(t2 - t1);
+    return jitter * 1000000;
+  };
+
+  const applyQuantumFluctuations = (baseRate: number): number => {
+    const quantumSeed = getQuantumSeed();
+    const fluctuation = (quantumSeed % 100) / 1000;
+    const modulatedRate = baseRate * (1 + fluctuation - 0.05);
+    return Math.round(modulatedRate);
   };
 
   const clientRate = calculateClientRate();
@@ -270,7 +306,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
     loadActiveHarmonizations();
   }, [selectedPatient]);
 
-  // Harmonisierungs-Timer Logic für parallele Sessions
+  // Harmonisierungs-Timer Logic für parallele Sessions mit TORSIONSFELD-MODULATION
   useEffect(() => {
     const interval = setInterval(() => {
       setHarmonizations(prev => {
@@ -285,8 +321,17 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
           const newElapsedTime = harm.elapsedTime + 0.1;
           
+          // KOZYREV-TORSIONSFELD-MODULATION
+          const spiralPhase = (newElapsedTime / 60) * 2 * Math.PI;
+          const phi = 1.618033988749895;
+          const torsionAmplitude = Math.sin(spiralPhase) * Math.cos(spiralPhase / phi);
+          const torsionFactor = 1 + (0.08 * torsionAmplitude);
+          
+          // Modulierte Raten mit Torsionsfeld
+          const modulatedWordRate = Math.round(harm.wordRate * torsionFactor);
+          const modulatedClientRate = Math.round(harm.clientRate * torsionFactor);
+          
           if (newElapsedTime >= durationInSeconds) {
-            // Automatische Potenz-Abtestung nach Harmonisierung
             const patient = selectedPatient;
             if (patient) {
               const combinedData = `${harm.word} ${patient.first_name} ${patient.last_name} ${patient.birth_date}`;
@@ -296,16 +341,15 @@ const CopenAlgorithmVisualization: React.FC = () => {
               }
               
               const ranges = {
-                'D': [1, 30],
+                'D': [1, 100],
                 'C': [1, 200],
                 'LM': [1, 30],
-                'M': [1, 10]
+                'M': [1, 100]
               };
               
               const [min, max] = ranges[harm.potencyType];
               const testedPotency = Math.max(min, Math.min(max, Math.floor(sum / 10)));
               
-              // Session abgeschlossen - ins Archiv mit getesteter Potenz verschieben
               const completedSession = {
                 id: harm.id,
                 patientId: harm.patientId,
@@ -323,11 +367,10 @@ const CopenAlgorithmVisualization: React.FC = () => {
               archiveSession(completedSession);
               
               toast({
-                title: "Harmonisierung abgeschlossen",
+                title: "Harmonisierung abgeschlossen ✅",
                 description: `${harm.word} • Getestete Potenz: ${harm.potencyType}${testedPotency}`,
               });
             } else {
-              // Session ohne Potenz-Abtestung
               const completedSession = {
                 id: harm.id,
                 patientId: harm.patientId,
@@ -344,7 +387,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
               archiveSession(completedSession);
               
               toast({
-                title: "Harmonisierung abgeschlossen",
+                title: "Harmonisierung abgeschlossen ✅",
                 description: `${harm.word} ${harm.potencyType}${harm.potency}`,
               });
             }
@@ -355,11 +398,12 @@ const CopenAlgorithmVisualization: React.FC = () => {
           return {
             ...harm,
             elapsedTime: newElapsedTime,
-            progress: (newElapsedTime / durationInSeconds) * 100
+            progress: (newElapsedTime / durationInSeconds) * 100,
+            wordRate: modulatedWordRate,
+            clientRate: modulatedClientRate
           };
         });
         
-        // Entferne abgeschlossene Sessions nach 3 Sekunden
         setTimeout(() => {
           setHarmonizations(current => current.filter(h => h.status !== 'completed'));
         }, 3000);
@@ -509,6 +553,15 @@ const CopenAlgorithmVisualization: React.FC = () => {
         selectedPatient={selectedPatient}
       />
 
+      {/* Kozyrev-Indikatoren */}
+      {autoPotency && selectedPatient && (
+        <KozyrevIndicators 
+          selectedPatient={selectedPatient}
+          wordEnergy={cleanWord}
+          autoPotency={autoPotency}
+        />
+      )}
+
       <Card>
         <CardHeader>
             <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
@@ -580,7 +633,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-lg text-center border-2">
             <div className="text-lg mb-2">
               "{cleanWord}" {potencyType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
-              {autoPotency && ' 🤖'}
+              {autoPotency && ' 🌀⚛️'}
             </div>
             <div className="text-3xl font-bold">
               {finalRate.toLocaleString()}
