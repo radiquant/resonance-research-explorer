@@ -53,7 +53,7 @@ serve(async (req) => {
           const { error: updateError } = await supabase
             .from('harmonization_sessions')
             .update({
-              status: 'active',
+              status: 'running',
               job_started_at: nowIso,
               job_last_heartbeat: nowIso,
               remaining_seconds: session.duration_seconds,
@@ -80,7 +80,7 @@ serve(async (req) => {
     const { data: activeSessions, error: fetchActiveError } = await supabase
       .from('harmonization_sessions')
       .select('*')
-      .eq('status', 'active')
+      .eq('status', 'running')
       .limit(100);
 
     if (fetchActiveError) {

@@ -18,7 +18,7 @@ export interface HarmonizationSession {
   duration: number;
   durationUnit: 'seconds' | 'minutes' | 'hours';
   completedAt?: string;
-  status: 'active' | 'paused' | 'completed' | 'stopped';
+  status: 'running' | 'paused' | 'completed' | 'cancelled';
   testedPotency?: number; // Automatisch getestete Potenz nach Harmonisierung
 }
 

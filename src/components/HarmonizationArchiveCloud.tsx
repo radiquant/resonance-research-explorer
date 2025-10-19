@@ -64,7 +64,7 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
       let query = supabase
         .from('harmonization_sessions')
         .select('*')
-        .in('status', ['completed', 'stopped'])
+        .in('status', ['completed', 'cancelled'])
         .order('completed_at', { ascending: false });
 
       if (patientId) {
@@ -119,9 +119,9 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
   const getStatusBadge = (status: string) => {
     const badges = {
       completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
-      stopped: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
+      cancelled: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
       paused: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100',
-      active: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
+      running: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
     };
     return badges[status as keyof typeof badges] || badges.completed;
   };
@@ -129,9 +129,9 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
   const getStatusText = (status: string) => {
     const texts = {
       completed: 'Abgeschlossen',
-      stopped: 'Gestoppt',
+      cancelled: 'Abgebrochen',
       paused: 'Pausiert',
-      active: 'Aktiv'
+      running: 'Läuft'
     };
     return texts[status as keyof typeof texts] || status;
   };

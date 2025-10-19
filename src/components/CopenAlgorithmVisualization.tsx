@@ -305,7 +305,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
           .from('harmonization_sessions')
           .select('*')
           .eq('patient_id', selectedPatient.id)
-          .eq('status', 'active')
+          .eq('status', 'running')
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -342,7 +342,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
               clientRate: calculateClientRateFor(selectedPatient, session.word),
               duration: Math.floor(session.duration_seconds / 60),
               durationUnit: 'minutes',
-              status: 'active',
+              status: 'running',
               elapsedTime: session.progress || 0,
               progress: session.progress || 0
             };
@@ -390,7 +390,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
     const interval = setInterval(() => {
       setHarmonizations(prev => {
         const updated = prev.map(harm => {
-          if (harm.status !== 'active') return harm;
+          if (harm.status !== 'running') return harm;
 
           const durationInSeconds = harm.durationUnit === 'hours' 
             ? harm.duration * 3600 
@@ -532,7 +532,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
         clientRate: clientRate,
         duration: harmonizationDuration,
         durationUnit: harmonizationUnit,
-        status: 'active',
+         status: 'running',
         elapsedTime: 0,
         progress: 0
       };
@@ -556,7 +556,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
   const resumeHarmonization = (id: string) => {
     setHarmonizations(prev => prev.map(h => 
-      h.id === id ? { ...h, status: 'active' as const } : h
+      h.id === id ? { ...h, status: 'running' as const } : h
     ));
   };
 
@@ -567,7 +567,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
     try {
       const { error } = await supabase
         .from('harmonization_sessions')
-        .update({ status: 'stopped', completed_at: new Date().toISOString() })
+        .update({ status: 'cancelled', completed_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
 
@@ -607,7 +607,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
       clientRate: 0,
       duration: Math.floor(session.duration_seconds / 60),
       durationUnit: 'minutes',
-      status: 'active',
+      status: 'running',
       elapsedTime: 0,
       progress: 0
     };
@@ -840,7 +840,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
                            )}
                          </div>
                         <div className="flex gap-1">
-                          {harm.status === 'active' && (
+                          {harm.status === 'running' && (
                             <Button onClick={() => pauseHarmonization(harm.id)} size="sm" variant="outline">
                               <Pause className="h-4 w-4" />
                             </Button>
@@ -874,13 +874,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="bg-background/50 p-2 rounded">
                           <div className="text-muted-foreground">Wortenergie-Rate</div>
-                          <div className={`font-bold ${harm.status === 'active' ? 'animate-pulse' : ''}`}>
+                          <div className={`font-bold ${harm.status === 'running' ? 'animate-pulse' : ''}`}>
                             {harm.wordRate.toLocaleString()}
                           </div>
                         </div>
                         <div className="bg-background/50 p-2 rounded">
                           <div className="text-muted-foreground">Klienten-Rate</div>
-                          <div className={`font-bold ${harm.status === 'active' ? 'animate-pulse' : ''}`}>
+                          <div className={`font-bold ${harm.status === 'running' ? 'animate-pulse' : ''}`}>
                             {harm.clientRate.toLocaleString()}
                           </div>
                         </div>
@@ -888,7 +888,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
                       {/* Status */}
                       <div className="text-center text-sm font-semibold">
-                        {harm.status === 'active' && '⚡ Läuft...'}
+                        {harm.status === 'running' && '⚡ Läuft...'}
                         {harm.status === 'paused' && '⏸️ Pausiert'}
                         {harm.status === 'completed' && '✅ Abgeschlossen'}
                       </div>
