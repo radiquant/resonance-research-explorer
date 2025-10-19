@@ -12,7 +12,7 @@ export interface HarmonizationSession {
   patientId: string;
   word: string;
   potency: number;
-  potencyType: 'D' | 'C' | 'LM' | 'M';
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
   wordRate: number;
   clientRate: number;
   duration: number;

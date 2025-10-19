@@ -43,10 +43,9 @@ import { supabase } from '@/integrations/supabase/client';
 const CopenAlgorithmVisualization: React.FC = () => {
   const [word, setWord] = useState('NUX VOMICA');
   const [potency, setPotency] = useState(6);
-  const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M'>('D');
+  const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
   const [autoPotency, setAutoPotency] = useState(false);
   const [kozyrevEnabled, setKozyrevEnabled] = useState(false);
-  const [spectrum, setSpectrum] = useState<'standard' | 'F1' | 'F2' | 'F3'>('standard');
   const [showCalculation, setShowCalculation] = useState(false);
 
   // Ausgewählter Patient
@@ -134,39 +133,41 @@ const CopenAlgorithmVisualization: React.FC = () => {
     // Kombinierte Summe mit Modulatoren
     const modulatedSum = Math.round(sum * ageModulator * placeModulator);
 
-    // Potenz-Bereiche nach MK12-Spektrum + F-Spektren
-    const ranges = {
-      standard: {
-        D: { min: 1, max: 100, divisor: 4 },
-        C: { min: 1, max: 200, divisor: 3 },
-        LM: { min: 1, max: 30, divisor: 12 },
-        M: { min: 1, max: 100, divisor: 6 },
-      },
-      F1: { // 1MM - 10C·MMMM
-        D: { min: 30, max: 100, divisor: 3 },
-        C: { min: 100, max: 200, divisor: 2 },
-        LM: { min: 15, max: 30, divisor: 8 },
-        M: { min: 50, max: 100, divisor: 4 },
-      },
-      F2: { // 100MM - 1CC·MMMM
-        D: { min: 50, max: 100, divisor: 2 },
-        C: { min: 150, max: 200, divisor: 1.5 },
-        LM: { min: 20, max: 30, divisor: 6 },
-        M: { min: 80, max: 100, divisor: 3 },
-      },
-      F3: { // 10C·MM - 10MMMMM
-        D: { min: 80, max: 100, divisor: 1.5 },
-        C: { min: 180, max: 200, divisor: 1.2 },
-        LM: { min: 25, max: 30, divisor: 4 },
-        M: { min: 90, max: 100, divisor: 2 },
-      },
-    } as const;
+    // Alle verfügbaren Potenz-Bereiche mit F-Spektren
+    const allRanges: { type: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3', min: number, max: number, divisor: number }[] = [
+      // Standard
+      { type: 'D', min: 1, max: 100, divisor: 4 },
+      { type: 'C', min: 1, max: 200, divisor: 3 },
+      { type: 'LM', min: 1, max: 30, divisor: 12 },
+      { type: 'M', min: 1, max: 100, divisor: 6 },
+      // F1: 1MM - 10C·MMMM
+      { type: 'F1', min: 30, max: 100, divisor: 3.5 },
+      // F2: 100MM - 1CC·MMMM
+      { type: 'F2', min: 50, max: 100, divisor: 2.5 },
+      // F3: 10C·MM - 10MMMMM
+      { type: 'F3', min: 80, max: 100, divisor: 1.8 },
+    ];
 
-    const spectrumRanges = ranges[spectrum];
-    const range = spectrumRanges[potencyType];
-    const calculated = Math.max(range.min, Math.min(range.max, Math.floor(modulatedSum / range.divisor)));
+    // Beste Potenz über alle Bereiche hinweg finden
+    let bestMatch = { type: 'D' as 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3', potency: 1, score: Infinity };
     
-    return calculated;
+    for (const range of allRanges) {
+      const calculated = Math.max(range.min, Math.min(range.max, Math.floor(modulatedSum / range.divisor)));
+      const targetValue = modulatedSum;
+      const actualValue = calculated * range.divisor;
+      const score = Math.abs(targetValue - actualValue);
+      
+      if (score < bestMatch.score) {
+        bestMatch = { type: range.type, potency: calculated, score };
+      }
+    }
+    
+    // Typ und Potenz setzen
+    if (autoPotency) {
+      setPotencyType(bestMatch.type);
+    }
+    
+    return bestMatch.potency;
   };
 
   const effectivePotency = autoPotency ? calculateAutoPotency() : potency;
@@ -662,8 +663,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
               </div>
             </div>
             <div>
-              <Label htmlFor="potencyType">Typ</Label>
-              <Select value={potencyType} onValueChange={(value) => setPotencyType(value as any)}>
+              <Label htmlFor="potencyType">Typ {autoPotency && '(Auto)'}</Label>
+              <Select value={potencyType} onValueChange={(value) => setPotencyType(value as any)} disabled={autoPotency}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -672,22 +673,22 @@ const CopenAlgorithmVisualization: React.FC = () => {
                   <SelectItem value="C">C (Centesimal 1-200)</SelectItem>
                   <SelectItem value="LM">LM (50-Millesimal 1-30)</SelectItem>
                   <SelectItem value="M">M (Millennial 1-100MM)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="spectrum">Spektrum</Label>
-              <Select value={spectrum} onValueChange={(value) => setSpectrum(value as any)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="standard">Standard (MK12)</SelectItem>
                   <SelectItem value="F1">F/1 (1MM - 10C·MMMM)</SelectItem>
                   <SelectItem value="F2">F/2 (100MM - 1CC·MMMM)</SelectItem>
                   <SelectItem value="F3">F/3 (10C·MM - 10MMMMM)</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="text-xs text-muted-foreground mt-1">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={kozyrevEnabled}
+                    onChange={(e) => setKozyrevEnabled(e.target.checked)}
+                    className="rounded"
+                  />
+                  Kozyrev-Modulation
+                </label>
+              </div>
             </div>
           </div>
           <Button onClick={handleCalculate} className="w-full">
@@ -699,7 +700,6 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-lg text-center border-2">
             <div className="text-lg mb-2">
               "{cleanWord}" {potencyType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
-              {spectrum !== 'standard' && <> • {spectrum.replace('F', 'F/').toUpperCase()}</>}
               {kozyrevEnabled && ' • Kozyrev aktiv'}
             </div>
             <div className="text-3xl font-bold">
