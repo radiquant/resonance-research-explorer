@@ -232,7 +232,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
               const testedPotency = Math.max(min, Math.min(max, Math.floor(sum / 10)));
               
               // Session abgeschlossen - ins Archiv mit getesteter Potenz verschieben
-              const completedSession: HarmonizationSession = {
+              const completedSession = {
                 id: harm.id,
                 patientId: harm.patientId,
                 word: harm.word,
@@ -242,7 +242,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 clientRate: harm.clientRate,
                 duration: harm.duration,
                 durationUnit: harm.durationUnit,
-                status: 'completed',
+                status: 'completed' as const,
                 completedAt: new Date().toISOString(),
                 testedPotency: testedPotency
               };
@@ -254,7 +254,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
               });
             } else {
               // Session ohne Potenz-Abtestung
-              const completedSession: HarmonizationSession = {
+              const completedSession = {
                 id: harm.id,
                 patientId: harm.patientId,
                 word: harm.word,
@@ -264,7 +264,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 clientRate: harm.clientRate,
                 duration: harm.duration,
                 durationUnit: harm.durationUnit,
-                status: 'completed',
+                status: 'completed' as const,
                 completedAt: new Date().toISOString()
               };
               archiveSession(completedSession);
@@ -348,7 +348,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const stopHarmonization = (id: string) => {
     const session = harmonizations.find(h => h.id === id);
     if (session) {
-      const stoppedSession: HarmonizationSession = {
+      const stoppedSession = {
         id: session.id,
         patientId: session.patientId,
         word: session.word,
@@ -358,7 +358,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
         clientRate: session.clientRate,
         duration: session.duration,
         durationUnit: session.durationUnit,
-        status: 'stopped',
+        status: 'stopped' as const,
         completedAt: new Date().toISOString()
       };
       archiveSession(stoppedSession);
@@ -520,7 +520,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
           {selectedPatient && clientRate > 0 && (
             <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg text-center border-2 border-purple-300">
               <div className="text-lg mb-2">
-                Persönliche Rate: {selectedPatient.firstName} {selectedPatient.lastName}
+                Persönliche Rate: {selectedPatient.first_name} {selectedPatient.last_name}
               </div>
               <div className="text-3xl font-bold text-purple-800">
                 {clientRate.toLocaleString()}
@@ -598,7 +598,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
                             {harm.word} {harm.potencyType}{harm.potency}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            Patient: {selectedPatient?.firstName} {selectedPatient?.lastName}
+                            Patient: {selectedPatient?.first_name} {selectedPatient?.last_name}
                           </div>
                         </div>
                         <div className="flex gap-1">
