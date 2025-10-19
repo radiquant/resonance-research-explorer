@@ -35,7 +35,9 @@ interface CloudHarmonizationSession {
 }
 import PatientManagerCloud from './PatientManagerCloud';
 import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
+import DatabaseManager from './DatabaseManager';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const CopenAlgorithmVisualization: React.FC = () => {
   const [word, setWord] = useState('NUX VOMICA');
@@ -46,6 +48,42 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
   // Ausgewählter Patient
   const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
+  
+  // Patient-Switch-Handler mit Neuberechnung
+  const handlePatientSwitch = (patient: CloudPatient | null) => {
+    setSelectedPatient(patient);
+    
+    // Aktualisiere alle laufenden Harmonisierungen mit neuen Raten
+    if (patient) {
+      setHarmonizations(prev => prev.map(harm => ({
+        ...harm,
+        patientId: patient.id,
+        clientRate: calculateClientRateFor(patient, harm.word)
+      })));
+    }
+  };
+  
+  const calculateClientRateFor = (patient: CloudPatient, wordEnergy: string): number => {
+    const clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
+    const cleanClientData = normalizeWordEnergy(clientData);
+    
+    let position = 1;
+    let clientSum = 0;
+    
+    for (let i = 0; i < cleanClientData.length; i++) {
+      const char = cleanClientData[i];
+      if (char === ' ') continue;
+      
+      const value = getLetterValue(char);
+      clientSum += value * position;
+      position++;
+    }
+    
+    const clientBaseRate = clientSum * 1000;
+    const clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
+    
+    return clientFibonacciRate;
+  };
 
   // Mehrere parallele Harmonisierungen
   const [harmonizations, setHarmonizations] = useState<ActiveHarmonization[]>([]);
@@ -80,7 +118,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const calculateAutoPotency = (): number => {
     if (!selectedPatient || !autoPotency) return potency;
 
-    const clientData = `${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date}`;
+    const clientData = `${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
     const combinedData = `${cleanWord} ${clientData}`;
     
     let sum = 0;
@@ -88,16 +126,16 @@ const CopenAlgorithmVisualization: React.FC = () => {
       sum += char.charCodeAt(0) - 64;
     }
 
-    // Potenz basierend auf Typ berechnen
+    // Potenz-Spektrum nach Bruce Copen MK12
     const ranges = {
-      'D': [1, 30],
-      'C': [1, 200],
-      'LM': [1, 30],
-      'M': [1, 10]
+      'D': { min: 1, max: 100, divisor: 3 },
+      'C': { min: 1, max: 200, divisor: 2 },
+      'LM': { min: 1, max: 30, divisor: 8 },
+      'M': { min: 1, max: 100, divisor: 5 }
     };
 
-    const [min, max] = ranges[potencyType];
-    const calculated = Math.max(min, Math.min(max, Math.floor(sum / 10)));
+    const range = ranges[potencyType];
+    const calculated = Math.max(range.min, Math.min(range.max, Math.floor(sum / range.divisor)));
     
     return calculated;
   };
@@ -195,6 +233,42 @@ const CopenAlgorithmVisualization: React.FC = () => {
   const handleCalculate = () => {
     setShowCalculation(true);
   };
+
+  // Cloud-Persistenz: Harmonisierungen laden beim Mount
+  useEffect(() => {
+    const loadActiveHarmonizations = async () => {
+      if (!selectedPatient) return;
+      
+      const { data: sessions } = await supabase
+        .from('harmonization_sessions')
+        .select('*')
+        .eq('patient_id', selectedPatient.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+      
+      if (sessions && sessions.length > 0) {
+        // Konvertiere zu ActiveHarmonization Format
+        const activeHarms: ActiveHarmonization[] = sessions.map(session => ({
+          id: session.id,
+          patientId: session.patient_id,
+          word: session.word,
+          potency: parseInt(session.tested_potency || '6'),
+          potencyType: 'D',
+          wordRate: 0, // Wird neu berechnet
+          clientRate: calculateClientRateFor(selectedPatient, session.word),
+          duration: Math.floor(session.duration_seconds / 60),
+          durationUnit: 'minutes',
+          status: 'active',
+          elapsedTime: session.progress || 0,
+          progress: session.progress || 0
+        }));
+        
+        setHarmonizations(activeHarms);
+      }
+    };
+    
+    loadActiveHarmonizations();
+  }, [selectedPatient]);
 
   // Harmonisierungs-Timer Logic für parallele Sessions
   useEffect(() => {
@@ -431,7 +505,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Patientenverwaltung */}
       <PatientManagerCloud 
-        onSelectPatient={setSelectedPatient}
+        onSelectPatient={handlePatientSwitch}
         selectedPatient={selectedPatient}
       />
 
@@ -488,12 +562,12 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="D">D (Dezimal)</SelectItem>
-                  <SelectItem value="C">C (Centesimal)</SelectItem>
-                  <SelectItem value="LM">LM (50-Millesimal)</SelectItem>
-                  <SelectItem value="M">M (Millennial)</SelectItem>
-                </SelectContent>
+                   <SelectContent>
+                    <SelectItem value="D">D (Dezimal 1-100)</SelectItem>
+                    <SelectItem value="C">C (Centesimal 1-200)</SelectItem>
+                    <SelectItem value="LM">LM (50-Millesimal 1-30)</SelectItem>
+                    <SelectItem value="M">M (Millennial 1-100MM)</SelectItem>
+                  </SelectContent>
               </Select>
             </div>
           </div>
@@ -593,14 +667,21 @@ const CopenAlgorithmVisualization: React.FC = () => {
                     <div className="space-y-3">
                       {/* Header */}
                       <div className="flex justify-between items-start">
-                        <div>
-                          <div className="font-semibold text-lg">
-                            {harm.word} {harm.potencyType}{harm.potency}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Patient: {selectedPatient?.first_name} {selectedPatient?.last_name}
-                          </div>
-                        </div>
+                         <div>
+                           <div className="font-semibold text-lg">
+                             {harm.word} {harm.potencyType}{harm.potency}
+                           </div>
+                           {selectedPatient && harm.patientId === selectedPatient.id && (
+                             <div className="text-sm text-muted-foreground">
+                               🔵 Aktiver Patient: {selectedPatient.first_name} {selectedPatient.last_name}
+                             </div>
+                           )}
+                           {selectedPatient && harm.patientId !== selectedPatient.id && (
+                             <div className="text-sm text-orange-600">
+                               ⚠️ Anderer Patient (nicht aktiv)
+                             </div>
+                           )}
+                         </div>
                         <div className="flex gap-1">
                           {harm.status === 'active' && (
                             <Button onClick={() => pauseHarmonization(harm.id)} size="sm" variant="outline">
@@ -662,6 +743,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Datenbank-Manager */}
+      <DatabaseManager selectedPatient={selectedPatient} />
 
       {/* Archiv */}
       {selectedPatient && (
