@@ -316,7 +316,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
         if (sessions && sessions.length > 0) {
           console.log('Lade aktive Harmonisierungen aus Backend:', sessions);
           
-          // Konvertiere zu ActiveHarmonization Format mit korrekten Raten
+          // Konvertiere zu ActiveHarmonization Format mit korrekten Raten und aktuellem Zeitstatus
           const activeHarms: ActiveHarmonization[] = sessions.map(session => {
             // Wortenergie-Rate neu berechnen
             const normalizedWord = normalizeWordEnergy(session.word);
@@ -332,6 +332,12 @@ const CopenAlgorithmVisualization: React.FC = () => {
             const baseRate = sum * 1000;
             const wordRate = Math.floor((baseRate / 21) * 34);
             
+            // Berechne die tatsächlich verstrichene Zeit basierend auf remaining_seconds
+            const totalDuration = session.duration_seconds;
+            const remainingTime = session.remaining_seconds || 0;
+            const elapsedTime = totalDuration - remainingTime;
+            const progress = totalDuration > 0 ? (elapsedTime / totalDuration) * 100 : 0;
+            
             return {
               id: session.id,
               patientId: session.patient_id,
@@ -339,12 +345,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
               potency: parseInt(session.tested_potency || '6'),
               potencyType: 'D',
               wordRate: wordRate,
-              clientRate: calculateClientRateFor(selectedPatient, session.word),
+              clientRate: parseInt(session.copen_rate || '0') || calculateClientRateFor(selectedPatient, session.word),
               duration: Math.floor(session.duration_seconds / 60),
               durationUnit: 'minutes',
               status: 'running',
-              elapsedTime: session.progress || 0,
-              progress: session.progress || 0
+              elapsedTime: elapsedTime,
+              progress: progress,
+              remainingSeconds: remainingTime // Speichere remaining_seconds für Backend-Sync
             };
           });
           
@@ -385,7 +392,56 @@ const CopenAlgorithmVisualization: React.FC = () => {
     };
   }, [selectedPatient]);
 
-  // Harmonisierungs-Timer: nur Zeit/Progress, Raten bleiben konstant (Modulation beeinflusst nicht die Rate)
+  // Harmonisierungs-Timer: Backend-Sync alle 2 Sekunden für korrekte Zeitanzeige
+  useEffect(() => {
+    let syncTimer: NodeJS.Timeout;
+    
+    const syncWithBackend = async () => {
+      if (!selectedPatient) return;
+      
+      try {
+        const { data: sessions } = await supabase
+          .from('harmonization_sessions')
+          .select('*')
+          .eq('patient_id', selectedPatient.id)
+          .eq('status', 'running');
+        
+        if (sessions && sessions.length > 0) {
+          setHarmonizations(prev => 
+            prev.map(harm => {
+              const backendSession = sessions.find(s => s.id === harm.id);
+              if (backendSession) {
+                const totalDuration = backendSession.duration_seconds;
+                const remainingTime = backendSession.remaining_seconds || 0;
+                const elapsedTime = totalDuration - remainingTime;
+                const progress = totalDuration > 0 ? (elapsedTime / totalDuration) * 100 : 0;
+                
+                return {
+                  ...harm,
+                  elapsedTime: elapsedTime,
+                  progress: progress,
+                  remainingSeconds: remainingTime
+                };
+              }
+              return harm;
+            })
+          );
+        }
+      } catch (err) {
+        console.error('Backend-Sync-Fehler:', err);
+      }
+    };
+    
+    // Initial-Sync
+    syncWithBackend();
+    
+    // Regelmäßiger Sync alle 2 Sekunden
+    syncTimer = setInterval(syncWithBackend, 2000);
+    
+    return () => clearInterval(syncTimer);
+  }, [selectedPatient]);
+
+  // Lokaler UI-Timer für flüssige Anzeige (zwischen Backend-Syncs)
   useEffect(() => {
     const interval = setInterval(() => {
       setHarmonizations(prev => {
@@ -510,7 +566,10 @@ const CopenAlgorithmVisualization: React.FC = () => {
           user_id: userId,
           patient_id: selectedPatient.id,
           word: cleanWord,
+          copen_rate: clientRate.toString(), // Speichere die korrekte Klienten-Rate
+          tested_potency: `${effectivePotency}`,
           duration_seconds: durationSeconds,
+          remaining_seconds: durationSeconds,
           status: 'pending',
         })
         .select('*')

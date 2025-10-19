@@ -17,6 +17,7 @@ export type Database = {
       harmonization_sessions: {
         Row: {
           completed_at: string | null
+          copen_rate: string | null
           created_at: string
           duration_seconds: number
           id: string
@@ -34,6 +35,7 @@ export type Database = {
         }
         Insert: {
           completed_at?: string | null
+          copen_rate?: string | null
           created_at?: string
           duration_seconds: number
           id?: string
@@ -51,6 +53,7 @@ export type Database = {
         }
         Update: {
           completed_at?: string | null
+          copen_rate?: string | null
           created_at?: string
           duration_seconds?: number
           id?: string
