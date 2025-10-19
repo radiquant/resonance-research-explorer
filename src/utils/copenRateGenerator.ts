@@ -66,11 +66,23 @@ export const calculateCopenRate = (
 ): CopenRateResult => {
   let letterSum = calculateLetterSum(word, alphabetType);
   
+  console.log('🔍 Copen Rate Berechnung:', { 
+    word, 
+    letterSum, 
+    useImageSignature, 
+    hasImageSignature: !!imageSignature,
+    imageSignatureActive: useImageSignature && !!imageSignature
+  });
+  
   // Bildsignatur-Integration (optional aktivierbar)
   if (useImageSignature && imageSignature && imageSignature.trim().length > 0) {
     const imageSum = calculateLetterSum(imageSignature, alphabetType);
+    const originalSum = letterSum;
     // Moduliere die letterSum mit der Bildsignatur (additive Integration)
     letterSum = Math.floor((letterSum + imageSum) / 2);
+    console.log('✅ Bildsignatur angewendet:', { originalSum, imageSum, adjustedSum: letterSum });
+  } else {
+    console.log('⚠️ Bildsignatur NICHT angewendet');
   }
   
   const potencyMultipliers = {

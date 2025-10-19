@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { calculateLevelResonance, findHighestResonanceLevel } from '@/utils/levelResonance';
 import { analyzeRates, DEFAULT_ANALYSIS_CONFIG, type RateObject } from '@/utils/resonanceAnalysis';
+import { interpretAnalysisResults, type AnalysisInterpretation } from '@/utils/analysisInterpreter';
 
 interface CloudPatient {
   id: string;
@@ -50,6 +51,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [analyzingImage, setAnalyzingImage] = useState(false);
   const [imageResonanceResults, setImageResonanceResults] = useState<Array<{word: string; score: number; analysis: string}>>([]);
   const [ollamaConnected, setOllamaConnected] = useState(false);
+  const [interpretation, setInterpretation] = useState<AnalysisInterpretation | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -233,10 +235,20 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     // Führe Resonanzanalyse nach Java-Algorithmus durch
     const analysisResult = analyzeRates(ratesInput, DEFAULT_ANALYSIS_CONFIG);
     
-    // Konvertiere zu ResonanceResult-Format
+    // Konvertiere zu ResonanceResult-Format und berechne Copen Rates mit korrekter Potenz
     const results: ResonanceResult[] = analysisResult.rateObjects.map((rateObj: RateObject) => {
+      // Berechne die Copen Rate für dieses Wort mit der ermittelten Potenz
+      const calculatedRate = calculateCopenRate(
+        rateObj.rateName,
+        rateObj.potency,
+        'D',
+        'latin',
+        imgSig,
+        useImgSig
+      );
+
       // Berechne Level-Resonanz mit dem originalen Algorithmus
-      const levelResonance = calculateLevelResonance(rateObj.copenRate, rateObj.rateName);
+      const levelResonance = calculateLevelResonance(calculatedRate.rate, rateObj.rateName);
       const { level: highestLevel, value: highestLevelValue } = findHighestResonanceLevel(levelResonance);
       
       // Resonanz-Score aus energeticValue normalisieren
@@ -246,11 +258,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         word: rateObj.rateName,
         potency: rateObj.potency,
         potencyType: 'D' as const,
-        rate: rateObj.copenRate,
+        rate: calculatedRate.rate, // Verwende die berechnete Rate mit korrekter Potenz
         resonanceScore,
         clientResonance: clientRate,
         levelResonance,
-        highestLevel,
+        highestLevel: Math.min(highestLevel, 12), // Limitiere auf Ebene 12
         highestLevelValue: rateObj.levelDistribution[rateObj.dominantLevel] || 0,
       };
     });
@@ -261,6 +273,23 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     toast({
       title: "Analyse abgeschlossen",
       description: `${results.length} Einträge analysiert (${analysisResult.numberOfTrials} Durchläufe) - Java-Algorithmus`,
+    });
+
+    // LLM-Interpretation im Hintergrund starten (nicht blockierend)
+    interpretAnalysisResults(
+      results.map(r => ({
+        word: r.word,
+        resonanceScore: r.resonanceScore,
+        highestLevel: r.highestLevel || 1,
+        testedPotency: `${r.potencyType}${r.potency}`
+      })),
+      selectedPatient ? `${selectedPatient.first_name} ${selectedPatient.last_name}` : undefined
+    ).then(interp => {
+      setInterpretation(interp);
+      console.log('✨ LLM Interpretation:', interp);
+    }).catch(err => {
+      console.error('LLM Interpretation fehlgeschlagen:', err);
+      // Fallback ist in der Funktion bereits eingebaut
     });
   };
 
@@ -585,6 +614,43 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             )}
           </div>
 
+          {interpretation && (
+            <Card className="bg-gradient-to-r from-primary/10 to-secondary/10 border-primary/20">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  💡 KI-Interpretation (Hybrid LLM + Algorithmus)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <h4 className="font-semibold mb-1 text-sm">Zusammenfassung</h4>
+                  <p className="text-sm text-muted-foreground">{interpretation.summary}</p>
+                </div>
+                {interpretation.insights.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-1 text-sm">Erkenntnisse</h4>
+                    <ul className="text-sm text-muted-foreground space-y-0.5">
+                      {interpretation.insights.map((insight, i) => (
+                        <li key={i}>• {insight}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {interpretation.recommendations.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold mb-1 text-sm">Empfehlungen</h4>
+                    <ul className="text-sm text-muted-foreground space-y-0.5">
+                      {interpretation.recommendations.map((rec, i) => (
+                        <li key={i}>• {rec}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {resonanceResults.length > 0 && (
             <div className="space-y-3">
               <div className="flex gap-2">
@@ -597,7 +663,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                   TXT Export
                 </Button>
                 <Button
-                  onClick={() => { setResonanceResults([]); toast({ title: 'Gelöscht', description: 'Alle Analyse-Ergebnisse wurden entfernt' }); }}
+                  onClick={() => { 
+                    setResonanceResults([]); 
+                    setInterpretation(null);
+                    toast({ title: 'Gelöscht', description: 'Alle Analyse-Ergebnisse wurden entfernt' }); 
+                  }}
                   variant="destructive"
                   size="sm"
                 >

@@ -208,5 +208,5 @@ export const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
   minSelection: 1,
   maxSelection: 100,
   chargingThreshold: 100,
-  maxEntries: 50,
+  maxEntries: 35,
 };
