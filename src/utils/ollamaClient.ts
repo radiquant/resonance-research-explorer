@@ -16,7 +16,7 @@ export interface OllamaImageAnalysisResult {
 
 const DEFAULT_CONFIG: Required<OllamaConfig> = {
   baseUrl: 'http://localhost:11434',
-  model: 'llava:13b' // Empfohlenes Modell für Bildanalyse
+  model: 'llava:7b' // Verfügbares Modell für Bildanalyse
 };
 
 /**
@@ -199,6 +199,12 @@ export const analyzeImageWithOllama = async (
     }
     
     const data = await response.json();
+    
+    // Prüfe auf Modell-Fehler
+    if (data.error) {
+      throw new Error(`Ollama model error: ${data.error}`);
+    }
+    
     const fullResponse = data.response || '';
     
     return {
@@ -206,7 +212,25 @@ export const analyzeImageWithOllama = async (
       description: fullResponse,
     };
   } catch (error) {
-    console.error('Ollama image analysis failed:', error);
+    console.error('Ollama image analysis failed, falling back to perceptual hash:', error);
+    
+    // Fallback zu Perceptual Hash bei jedem Fehler
+    if (image instanceof File) {
+      try {
+        const phash = await calculatePerceptualHash(image);
+        return {
+          signature: phash,
+          description: 'Perceptual Hash Signatur (Ollama Fehler)'
+        };
+      } catch (phashError: any) {
+        return {
+          signature: '',
+          description: '',
+          error: `Perceptual Hash fehlgeschlagen: ${phashError.message}`
+        };
+      }
+    }
+    
     return {
       signature: '',
       description: '',
