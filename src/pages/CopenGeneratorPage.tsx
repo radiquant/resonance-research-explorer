@@ -25,6 +25,8 @@ interface CloudPatient {
   birth_place: string;
   created_at: string;
   updated_at: string;
+  image_signature?: string | null;
+  image_signature_active?: boolean;
 }
 
 const CopenGeneratorPage: React.FC = () => {
@@ -50,7 +52,18 @@ const CopenGeneratorPage: React.FC = () => {
       return;
     }
 
-    const result = calculateCopenRate(singleWord, singlePotency, singlePotencyType, singleAlphabetType);
+    // Bildsignatur nutzen, wenn Klient ausgewählt und aktiv
+    const useImgSig = selectedPatient?.image_signature_active ?? false;
+    const imgSig = selectedPatient?.image_signature ?? undefined;
+    
+    const result = calculateCopenRate(
+      singleWord, 
+      singlePotency, 
+      singlePotencyType, 
+      singleAlphabetType,
+      imgSig,
+      useImgSig
+    );
     
     // Berechne Ebenen-Resonanz
     const levelResonance = calculateLevelResonance(result.rate, result.word);
@@ -62,9 +75,10 @@ const CopenGeneratorPage: React.FC = () => {
     
     setResults(prev => [result, ...prev]);
     
+    const imgInfo = useImgSig ? ' (mit Bildsignatur)' : '';
     toast({
       title: 'Rate berechnet',
-      description: `${result.word} ${result.potencyType}${result.potency}: ${result.rate.toLocaleString('de-DE')} (Ebene ${highestLevel.level})`
+      description: `${result.word} ${result.potencyType}${result.potency}: ${result.rate.toLocaleString('de-DE')} (Ebene ${highestLevel.level})${imgInfo}`
     });
   };
 

@@ -96,11 +96,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
     return [...new Set(entries)]; // Deduplizieren
   };
-  const calculateClientRate = (patient: CloudPatient): number => {
+  const calculateClientRate = (patient: CloudPatient, useImageSig: boolean = true): number => {
     let clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
     
-    // Bildsignatur nur einbeziehen wenn aktiv
-    if (patient.image_signature_active && patient.image_signature) {
+    // Bildsignatur hinzufügen, wenn aktiv und vorhanden
+    if (useImageSig && patient.image_signature_active && patient.image_signature) {
       clientData += ` ${patient.image_signature}`;
     }
     
@@ -234,7 +234,9 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       
       // Teste alle Potenzen und finde die beste
       for (const pot of potencies) {
-        const result = calculateCopenRate(word, pot.value, pot.type);
+        const useImgSig = selectedPatient.image_signature_active ?? true;
+        const imgSig = selectedPatient.image_signature ?? undefined;
+        const result = calculateCopenRate(word, pot.value, pot.type, 'latin', imgSig, useImgSig);
         const levelResonance = calculateLevelResonance(result.rate, word);
         const { value: levelValue } = findHighestResonanceLevel(levelResonance);
         const resonanceScore = analyzeResonance(result.rate, clientRate);
@@ -248,8 +250,10 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         }
       }
 
-      // Berechne finale Werte mit bester Potenz
-      const result = calculateCopenRate(word, bestPotency.value, bestPotency.type);
+      // Berechne finale Werte mit bester Potenz (mit/ohne Bildsignatur je nach Klient-Einstellung)
+      const useImgSig = selectedPatient.image_signature_active ?? true;
+      const imgSig = selectedPatient.image_signature ?? undefined;
+      const result = calculateCopenRate(word, bestPotency.value, bestPotency.type, 'latin', imgSig, useImgSig);
       const levelResonance = calculateLevelResonance(result.rate, word);
       const { level: highestLevel, value: highestLevelValue } = findHighestResonanceLevel(levelResonance);
       const resonanceScore = analyzeResonance(result.rate, clientRate);

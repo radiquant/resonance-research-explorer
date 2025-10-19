@@ -60,9 +60,18 @@ export const calculateCopenRate = (
   word: string, 
   potency: number, 
   potencyType: 'D' | 'C' | 'LM' | 'M',
-  alphabetType: AlphabetType = 'latin'
+  alphabetType: AlphabetType = 'latin',
+  imageSignature?: string,
+  useImageSignature: boolean = false
 ): CopenRateResult => {
-  const letterSum = calculateLetterSum(word, alphabetType);
+  let letterSum = calculateLetterSum(word, alphabetType);
+  
+  // Bildsignatur-Integration (optional aktivierbar)
+  if (useImageSignature && imageSignature && imageSignature.trim().length > 0) {
+    const imageSum = calculateLetterSum(imageSignature, alphabetType);
+    // Moduliere die letterSum mit der Bildsignatur (additive Integration)
+    letterSum = Math.floor((letterSum + imageSum) / 2);
+  }
   
   const potencyMultipliers = {
     'D': 1,
