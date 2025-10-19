@@ -108,28 +108,63 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
   const cleanWord = normalizeWordEnergy(word);
 
-  // Automatische Potenzermittlung (ohne Kozyrev-Modulation) – bestimmt NUR die Potenzzahl
+  // Auto-Potenz-Berechnung: Intelligente Ermittlung basierend auf Klientendaten
   const calculateAutoPotency = (): number => {
-    if (!selectedPatient || !autoPotency) return potency;
+    if (!selectedPatient) return 6;
 
-    const clientData = `${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
-    const combinedData = `${cleanWord} ${clientData}`;
+    // Kombinierte Datengrundlage: Wortenergie + Klientendaten
+    const combinedData = `${word} ${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
     
+    // ASCII-Summe
     let sum = 0;
     for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
       sum += char.charCodeAt(0) - 64;
     }
 
-    // Potenz-Bereiche nach MK12 (Grundspektrum)
+    // Geburtsjahr-Faktor (nur bei Kozyrev aktiv)
+    const birthYear = parseInt(selectedPatient.birth_date.split('-')[0]);
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - birthYear;
+    const ageModulator = kozyrevEnabled ? (1 + (age % 7) / 20) : 1; // 7-Jahres-Zyklus: +0% bis +35%
+    
+    // Ortsenergie (Anzahl Buchstaben im Geburtsort, nur bei Kozyrev aktiv)
+    const placeEnergy = selectedPatient.birth_place.replace(/[^A-Z]/gi, '').length;
+    const placeModulator = kozyrevEnabled ? (1 + (placeEnergy % 10) / 30) : 1; // +0% bis +30%
+    
+    // Kombinierte Summe mit Modulatoren
+    const modulatedSum = Math.round(sum * ageModulator * placeModulator);
+
+    // Potenz-Bereiche nach MK12-Spektrum + F-Spektren
     const ranges = {
-      D: { min: 1, max: 100, divisor: 3 },
-      C: { min: 1, max: 200, divisor: 2 },
-      LM: { min: 1, max: 30, divisor: 8 },
-      M: { min: 1, max: 100, divisor: 5 },
+      standard: {
+        D: { min: 1, max: 100, divisor: 4 },
+        C: { min: 1, max: 200, divisor: 3 },
+        LM: { min: 1, max: 30, divisor: 12 },
+        M: { min: 1, max: 100, divisor: 6 },
+      },
+      F1: { // 1MM - 10C·MMMM
+        D: { min: 30, max: 100, divisor: 3 },
+        C: { min: 100, max: 200, divisor: 2 },
+        LM: { min: 15, max: 30, divisor: 8 },
+        M: { min: 50, max: 100, divisor: 4 },
+      },
+      F2: { // 100MM - 1CC·MMMM
+        D: { min: 50, max: 100, divisor: 2 },
+        C: { min: 150, max: 200, divisor: 1.5 },
+        LM: { min: 20, max: 30, divisor: 6 },
+        M: { min: 80, max: 100, divisor: 3 },
+      },
+      F3: { // 10C·MM - 10MMMMM
+        D: { min: 80, max: 100, divisor: 1.5 },
+        C: { min: 180, max: 200, divisor: 1.2 },
+        LM: { min: 25, max: 30, divisor: 4 },
+        M: { min: 90, max: 100, divisor: 2 },
+      },
     } as const;
 
-    const range = ranges[potencyType];
-    const calculated = Math.max(range.min, Math.min(range.max, Math.floor(sum / range.divisor)));
+    const spectrumRanges = ranges[spectrum];
+    const range = spectrumRanges[potencyType];
+    const calculated = Math.max(range.min, Math.min(range.max, Math.floor(modulatedSum / range.divisor)));
     
     return calculated;
   };
@@ -246,40 +281,94 @@ const CopenAlgorithmVisualization: React.FC = () => {
     setShowCalculation(true);
   };
 
-  // Cloud-Persistenz: Harmonisierungen laden beim Mount
+  // Cloud-Persistenz: Harmonisierungen laden beim Mount UND bei Rückkehr zur App
   useEffect(() => {
     const loadActiveHarmonizations = async () => {
       if (!selectedPatient) return;
       
-      const { data: sessions } = await supabase
-        .from('harmonization_sessions')
-        .select('*')
-        .eq('patient_id', selectedPatient.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-      
-      if (sessions && sessions.length > 0) {
-        // Konvertiere zu ActiveHarmonization Format
-        const activeHarms: ActiveHarmonization[] = sessions.map(session => ({
-          id: session.id,
-          patientId: session.patient_id,
-          word: session.word,
-          potency: parseInt(session.tested_potency || '6'),
-          potencyType: 'D',
-          wordRate: 0, // Wird neu berechnet
-          clientRate: calculateClientRateFor(selectedPatient, session.word),
-          duration: Math.floor(session.duration_seconds / 60),
-          durationUnit: 'minutes',
-          status: 'active',
-          elapsedTime: session.progress || 0,
-          progress: session.progress || 0
-        }));
+      try {
+        const { data: sessions, error } = await supabase
+          .from('harmonization_sessions')
+          .select('*')
+          .eq('patient_id', selectedPatient.id)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
         
-        setHarmonizations(activeHarms);
+        if (error) {
+          console.error('Fehler beim Laden der Harmonisierungen:', error);
+          return;
+        }
+        
+        if (sessions && sessions.length > 0) {
+          console.log('Lade aktive Harmonisierungen aus Backend:', sessions);
+          
+          // Konvertiere zu ActiveHarmonization Format mit korrekten Raten
+          const activeHarms: ActiveHarmonization[] = sessions.map(session => {
+            // Wortenergie-Rate neu berechnen
+            const normalizedWord = normalizeWordEnergy(session.word);
+            let sum = 0;
+            let pos = 1;
+            for (let i = 0; i < normalizedWord.length; i++) {
+              const char = normalizedWord[i];
+              if (char === ' ') continue;
+              const value = getLetterValue(char);
+              sum += value * pos;
+              pos++;
+            }
+            const baseRate = sum * 1000;
+            const wordRate = Math.floor((baseRate / 21) * 34);
+            
+            return {
+              id: session.id,
+              patientId: session.patient_id,
+              word: session.word,
+              potency: parseInt(session.tested_potency || '6'),
+              potencyType: 'D',
+              wordRate: wordRate,
+              clientRate: calculateClientRateFor(selectedPatient, session.word),
+              duration: Math.floor(session.duration_seconds / 60),
+              durationUnit: 'minutes',
+              status: 'active',
+              elapsedTime: session.progress || 0,
+              progress: session.progress || 0
+            };
+          });
+          
+          setHarmonizations(activeHarms);
+          
+          toast({
+            title: "Harmonisierungen geladen",
+            description: `${activeHarms.length} aktive Session(s) wiederhergestellt`,
+          });
+        }
+      } catch (err) {
+        console.error('Fehler:', err);
       }
     };
     
     loadActiveHarmonizations();
+    
+    // Realtime-Subscription für Status-Updates
+    const channel = supabase
+      .channel('harmonization_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'harmonization_sessions',
+          filter: selectedPatient ? `patient_id=eq.${selectedPatient.id}` : undefined,
+        },
+        (payload) => {
+          console.log('Harmonization change detected:', payload);
+          loadActiveHarmonizations();
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedPatient]);
 
   // Harmonisierungs-Timer: nur Zeit/Progress, Raten bleiben konstant (Modulation beeinflusst nicht die Rate)
@@ -578,12 +667,26 @@ const CopenAlgorithmVisualization: React.FC = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                   <SelectContent>
-                    <SelectItem value="D">D (Dezimal 1-100)</SelectItem>
-                    <SelectItem value="C">C (Centesimal 1-200)</SelectItem>
-                    <SelectItem value="LM">LM (50-Millesimal 1-30)</SelectItem>
-                    <SelectItem value="M">M (Millennial 1-100MM)</SelectItem>
-                  </SelectContent>
+                <SelectContent>
+                  <SelectItem value="D">D (Dezimal 1-100)</SelectItem>
+                  <SelectItem value="C">C (Centesimal 1-200)</SelectItem>
+                  <SelectItem value="LM">LM (50-Millesimal 1-30)</SelectItem>
+                  <SelectItem value="M">M (Millennial 1-100MM)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="spectrum">Spektrum</Label>
+              <Select value={spectrum} onValueChange={(value) => setSpectrum(value as any)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">Standard (MK12)</SelectItem>
+                  <SelectItem value="F1">F/1 (1MM - 10C·MMMM)</SelectItem>
+                  <SelectItem value="F2">F/2 (100MM - 1CC·MMMM)</SelectItem>
+                  <SelectItem value="F3">F/3 (10C·MM - 10MMMMM)</SelectItem>
+                </SelectContent>
               </Select>
             </div>
           </div>
