@@ -48,22 +48,25 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
   const parseImportData = (data: string): string[] => {
     // Auto-detect format: CSV or TXT
+    // WICHTIG: Ganze Sätze werden als EIN Datensatz behandelt
     const lines = data.trim().split('\n');
-    const words: string[] = [];
+    const entries: string[] = [];
 
     for (const line of lines) {
-      if (line.includes(',')) {
-        // CSV format
-        const parts = line.split(',').map(p => p.trim());
-        words.push(...parts.filter(p => p.length > 0));
+      const trimmedLine = line.trim();
+      if (trimmedLine.length === 0) continue;
+
+      if (trimmedLine.includes(',')) {
+        // CSV format - Split bei Komma, jeder Teil ist ein Datensatz (kann Satz sein)
+        const parts = trimmedLine.split(',').map(p => p.trim());
+        entries.push(...parts.filter(p => p.length > 0));
       } else {
-        // TXT format - one word per line
-        const word = line.trim();
-        if (word.length > 0) words.push(word);
+        // TXT format - eine Zeile = ein Datensatz (kann ganzer Satz sein)
+        entries.push(trimmedLine);
       }
     }
 
-    return [...new Set(words)]; // Remove duplicates
+    return [...new Set(entries)]; // Remove duplicates
   };
 
   const calculateClientRate = (patient: CloudPatient): number => {
@@ -286,7 +289,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             <Textarea
               value={importData}
               onChange={(e) => setImportData(e.target.value)}
-              placeholder="Fügen Sie Ihre Datenbank ein (ein Wort pro Zeile oder CSV-Format)&#10;Beispiel:&#10;ARNICA&#10;BELLADONNA&#10;CALCIUM&#10;oder: ARNICA, BELLADONNA, CALCIUM"
+              placeholder="Fügen Sie Ihre Datenbank ein (Wortenergien oder ganze Sätze)&#10;TXT: Eine Zeile = Ein Datensatz&#10;Beispiel:&#10;ARNICA&#10;Chronische Schmerzen im Kopf&#10;BELLADONNA&#10;&#10;CSV: Komma-getrennt&#10;Beispiel:&#10;ARNICA, Chronische Schmerzen, BELLADONNA"
               className="min-h-32 font-mono text-sm"
             />
           </div>

@@ -60,6 +60,7 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [analyzingImage, setAnalyzingImage] = useState(false);
   const [ollamaConnected, setOllamaConnected] = useState(false);
+  const [imageSignatureActive, setImageSignatureActive] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
@@ -389,8 +390,19 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
                   </p>
                 )}
                 {formData.image_signature && (
-                  <div className="mt-2 p-2 bg-primary/5 rounded text-xs">
-                    <strong>Bildsignatur:</strong> {formData.image_signature.substring(0, 150)}...
+                  <div className="mt-2 space-y-2">
+                    <div className="p-2 bg-primary/5 rounded text-xs">
+                      <strong>Bildsignatur:</strong> {formData.image_signature.substring(0, 150)}...
+                    </div>
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={imageSignatureActive}
+                        onChange={(e) => setImageSignatureActive(e.target.checked)}
+                        className="w-4 h-4"
+                      />
+                      <span>Bildsignatur in Resonanzanalyse aktiv</span>
+                    </label>
                   </div>
                 )}
               </div>
