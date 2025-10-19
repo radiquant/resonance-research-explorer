@@ -14,7 +14,95 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      harmonization_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_seconds: number
+          id: string
+          job_last_heartbeat: string | null
+          job_started_at: string | null
+          patient_id: string
+          progress: number | null
+          remaining_seconds: number | null
+          started_at: string | null
+          status: string
+          tested_potency: string | null
+          updated_at: string
+          word: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds: number
+          id?: string
+          job_last_heartbeat?: string | null
+          job_started_at?: string | null
+          patient_id: string
+          progress?: number | null
+          remaining_seconds?: number | null
+          started_at?: string | null
+          status?: string
+          tested_potency?: string | null
+          updated_at?: string
+          word: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          job_last_heartbeat?: string | null
+          job_started_at?: string | null
+          patient_id?: string
+          progress?: number | null
+          remaining_seconds?: number | null
+          started_at?: string | null
+          status?: string
+          tested_potency?: string | null
+          updated_at?: string
+          word?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "harmonization_sessions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          birth_date: string
+          birth_place: string
+          created_at: string
+          first_name: string
+          id: string
+          last_name: string
+          updated_at: string
+        }
+        Insert: {
+          birth_date: string
+          birth_place: string
+          created_at?: string
+          first_name: string
+          id?: string
+          last_name: string
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string
+          birth_place?: string
+          created_at?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
