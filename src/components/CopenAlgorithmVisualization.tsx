@@ -485,7 +485,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
     // Cloud-Persistenz wird über HarmonizationArchiveCloud gehandhabt
   };
 
-  const startNewHarmonization = () => {
+  const startNewHarmonization = async () => {
     if (!selectedPatient) {
       toast({
         title: "Fehler",
@@ -495,26 +495,57 @@ const CopenAlgorithmVisualization: React.FC = () => {
       return;
     }
 
-    const newHarmonization: ActiveHarmonization = {
-      id: Date.now().toString(),
-      patientId: selectedPatient.id,
-      word: cleanWord,
-      potency: effectivePotency,
-      potencyType: potencyType,
-      wordRate: finalRate,
-      clientRate: clientRate,
-      duration: harmonizationDuration,
-      durationUnit: harmonizationUnit,
-      status: 'active',
-      elapsedTime: 0,
-      progress: 0
-    };
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        toast({ title: 'Fehler', description: 'Nicht angemeldet', variant: 'destructive' });
+        return;
+      }
 
-    setHarmonizations(prev => [...prev, newHarmonization]);
-    toast({
-      title: "Harmonisierung gestartet",
-      description: `${cleanWord} ${potencyType}${effectivePotency}`,
-    });
+      const durationSeconds = getDurationInSeconds(harmonizationDuration, harmonizationUnit);
+      const { data: inserted, error } = await supabase
+        .from('harmonization_sessions')
+        .insert({
+          user_id: userId,
+          patient_id: selectedPatient.id,
+          word: cleanWord,
+          duration_seconds: durationSeconds,
+          status: 'pending',
+        })
+        .select('*')
+        .single();
+
+      if (error) throw error;
+
+      // Optional: Worker sofort anstoßen, damit es direkt aktiv wird
+      try { await supabase.functions.invoke('harmonization-worker'); } catch (_) {}
+
+      // Optimistisches UI-Update
+      const newHarmonization: ActiveHarmonization = {
+        id: inserted.id,
+        patientId: selectedPatient.id,
+        word: cleanWord,
+        potency: effectivePotency,
+        potencyType: potencyType,
+        wordRate: finalRate,
+        clientRate: clientRate,
+        duration: harmonizationDuration,
+        durationUnit: harmonizationUnit,
+        status: 'active',
+        elapsedTime: 0,
+        progress: 0
+      };
+      setHarmonizations(prev => [newHarmonization, ...prev]);
+
+      toast({
+        title: "Harmonisierung gestartet",
+        description: `${cleanWord} ${potencyType}${effectivePotency}`,
+      });
+    } catch (err: any) {
+      console.error('Start-Fehler', err);
+      toast({ title: 'Fehler', description: err.message, variant: 'destructive' });
+    }
   };
 
   const pauseHarmonization = (id: string) => {
@@ -529,29 +560,22 @@ const CopenAlgorithmVisualization: React.FC = () => {
     ));
   };
 
-  const stopHarmonization = (id: string) => {
+  const stopHarmonization = async (id: string) => {
     const session = harmonizations.find(h => h.id === id);
-    if (session) {
-      const stoppedSession = {
-        id: session.id,
-        patientId: session.patientId,
-        word: session.word,
-        potency: session.potency,
-        potencyType: session.potencyType,
-        wordRate: session.wordRate,
-        clientRate: session.clientRate,
-        duration: session.duration,
-        durationUnit: session.durationUnit,
-        status: 'stopped' as const,
-        completedAt: new Date().toISOString()
-      };
-      archiveSession(stoppedSession);
-      
+    if (!session) return;
+
+    try {
+      const { error } = await supabase
+        .from('harmonization_sessions')
+        .update({ status: 'stopped', completed_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+
       setHarmonizations(prev => prev.filter(h => h.id !== id));
-      toast({
-        title: "Harmonisierung gestoppt",
-        description: "Session wurde archiviert",
-      });
+      toast({ title: 'Harmonisierung gestoppt', description: 'Session wurde im Backend gestoppt' });
+    } catch (err: any) {
+      console.error('Stop-Fehler', err);
+      toast({ title: 'Fehler', description: err.message, variant: 'destructive' });
     }
   };
 
