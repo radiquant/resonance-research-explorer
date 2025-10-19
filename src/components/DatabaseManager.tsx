@@ -3,9 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Upload, Download, Database, FileText, FileSpreadsheet } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, type CopenRateResult } from '@/utils/copenRateGenerator';
+import { analyzeImageWithOllama, compareImageSignatures, checkOllamaConnection } from '@/utils/ollamaClient';
 
 interface CloudPatient {
   id: string;
@@ -13,6 +15,7 @@ interface CloudPatient {
   last_name: string;
   birth_date: string;
   birth_place: string;
+  image_signature?: string | null;
 }
 
 interface DatabaseManagerProps {
@@ -32,7 +35,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [importData, setImportData] = useState('');
   const [resonanceResults, setResonanceResults] = useState<ResonanceResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageSignature, setImageSignature] = useState<string>('');
+  const [analyzingImage, setAnalyzingImage] = useState(false);
+  const [imageResonanceResults, setImageResonanceResults] = useState<Array<{word: string; score: number; analysis: string}>>([]);
+  const [ollamaConnected, setOllamaConnected] = useState(false);
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    checkOllamaConnection().then(setOllamaConnected);
+  }, []);
 
   const parseImportData = (data: string): string[] => {
     // Auto-detect format: CSV or TXT
@@ -145,6 +157,89 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     });
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ollamaConnected) {
+      toast({
+        variant: "destructive",
+        title: "Ollama nicht verbunden",
+        description: "Bitte starten Sie Ollama mit: OLLAMA_ORIGINS=* ollama serve",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    setAnalyzingImage(true);
+
+    try {
+      const result = await analyzeImageWithOllama(file);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      setImageSignature(result.signature);
+      toast({
+        title: "Bild analysiert",
+        description: "Bildsignatur wurde mit Ollama llava erstellt",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Bildanalyse fehlgeschlagen",
+        description: error.message,
+      });
+    } finally {
+      setAnalyzingImage(false);
+    }
+  };
+
+  const handleImageResonanceAnalysis = async () => {
+    if (!imageSignature || !importData.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: "Bitte laden Sie ein Bild hoch und importieren Sie eine Datenbank",
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    const words = parseImportData(importData);
+    const results: Array<{word: string; score: number; analysis: string}> = [];
+
+    try {
+      for (const word of words.slice(0, 20)) { // Limit für Demo
+        const wordSignature = `Wortenergie: ${word}`;
+        const comparison = await compareImageSignatures(imageSignature, wordSignature);
+        
+        results.push({
+          word,
+          score: comparison.resonanceScore,
+          analysis: comparison.analysis
+        });
+      }
+
+      results.sort((a, b) => b.score - a.score);
+      setImageResonanceResults(results);
+
+      toast({
+        title: "Bild-Resonanz-Analyse abgeschlossen",
+        description: `${results.length} Vergleiche durchgeführt`,
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: error.message,
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const exportResults = (format: 'csv' | 'txt') => {
     if (resonanceResults.length === 0) {
       toast({
@@ -202,11 +297,53 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             />
           </div>
 
+          {/* Bild-Upload für Resonanzanalyse */}
+          <div className="border-t pt-4 space-y-3">
+            <Label className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />
+              Bild-Resonanzanalyse (Ollama llava)
+              {ollamaConnected && <Sparkles className="h-3 w-3 text-green-500" />}
+            </Label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleImageUpload}
+              disabled={analyzingImage || !ollamaConnected}
+            />
+            {analyzingImage && (
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                <Sparkles className="h-3 w-3 animate-pulse" />
+                Analysiere Bild mit Ollama llava...
+              </p>
+            )}
+            {!ollamaConnected && (
+              <p className="text-sm text-yellow-600">
+                ⚠️ Ollama nicht verbunden. Starten Sie: OLLAMA_ORIGINS=* ollama serve
+              </p>
+            )}
+            {imageSignature && (
+              <div className="p-2 bg-primary/5 rounded text-xs">
+                <strong>Bildsignatur:</strong> {imageSignature.substring(0, 200)}...
+              </div>
+            )}
+          </div>
+
           <div className="flex gap-2">
-            <Button onClick={handleAnalyzeDatabase} disabled={isAnalyzing} className="flex-1">
+            <Button onClick={handleAnalyzeDatabase} disabled={isAnalyzing || !selectedPatient} className="flex-1">
               <Database className="h-4 w-4 mr-2" />
-              {isAnalyzing ? 'Analysiere...' : 'Resonanzen analysieren'}
+              {isAnalyzing ? 'Analysiere...' : 'Text-Resonanzen analysieren'}
             </Button>
+            {imageSignature && (
+              <Button 
+                onClick={handleImageResonanceAnalysis} 
+                disabled={isAnalyzing || !importData.trim()} 
+                variant="secondary"
+                className="flex-1"
+              >
+                <ImageIcon className="h-4 w-4 mr-2" />
+                {isAnalyzing ? 'Analysiere...' : 'Bild-Resonanzen analysieren'}
+              </Button>
+            )}
           </div>
 
           {resonanceResults.length > 0 && (
@@ -262,6 +399,47 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                   Zeige Top 50 von {resonanceResults.length} Ergebnissen. Exportieren Sie für alle Ergebnisse.
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Bild-Resonanz-Ergebnisse */}
+          {imageResonanceResults.length > 0 && (
+            <div className="space-y-3 border-t pt-4">
+              <h3 className="font-semibold flex items-center gap-2">
+                <ImageIcon className="h-5 w-5" />
+                Bild-Resonanz-Ergebnisse
+              </h3>
+              
+              <div className="border rounded-lg max-h-96 overflow-y-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="p-2 text-left">Wortenergie</th>
+                      <th className="p-2 text-right">Resonanz</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {imageResonanceResults.map((result, index) => (
+                      <tr key={index} className={`border-b ${
+                        result.score >= 80 ? 'bg-green-50' :
+                        result.score >= 60 ? 'bg-yellow-50' :
+                        ''
+                      }`}>
+                        <td className="p-2 font-medium">{result.word}</td>
+                        <td className="p-2 text-right">
+                          <span className={`font-bold ${
+                            result.score >= 80 ? 'text-green-600' :
+                            result.score >= 60 ? 'text-yellow-600' :
+                            'text-gray-600'
+                          }`}>
+                            {result.score}%
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </CardContent>

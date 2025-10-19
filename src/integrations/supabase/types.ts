@@ -86,6 +86,7 @@ export type Database = {
           created_at: string
           first_name: string
           id: string
+          image_signature: string | null
           last_name: string
           updated_at: string
           user_id: string | null
@@ -96,6 +97,7 @@ export type Database = {
           created_at?: string
           first_name: string
           id?: string
+          image_signature?: string | null
           last_name: string
           updated_at?: string
           user_id?: string | null
@@ -106,6 +108,7 @@ export type Database = {
           created_at?: string
           first_name?: string
           id?: string
+          image_signature?: string | null
           last_name?: string
           updated_at?: string
           user_id?: string | null

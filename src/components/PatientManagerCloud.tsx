@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, Plus, Trash2, Edit2, Check, X, Loader2 } from 'lucide-react';
+import { Users, Plus, Trash2, Edit2, Check, X, Loader2, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { z } from 'zod';
+import { analyzeImageWithOllama, checkOllamaConnection } from '@/utils/ollamaClient';
 
 // DSGVO-konforme Input-Validierung
 const patientSchema = z.object({
@@ -30,6 +31,7 @@ interface Patient {
   last_name: string;
   birth_date: string;
   birth_place: string;
+  image_signature?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,11 +54,20 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
     first_name: '',
     last_name: '',
     birth_date: '',
-    birth_place: ''
+    birth_place: '',
+    image_signature: ''
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [analyzingImage, setAnalyzingImage] = useState(false);
+  const [ollamaConnected, setOllamaConnected] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Prüfe Ollama-Verbindung beim Start
+  useEffect(() => {
+    checkOllamaConnection().then(setOllamaConnected);
+  }, []);
 
   // Lade Patienten von Cloud
   useEffect(() => {
@@ -124,6 +135,47 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
     }
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ollamaConnected) {
+      toast({
+        variant: "destructive",
+        title: "Ollama nicht verbunden",
+        description: "Bitte starten Sie Ollama mit: OLLAMA_ORIGINS=* ollama serve",
+      });
+      return;
+    }
+
+    setImageFile(file);
+    setAnalyzingImage(true);
+
+    try {
+      const result = await analyzeImageWithOllama(file);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+
+      // Aktualisiere formData mit Bildsignatur
+      setFormData(prev => ({ ...prev, image_signature: result.signature }));
+      
+      toast({
+        title: "Bild analysiert",
+        description: "Bildsignatur wurde mit Ollama llava erstellt",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Bildanalyse fehlgeschlagen",
+        description: error.message,
+      });
+    } finally {
+      setAnalyzingImage(false);
+    }
+  };
+
   const handleAdd = async () => {
     if (!validateForm()) return;
     if (!user) return;
@@ -141,7 +193,8 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
 
       if (error) throw error;
 
-      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '' });
+      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '' });
+      setImageFile(null);
       setIsAdding(false);
       toast({
         title: "Erfolg",
@@ -165,6 +218,7 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       last_name: patient.last_name,
       birth_date: patient.birth_date,
       birth_place: patient.birth_place,
+      image_signature: patient.image_signature || ''
     });
   };
 
@@ -181,7 +235,7 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       if (error) throw error;
 
       setEditingId(null);
-      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '' });
+      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '' });
 
       // Update selectedPatient wenn er editiert wurde
       if (selectedPatient?.id === editingId) {
@@ -234,7 +288,8 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '' });
+    setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '' });
+    setImageFile(null);
     setErrors({});
   };
 
@@ -314,6 +369,37 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
                   <p className="text-sm text-destructive mt-1">{errors.birth_place}</p>
                 )}
               </div>
+              
+              {/* Bild-Upload für Ollama-Analyse */}
+              <div className="col-span-full">
+                <Label className="flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4" />
+                  Patientenbild (Optional - Ollama llava Analyse)
+                  {ollamaConnected && <Sparkles className="h-3 w-3 text-green-500" />}
+                </Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={submitting || analyzingImage || !ollamaConnected}
+                />
+                {analyzingImage && (
+                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Analysiere Bild mit Ollama llava...
+                  </p>
+                )}
+                {!ollamaConnected && (
+                  <p className="text-sm text-yellow-600 mt-1">
+                    ⚠️ Ollama nicht verbunden. Starten Sie: OLLAMA_ORIGINS=* ollama serve
+                  </p>
+                )}
+                {formData.image_signature && (
+                  <div className="mt-2 p-2 bg-primary/5 rounded text-xs">
+                    <strong>Bildsignatur:</strong> {formData.image_signature.substring(0, 150)}...
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button 
@@ -371,6 +457,12 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
                     {patient.birth_place && (
                       <div className="text-sm text-muted-foreground">
                         Ort: {patient.birth_place}
+                      </div>
+                    )}
+                    {patient.image_signature && (
+                      <div className="text-xs text-primary mt-1 flex items-center gap-1">
+                        <ImageIcon className="h-3 w-3" />
+                        Bildsignatur vorhanden
                       </div>
                     )}
                   </div>
