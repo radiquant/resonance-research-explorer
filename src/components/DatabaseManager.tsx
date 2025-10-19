@@ -217,38 +217,54 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     const clientRate = calculateClientRate(selectedPatient);
     const results: ResonanceResult[] = [];
 
-    // Analysiere jedes Wort mit verschiedenen Potenzen
-    for (const word of words) {
-      const potencies: Array<{ type: 'D' | 'C' | 'LM' | 'M', value: number }> = [
-        { type: 'D', value: 6 },
-        { type: 'D', value: 12 },
-        { type: 'D', value: 30 },
-        { type: 'C', value: 30 },
-        { type: 'C', value: 200 },
-        { type: 'LM', value: 6 },
-        { type: 'M', value: 1 }
-      ];
+    const potencies: Array<{ type: 'D' | 'C' | 'LM' | 'M', value: number }> = [
+      { type: 'D', value: 6 },
+      { type: 'D', value: 12 },
+      { type: 'D', value: 30 },
+      { type: 'C', value: 30 },
+      { type: 'C', value: 200 },
+      { type: 'LM', value: 6 },
+      { type: 'M', value: 1 }
+    ];
 
+    // Für jedes Wort: Finde die optimale Potenz
+    for (const word of words) {
+      let bestPotency = potencies[0];
+      let bestResonance = 0;
+      
+      // Teste alle Potenzen und finde die beste
       for (const pot of potencies) {
         const result = calculateCopenRate(word, pot.value, pot.type);
+        const levelResonance = calculateLevelResonance(result.rate, word);
+        const { value: levelValue } = findHighestResonanceLevel(levelResonance);
         const resonanceScore = analyzeResonance(result.rate, clientRate);
         
-        // Berechne Ebenen-Resonanz
-        const levelResonance = calculateLevelResonance(result.rate, word);
-        const { level: highestLevel, value: highestLevelValue } = findHighestResonanceLevel(levelResonance);
+        // Kombiniere beide Resonanzwerte für optimale Auswahl
+        const combinedScore = (resonanceScore + levelValue) / 2;
         
-        results.push({
-          word,
-          potency: pot.value,
-          potencyType: pot.type,
-          rate: result.rate,
-          resonanceScore,
-          clientResonance: clientRate,
-          levelResonance,
-          highestLevel,
-          highestLevelValue
-        });
+        if (combinedScore > bestResonance) {
+          bestResonance = combinedScore;
+          bestPotency = pot;
+        }
       }
+
+      // Berechne finale Werte mit bester Potenz
+      const result = calculateCopenRate(word, bestPotency.value, bestPotency.type);
+      const levelResonance = calculateLevelResonance(result.rate, word);
+      const { level: highestLevel, value: highestLevelValue } = findHighestResonanceLevel(levelResonance);
+      const resonanceScore = analyzeResonance(result.rate, clientRate);
+      
+      results.push({
+        word,
+        potency: bestPotency.value,
+        potencyType: bestPotency.type,
+        rate: result.rate,
+        resonanceScore,
+        clientResonance: clientRate,
+        levelResonance,
+        highestLevel,
+        highestLevelValue
+      });
     }
 
     // Sortiere nach Resonanz-Score
@@ -259,7 +275,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     
     toast({
       title: "Analyse abgeschlossen",
-      description: `${results.length} Resonanzen berechnet für ${words.length} Wortenergien`,
+      description: `${results.length} Wortenergien mit optimalen Potenzen analysiert`,
     });
   };
 

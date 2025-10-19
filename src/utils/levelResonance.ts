@@ -132,34 +132,45 @@ export function calculateLevelResonance(
 
     // 1. Frequenzbasierte Resonanz
     const { min, max } = level.frequencyRange;
-    if (copenRate >= min && copenRate <= max) {
-      // Maximale Resonanz in der Mitte des Bereichs
+    
+    if (max === Infinity) {
+      // Göttliche Ebene - volle Resonanz wenn über min
+      if (copenRate >= min) {
+        baseResonance = 100;
+      } else {
+        const ratio = copenRate / min;
+        baseResonance = Math.max(0, ratio * 50);
+      }
+    } else if (copenRate >= min && copenRate <= max) {
+      // Rate liegt im Bereich - hohe Resonanz
       const midpoint = (min + max) / 2;
       const distance = Math.abs(copenRate - midpoint);
       const range = (max - min) / 2;
-      baseResonance = Math.max(0, 100 - (distance / range) * 100);
+      baseResonance = Math.max(0, 100 - (distance / range) * 50);
     } else if (copenRate < min) {
-      // Schwache Resonanz unter dem Bereich
-      const distance = min - copenRate;
-      baseResonance = Math.max(0, 50 - (distance / min) * 50);
+      // Rate liegt unter dem Bereich
+      const ratio = copenRate / min;
+      baseResonance = Math.max(0, ratio * 40);
     } else {
-      // Sehr schwache Resonanz über dem Bereich
-      const distance = copenRate - max;
-      baseResonance = Math.max(0, 25 - (distance / max) * 25);
+      // Rate liegt über dem Bereich
+      if (max > 0) {
+        const overshoot = (copenRate - max) / max;
+        baseResonance = Math.max(0, 30 - overshoot * 30);
+      }
     }
 
     // 2. Keyword-basierte Resonanz
     let keywordBonus = 0;
     level.keywords.forEach(keyword => {
       if (normalizedWord.includes(keyword.toLowerCase())) {
-        keywordBonus += 30; // Starker Bonus für Keyword-Match
+        keywordBonus += 25;
       }
     });
 
     // 3. Kombiniere beide Resonanzen
     const totalResonance = Math.min(100, baseResonance + keywordBonus);
     
-    resonance[`level_${level.id}`] = Math.round(totalResonance * 100) / 100;
+    resonance[`level_${level.id}`] = parseFloat(totalResonance.toFixed(2));
   });
 
   return resonance;
