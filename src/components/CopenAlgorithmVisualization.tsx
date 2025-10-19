@@ -39,7 +39,6 @@ import DatabaseManager from './DatabaseManager';
 import KozyrevIndicators from './KozyrevIndicators';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { applyQuantumFluctuation } from '@/utils/copenRateGenerator';
 import { useWordEnergyHistory } from '@/hooks/useWordEnergyHistory';
 
 const CopenAlgorithmVisualization: React.FC = () => {
@@ -273,18 +272,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
     }
     
     const clientBaseRate = clientSum * 1000;
-    let clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
-    
-    // KOZYREV-HARDWARE-QUANTENEFFEKTE
-    clientFibonacciRate = applyQuantumFluctuations(clientFibonacciRate);
+    const clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
     
     return clientFibonacciRate;
-  };
-
-  // Hardware-Quantum-Effekt: Nutzt CPU-Jitter wenn Kozyrev aktiviert
-  const applyQuantumFluctuations = (baseRate: number): number => {
-    if (!kozyrevEnabled) return baseRate;
-    return applyQuantumFluctuation(baseRate, true);
   };
 
   const clientRate = calculateClientRate();

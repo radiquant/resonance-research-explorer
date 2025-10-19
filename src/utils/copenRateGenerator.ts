@@ -122,31 +122,6 @@ export const parseWordEnergyData = (csvData: string): WordEnergyInput[] => {
   return results;
 };
 
-// ============= Kozyrev Hardware-Dioden (Echtzeit-Sensoren) =============
-// Nutzt CPU-Timestamp-Jitter als Quanten-Zufallsquelle für Effektivitätsoptimierung
-// WICHTIG: Ändert die Basis-Rate NICHT, nur minimale Feinabstimmung für Effektivität
-
-export const getQuantumSeed = (): number => {
-  // Nutze performance.now() Mikrosekunden-Jitter als Quanten-Sensor
-  const t1 = performance.now();
-  const t2 = performance.now();
-  const jitter = Math.abs(t2 - t1);
-  
-  // Extrahiere Nachkommastellen als Seed (0.0 - 1.0)
-  const seed = (jitter % 1);
-  return seed;
-};
-
-export const applyQuantumFluctuation = (baseRate: number, enabled: boolean = false): number => {
-  if (!enabled) return baseRate;
-  
-  // Sehr kleine Fluktuation basierend auf Quanten-Jitter (±0.01% max)
-  const seed = getQuantumSeed();
-  const fluctuation = 1 + (seed - 0.5) * 0.0001; // ±0.01% Variation
-  
-  return Math.round(baseRate * fluctuation);
-};
-
 export const exportCopenRatesToCSV = (results: CopenRateResult[]): string => {
   const header = 'Wortenergie,Potenz,Typ,Alphabet,Copen-Rate\n';
   const rows = results.map(result => {
