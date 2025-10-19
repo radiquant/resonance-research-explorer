@@ -186,26 +186,68 @@ const CopenAlgorithmVisualization: React.FC = () => {
           const newElapsedTime = harm.elapsedTime + 0.1;
           
           if (newElapsedTime >= durationInSeconds) {
-            // Session abgeschlossen - ins Archiv verschieben
-            const completedSession: HarmonizationSession = {
-              id: harm.id,
-              patientId: harm.patientId,
-              word: harm.word,
-              potency: harm.potency,
-              potencyType: harm.potencyType,
-              wordRate: harm.wordRate,
-              clientRate: harm.clientRate,
-              duration: harm.duration,
-              durationUnit: harm.durationUnit,
-              status: 'completed',
-              completedAt: new Date().toISOString()
-            };
-            archiveSession(completedSession);
-            
-            toast({
-              title: "Harmonisierung abgeschlossen",
-              description: `${harm.word} für ${selectedPatient?.firstName} ${selectedPatient?.lastName}`,
-            });
+            // Automatische Potenz-Abtestung nach Harmonisierung
+            const patient = selectedPatient;
+            if (patient) {
+              const combinedData = `${harm.word} ${patient.firstName} ${patient.lastName} ${patient.birthDate}`;
+              let sum = 0;
+              for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
+                sum += char.charCodeAt(0) - 64;
+              }
+              
+              const ranges = {
+                'D': [1, 30],
+                'C': [1, 200],
+                'LM': [1, 30],
+                'M': [1, 10]
+              };
+              
+              const [min, max] = ranges[harm.potencyType];
+              const testedPotency = Math.max(min, Math.min(max, Math.floor(sum / 10)));
+              
+              // Session abgeschlossen - ins Archiv mit getesteter Potenz verschieben
+              const completedSession: HarmonizationSession = {
+                id: harm.id,
+                patientId: harm.patientId,
+                word: harm.word,
+                potency: harm.potency,
+                potencyType: harm.potencyType,
+                wordRate: harm.wordRate,
+                clientRate: harm.clientRate,
+                duration: harm.duration,
+                durationUnit: harm.durationUnit,
+                status: 'completed',
+                completedAt: new Date().toISOString(),
+                testedPotency: testedPotency
+              };
+              archiveSession(completedSession);
+              
+              toast({
+                title: "Harmonisierung abgeschlossen",
+                description: `${harm.word} • Getestete Potenz: ${harm.potencyType}${testedPotency}`,
+              });
+            } else {
+              // Session ohne Potenz-Abtestung
+              const completedSession: HarmonizationSession = {
+                id: harm.id,
+                patientId: harm.patientId,
+                word: harm.word,
+                potency: harm.potency,
+                potencyType: harm.potencyType,
+                wordRate: harm.wordRate,
+                clientRate: harm.clientRate,
+                duration: harm.duration,
+                durationUnit: harm.durationUnit,
+                status: 'completed',
+                completedAt: new Date().toISOString()
+              };
+              archiveSession(completedSession);
+              
+              toast({
+                title: "Harmonisierung abgeschlossen",
+                description: `${harm.word} ${harm.potencyType}${harm.potency}`,
+              });
+            }
             
             return { ...harm, status: 'completed' as const, elapsedTime: durationInSeconds, progress: 100 };
           }

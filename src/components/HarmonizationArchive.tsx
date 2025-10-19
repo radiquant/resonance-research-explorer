@@ -114,6 +114,11 @@ const HarmonizationArchive: React.FC<HarmonizationArchiveProps> = ({ patientId, 
                       <div className="mt-2 p-2 bg-muted rounded text-sm space-y-1">
                         <div>Wortenergie-Rate: <strong>{session.wordRate.toLocaleString()}</strong></div>
                         <div>Klienten-Rate: <strong>{session.clientRate.toLocaleString()}</strong></div>
+                        {session.testedPotency && (
+                          <div className="pt-1 border-t border-border">
+                            Getestete Potenz: <strong className="text-primary">{session.potencyType}{session.testedPotency}</strong>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
