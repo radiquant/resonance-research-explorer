@@ -139,15 +139,6 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ollamaConnected) {
-      toast({
-        variant: "destructive",
-        title: "Ollama nicht verbunden",
-        description: "Bitte starten Sie Ollama mit: OLLAMA_ORIGINS=* ollama serve",
-      });
-      return;
-    }
-
     setImageFile(file);
     setAnalyzingImage(true);
 
@@ -161,9 +152,12 @@ const PatientManagerCloud: React.FC<PatientManagerCloudProps> = ({
       // Aktualisiere formData mit Bildsignatur
       setFormData(prev => ({ ...prev, image_signature: result.signature }));
       
+      const isPerceptualHash = result.signature.startsWith('PHASH:');
       toast({
         title: "Bild analysiert",
-        description: "Bildsignatur wurde mit Ollama llava erstellt",
+        description: isPerceptualHash 
+          ? "Perceptual Hash Signatur erstellt (Ollama Fallback)" 
+          : "Bildsignatur wurde mit Ollama llava erstellt",
       });
     } catch (error: any) {
       toast({

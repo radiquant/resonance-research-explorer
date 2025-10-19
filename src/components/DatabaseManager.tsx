@@ -161,15 +161,6 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!ollamaConnected) {
-      toast({
-        variant: "destructive",
-        title: "Ollama nicht verbunden",
-        description: "Bitte starten Sie Ollama mit: OLLAMA_ORIGINS=* ollama serve",
-      });
-      return;
-    }
-
     setImageFile(file);
     setAnalyzingImage(true);
 
@@ -181,9 +172,12 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       }
 
       setImageSignature(result.signature);
+      const isPerceptualHash = result.signature.startsWith('PHASH:');
       toast({
         title: "Bild analysiert",
-        description: "Bildsignatur wurde mit Ollama llava erstellt",
+        description: isPerceptualHash 
+          ? "Perceptual Hash Signatur erstellt (Ollama Fallback)" 
+          : "Bildsignatur wurde mit Ollama llava erstellt",
       });
     } catch (error: any) {
       toast({

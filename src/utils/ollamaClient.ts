@@ -20,6 +20,67 @@ const DEFAULT_CONFIG: Required<OllamaConfig> = {
 };
 
 /**
+ * Perceptual Hash Fallback (wenn Ollama nicht verfügbar)
+ */
+export const calculatePerceptualHash = async (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      reject(new Error('Canvas context nicht verfügbar'));
+      return;
+    }
+
+    img.onload = () => {
+      // Resize to 8x8 for perceptual hash
+      const size = 8;
+      canvas.width = size;
+      canvas.height = size;
+      
+      // Draw and convert to grayscale
+      ctx.drawImage(img, 0, 0, size, size);
+      const imageData = ctx.getImageData(0, 0, size, size);
+      const pixels = imageData.data;
+      
+      // Convert to grayscale and calculate average
+      const grayscale: number[] = [];
+      let sum = 0;
+      
+      for (let i = 0; i < pixels.length; i += 4) {
+        const gray = Math.floor((pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3);
+        grayscale.push(gray);
+        sum += gray;
+      }
+      
+      const average = sum / grayscale.length;
+      
+      // Create hash based on whether pixel is above/below average
+      let hash = '';
+      for (let i = 0; i < grayscale.length; i++) {
+        hash += grayscale[i] >= average ? '1' : '0';
+      }
+      
+      // Convert binary to hex
+      const hexHash = parseInt(hash, 2).toString(16).padStart(16, '0');
+      
+      // Create signature from hash
+      const signature = `PHASH:${hexHash}:${file.name}:${file.size}`;
+      URL.revokeObjectURL(img.src);
+      resolve(signature);
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Bild konnte nicht geladen werden'));
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+/**
  * Konvertiert ein Bild (File oder Blob) zu Base64
  */
 const imageToBase64 = async (image: File | Blob): Promise<string> => {
@@ -78,6 +139,7 @@ export const listOllamaModels = async (config: OllamaConfig = {}): Promise<strin
 
 /**
  * Analysiert ein Bild mit Ollama llava und generiert eine Signatur
+ * Falls Ollama nicht verfügbar ist, wird automatisch auf Perceptual Hash zurückgegriffen
  */
 export const analyzeImageWithOllama = async (
   image: File | Blob,
@@ -85,6 +147,34 @@ export const analyzeImageWithOllama = async (
   config: OllamaConfig = {}
 ): Promise<OllamaImageAnalysisResult> => {
   const { baseUrl, model } = { ...DEFAULT_CONFIG, ...config };
+  
+  // Check if Ollama is available
+  const isConnected = await checkOllamaConnection(config);
+  
+  if (!isConnected) {
+    // Fallback to perceptual hash
+    if (image instanceof File) {
+      try {
+        const phash = await calculatePerceptualHash(image);
+        return {
+          signature: phash,
+          description: 'Perceptual Hash Signatur (Ollama nicht verfügbar)'
+        };
+      } catch (error: any) {
+        return {
+          signature: '',
+          description: '',
+          error: `Perceptual Hash fehlgeschlagen: ${error.message}`
+        };
+      }
+    } else {
+      return {
+        signature: '',
+        description: '',
+        error: 'Ollama ist nicht verfügbar und Perceptual Hash benötigt ein File-Objekt'
+      };
+    }
+  }
   
   try {
     // Konvertiere Bild zu Base64
