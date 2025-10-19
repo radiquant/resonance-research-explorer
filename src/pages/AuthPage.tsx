@@ -148,16 +148,46 @@ const AuthPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <Shield className="h-12 w-12 text-primary" />
+      <div className="w-full max-w-4xl space-y-8">
+        {/* Intro-Bereich */}
+        <div className="text-center space-y-4">
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative">
+              <Shield className="h-16 w-16 text-primary" />
+              <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
+            </div>
           </div>
-          <CardTitle className="text-2xl text-center">Frequenz-Harmonisierung</CardTitle>
-          <CardDescription className="text-center">
-            DSGVO-konforme Authentifizierung
-          </CardDescription>
-        </CardHeader>
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent">
+            Frequenz-Harmonisierungs-System
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Professionelle Biofrequenz-Analyse nach Bruce Copen, Baklayan, Garjajev und weiteren 
+            führenden Frequenztheorien. DSGVO-konforme Cloud-Lösung für Therapeuten und Anwender.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              <span>TLS 1.3 Verschlüsselung</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              <span>DSGVO-konform</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              <span>Secure Cloud Backend</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Auth Card */}
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl text-center">Zugang</CardTitle>
+            <CardDescription className="text-center">
+              Melden Sie sich an oder erstellen Sie ein neues Konto
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
@@ -267,6 +297,7 @@ const AuthPage = () => {
           </Alert>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 };
