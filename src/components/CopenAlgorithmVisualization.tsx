@@ -568,13 +568,19 @@ const CopenAlgorithmVisualization: React.FC = () => {
         return;
       }
 
+      // Auto-Potenz-Direktive: Projektion der aktuellen Rate
+      const autoPotenzDirektive = autoPotency 
+        ? `Projiziere "${finalRate}" in der jeweils benötigten Autopotenz oder im jeweils benötigten Potenzakkord. `
+        : '';
+      const harmonizationWord = autoPotenzDirektive + cleanWord;
+
       const durationSeconds = getDurationInSeconds(harmonizationDuration, harmonizationUnit);
       const { data: inserted, error } = await supabase
         .from('harmonization_sessions')
         .insert({
           user_id: userId,
           patient_id: selectedPatient.id,
-          word: cleanWord,
+          word: harmonizationWord,
           copen_rate: clientRate.toString(), // Speichere die korrekte Klienten-Rate
           tested_potency: `${effectivePotency}`,
           duration_seconds: durationSeconds,
@@ -593,7 +599,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
       const newHarmonization: ActiveHarmonization = {
         id: inserted.id,
         patientId: selectedPatient.id,
-        word: cleanWord,
+        word: harmonizationWord,
         potency: effectivePotency,
         potencyType: potencyType,
         wordRate: finalRate,
@@ -608,7 +614,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
       toast({
         title: "Harmonisierung gestartet",
-        description: `${cleanWord} ${potencyType}${effectivePotency}`,
+        description: autoPotency 
+          ? `Auto-Potenz-Projektion aktiv • ${cleanWord}`
+          : `${cleanWord} ${potencyType}${effectivePotency}`,
       });
     } catch (err: any) {
       console.error('Start-Fehler', err);
@@ -762,8 +770,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
                     onChange={(e) => setAutoPotency(e.target.checked)}
                     className="rounded"
                   />
-                  Auto-Potenz
+                  Auto-Potenz-Projektion
                 </label>
+                {autoPotency && (
+                  <div className="text-xs text-green-700 mt-1 font-semibold">
+                    ✓ Direktive aktiv
+                  </div>
+                )}
               </div>
             </div>
             <div>
@@ -805,6 +818,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
             <div className="text-lg mb-2">
               "{cleanWord}" {effectiveType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
               {kozyrevEnabled && ' • Kozyrev aktiv'}
+              {autoPotency && <div className="text-sm text-green-700 font-semibold mt-1">
+                📡 Projiziere "{finalRate.toLocaleString()}" in der jeweils benötigten Autopotenz
+              </div>}
             </div>
             <div className="text-3xl font-bold">
               {finalRate.toLocaleString()}
