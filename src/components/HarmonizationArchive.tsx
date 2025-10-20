@@ -48,7 +48,8 @@ const HarmonizationArchive: React.FC<HarmonizationArchiveProps> = ({ patientId, 
     }
   };
 
-  const formatDuration = (duration: number, unit: string) => {
+  const formatDuration = (duration: number, unit: 'seconds' | 'minutes' | 'hours' | 'days') => {
+    if (unit === 'days') return `${duration} Tage`;
     if (unit === 'seconds') return `${duration}s`;
     if (unit === 'minutes') return `${duration}min`;
     if (unit === 'hours') return `${duration}h`;
@@ -107,7 +108,7 @@ const HarmonizationArchive: React.FC<HarmonizationArchiveProps> = ({ patientId, 
                       </span>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Dauer: {formatDuration(session.duration, session.durationUnit)} •{' '}
+                      Dauer: {formatDuration(session.duration, session.durationUnit as 'seconds' | 'minutes' | 'hours' | 'days')} •{' '}
                       {session.completedAt && new Date(session.completedAt).toLocaleString('de-DE')}
                     </div>
                     {expandedId === session.id && (

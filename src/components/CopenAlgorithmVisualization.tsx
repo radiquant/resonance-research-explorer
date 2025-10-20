@@ -35,6 +35,7 @@ interface CloudHarmonizationSession {
 }
 import PatientManagerCloud from './PatientManagerCloud';
 import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
+import HarmonizationTemplates from './HarmonizationTemplates';
 import DatabaseManager from './DatabaseManager';
 import KozyrevIndicators from './KozyrevIndicators';
 import { useToast } from '@/hooks/use-toast';
@@ -454,7 +455,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
         const updated = prev.map(harm => {
           if (harm.status !== 'running') return harm;
 
-          const durationInSeconds = harm.durationUnit === 'hours' 
+          const durationInSeconds = harm.durationUnit === 'days'
+            ? harm.duration * 86400
+            : harm.durationUnit === 'hours' 
             ? harm.duration * 3600 
             : harm.durationUnit === 'minutes' 
               ? harm.duration * 60 
@@ -703,6 +706,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
   };
 
   const getDurationInSeconds = (duration: number, unit: string) => {
+    if (unit === 'days') return duration * 86400;
     if (unit === 'hours') return duration * 3600;
     if (unit === 'minutes') return duration * 60;
     return duration;
@@ -1007,6 +1011,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
 
       {/* Datenbank-Manager */}
       <DatabaseManager selectedPatient={selectedPatient} />
+
+      {/* Harmonisierungs-Templates */}
+      {selectedPatient && (
+        <HarmonizationTemplates 
+          patientId={selectedPatient.id} 
+        />
+      )}
 
       {/* Archiv */}
       {selectedPatient && (

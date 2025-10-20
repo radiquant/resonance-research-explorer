@@ -538,6 +538,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm">
+            <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">💡 Hinweis zur Datenbank-Analyse:</p>
+            <ul className="text-blue-800 dark:text-blue-200 space-y-0.5 list-disc list-inside">
+              <li>Bei Datenbanken mit bestehenden Zahlenraten wird <strong>keine neue Copen-Rate</strong> berechnet</li>
+              <li>Format mit Rate: <code>Wortenergie,12345</code> (Rate wird übernommen)</li>
+              <li>Format ohne Rate: <code>Wortenergie</code> (neue Rate wird berechnet)</li>
+              <li>Die Analyse zeigt maximal <strong>35 Top-Ergebnisse</strong> nach Resonanz sortiert</li>
+            </ul>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="md:col-span-2">
               <Label>Datenbank-Name (für Speicherung)</Label>
