@@ -889,7 +889,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                           Wortenergie
                           <span
                             onMouseDown={(e) => startResize('word', e)}
-                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
                           />
                         </div>
                       </th>
@@ -897,8 +897,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <div className="p-2 relative cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('potency')}>
                           Potenz {sortBy === 'potency' && (sortOrder === 'asc' ? '↑' : '↓')}
                           <span
-                            onMouseDown={(e) => startResize('potency', e)}
-                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                            onMouseDown={(e) => { e.stopPropagation(); startResize('potency', e); }}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
                           />
                         </div>
                       </th>
@@ -907,7 +907,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                           Copen-Rate
                           <span
                             onMouseDown={(e) => startResize('rate', e)}
-                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
                           />
                         </div>
                       </th>
@@ -915,8 +915,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <div className="p-2 relative cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('resonance')}>
                           Resonanz {sortBy === 'resonance' && (sortOrder === 'asc' ? '↑' : '↓')}
                           <span
-                            onMouseDown={(e) => startResize('resonance', e)}
-                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                            onMouseDown={(e) => { e.stopPropagation(); startResize('resonance', e); }}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
                           />
                         </div>
                       </th>
@@ -924,8 +924,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <div className="p-2 relative cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('level')}>
                           Höchste Ebene {sortBy === 'level' && (sortOrder === 'asc' ? '↑' : '↓')}
                           <span
-                            onMouseDown={(e) => startResize('level', e)}
-                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                            onMouseDown={(e) => { e.stopPropagation(); startResize('level', e); }}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
                           />
                         </div>
                       </th>
@@ -934,7 +934,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                           Aktionen
                           <span
                             onMouseDown={(e) => startResize('actions', e)}
-                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50"
                           />
                         </div>
                       </th>
