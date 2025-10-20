@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw, StopCircle, Plus, Trash2, Archive } from 'lucide-react';
+import { calculateLevelResonance, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
 import { Progress } from '@/components/ui/progress';
 import type { ActiveHarmonization } from '@/types/patient';
 
@@ -852,6 +853,18 @@ const CopenAlgorithmVisualization: React.FC = () => {
             <div className="text-3xl font-bold">
               {finalRate.toLocaleString()}
             </div>
+            {selectedPatient && (
+              <div className="mt-3 pt-3 border-t border-primary/30">
+                <div className="text-xs text-muted-foreground">Höchste Ebene für {selectedPatient.first_name}:</div>
+                <div className="text-sm font-bold text-primary mt-1">
+                  {(() => {
+                    const levelRes = calculateLevelResonance(finalRate, cleanWord);
+                    const { level } = findHighestResonanceLevel(levelRes);
+                    return getLevelDisplayName(level, 'de');
+                  })()}
+                </div>
+              </div>
+            )}
             <div className="text-sm text-muted-foreground mt-2">
               Live-Vorschau der Bruce Copen Rate
             </div>

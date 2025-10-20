@@ -57,6 +57,10 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
   const [savedDatabases, setSavedDatabases] = useState<Array<{ id: string; name: string; entries: string[] }>>([]);
   const [loadingDatabases, setLoadingDatabases] = useState(false);
+  
+  // Sortierung
+  const [sortBy, setSortBy] = useState<'resonance' | 'level' | 'potency' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => {
     if (user) loadSavedDatabases();
@@ -64,6 +68,42 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   useEffect(() => {
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
+
+  // Sortierfunktion
+  const handleSort = (column: 'resonance' | 'level' | 'potency') => {
+    if (sortBy === column) {
+      // Toggle Reihenfolge
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
+
+  // Sortierte Ergebnisse
+  const sortedResults = React.useMemo(() => {
+    if (!sortBy) return resonanceResults;
+    
+    const sorted = [...resonanceResults].sort((a, b) => {
+      let compareValue = 0;
+      
+      switch (sortBy) {
+        case 'resonance':
+          compareValue = a.resonanceScore - b.resonanceScore;
+          break;
+        case 'level':
+          compareValue = (a.highestLevel || 0) - (b.highestLevel || 0);
+          break;
+        case 'potency':
+          compareValue = a.potency - b.potency;
+          break;
+      }
+      
+      return sortOrder === 'asc' ? compareValue : -compareValue;
+    });
+    
+    return sorted;
+  }, [resonanceResults, sortBy, sortOrder]);
 
   const parseImportData = (data: string): string[] => {
     // Auto-detect format: CSV (mit Potenz/Typ) oder TXT (eine Zeile = ein Datensatz)
@@ -304,6 +344,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     
     setResonanceResults(results);
     setIsAnalyzing(false);
+    setSortBy(null); // Reset Sortierung bei neuer Analyse
     
     toast({
       title: "Analyse abgeschlossen",
@@ -725,15 +766,21 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                   <thead className="bg-muted sticky top-0">
                     <tr>
                       <th className="p-2 text-left">Wortenergie</th>
-                      <th className="p-2 text-left">Potenz</th>
+                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10" onClick={() => handleSort('potency')}>
+                        Potenz {sortBy === 'potency' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th className="p-2 text-right">Copen-Rate</th>
-                      <th className="p-2 text-right">Resonanz</th>
-                      <th className="p-2 text-left">Höchste Ebene</th>
+                      <th className="p-2 text-right cursor-pointer hover:bg-muted-foreground/10" onClick={() => handleSort('resonance')}>
+                        Resonanz {sortBy === 'resonance' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      </th>
+                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10" onClick={() => handleSort('level')}>
+                        Höchste Ebene {sortBy === 'level' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      </th>
                       <th className="p-2 text-right">Aktionen</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {resonanceResults.slice(0, 200).map((result, index) => (
+                    {sortedResults.slice(0, 200).map((result, index) => (
                       <tr key={index} className={`border-b ${
                         result.resonanceScore >= 80 ? 'bg-green-50' :
                         result.resonanceScore >= 60 ? 'bg-yellow-50' :
