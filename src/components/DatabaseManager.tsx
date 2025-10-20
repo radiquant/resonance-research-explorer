@@ -58,7 +58,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [savedDatabases, setSavedDatabases] = useState<Array<{ id: string; name: string; entries: string[] }>>([]);
   const [loadingDatabases, setLoadingDatabases] = useState(false);
   
-  // Sortierung
+  // Sortierung für Analyseergebnisse
   const [sortBy, setSortBy] = useState<'resonance' | 'level' | 'potency' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
