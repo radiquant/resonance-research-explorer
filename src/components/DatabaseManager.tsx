@@ -69,6 +69,27 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
 
+  // Anzeige: Copen-Rate auf max. 20 Stellen begrenzen
+  const formatRate20 = (value: number): string => {
+    if (!Number.isFinite(value)) return '';
+    const raw = value.toString();
+    // Für sehr große Zahlen: wissenschaftliche Notation in führende Ziffern umwandeln
+    if (raw.includes('e')) {
+      const expStr = Number(value).toExponential(15); // genügend Mantissen-Ziffern
+      const [mantissa, expPart] = expStr.split('e');
+      const exp = parseInt(expPart.replace('+', ''), 10);
+      const digits = mantissa.replace('.', '').replace('-', '');
+      const totalDigits = exp + 1; // Ziffernanzahl der Ganzzahl
+      const take = Math.min(20, totalDigits);
+      const prefix = digits.padEnd(take, '0').slice(0, take);
+      return prefix + (totalDigits > 20 ? '…' : '');
+    }
+    // Normale Zahlen
+    const intStr = Math.round(value).toString();
+    if (intStr.length <= 20) return Math.round(value).toLocaleString();
+    return intStr.slice(0, 20) + '…';
+  };
+
   // Sortierfunktion
   const handleSort = (column: 'resonance' | 'level' | 'potency') => {
     if (sortBy === column) {
@@ -477,7 +498,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     } else {
       content = `Resonanz-Analyse für: ${selectedPatient?.first_name} ${selectedPatient?.last_name}\n\n`;
       content += resonanceResults.map(r => 
-        `${r.word} ${r.potencyType}${r.potency} | Rate: ${r.rate.toLocaleString()} | Resonanz: ${r.resonanceScore}%`
+        `${r.word} ${r.potencyType}${r.potency} | Rate: ${formatRate20(r.rate)} | Resonanz: ${r.resonanceScore}%`
       ).join('\n');
     }
 
@@ -801,7 +822,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <td className="p-2 font-medium">{result.word}</td>
                         <td className="p-2">{result.potencyType}{result.potency}</td>
                         <td className="p-2 text-right font-mono">
-                          {result.rate.toLocaleString()}
+                          {formatRate20(result.rate)}
                         </td>
                         <td className="p-2 text-right">
                           <span className={`font-bold ${
