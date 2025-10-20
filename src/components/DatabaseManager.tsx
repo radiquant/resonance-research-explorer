@@ -13,6 +13,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { calculateLevelResonance, findHighestResonanceLevel } from '@/utils/levelResonance';
 import { analyzeRates, DEFAULT_ANALYSIS_CONFIG, type RateObject } from '@/utils/resonanceAnalysis';
 import { interpretAnalysisResults, type AnalysisInterpretation } from '@/utils/analysisInterpreter';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface CloudPatient {
   id: string;
@@ -475,13 +477,53 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     }
   };
 
-  const exportResults = (format: 'csv' | 'txt') => {
+  const exportResults = (format: 'csv' | 'txt' | 'pdf') => {
     if (resonanceResults.length === 0) {
       toast({
         title: "Fehler",
         description: "Keine Ergebnisse zum Exportieren",
         variant: "destructive"
       });
+      return;
+    }
+
+    if (format === 'pdf') {
+      const doc = new jsPDF();
+      const title = `Resonanz-Analyse für: ${selectedPatient?.first_name ?? ''} ${selectedPatient?.last_name ?? ''}`.trim();
+      doc.setFontSize(12);
+      doc.text(title, 14, 14);
+
+      const head = [["Wortenergie", "Potenz", "Typ", "Copen-Rate", "Resonanz"]];
+      const body = resonanceResults.map(r => [
+        r.word,
+        String(r.potency),
+        r.potencyType,
+        formatRate12(r.rate),
+        `${r.resonanceScore}%`
+      ]);
+
+      autoTable(doc, {
+        head,
+        body,
+        startY: 20,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [33, 33, 33] },
+        columnStyles: {
+          0: { cellWidth: 'wrap' },
+          1: { cellWidth: 18 },
+          2: { cellWidth: 14 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 22, halign: 'right' }
+        },
+        didDrawPage: () => {
+          const pageHeight = (doc.internal as any).pageSize.getHeight();
+          doc.setFontSize(8);
+          doc.text(new Date().toLocaleString(), 14, pageHeight - 8);
+        }
+      });
+
+      doc.save(`resonanz-analyse-${Date.now()}.pdf`);
+      toast({ title: "Export erfolgreich", description: "Ergebnisse als PDF exportiert" });
       return;
     }
 
@@ -777,6 +819,10 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                   <FileText className="h-4 w-4 mr-2" />
                   TXT Export
                 </Button>
+                <Button onClick={() => exportResults('pdf')} variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  PDF Export
+                </Button>
                 <Button
                   onClick={() => { 
                     setResonanceResults([]); 
@@ -794,7 +840,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 <table className="w-full text-sm table-auto">
                   <thead className="bg-muted sticky top-0">
                     <tr>
-                      <th className="p-2 text-left min-w-[200px] max-w-[400px]">Wortenergie</th>
+                      <th className="p-2 text-left">Wortenergie</th>
                       <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('potency')}>
                         Potenz {sortBy === 'potency' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
@@ -815,7 +861,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         result.resonanceScore >= 60 ? 'bg-yellow-50' :
                         ''
                       }`}>
-                        <td className="p-2 font-medium break-words max-w-[400px]">{result.word}</td>
+                        <td className="p-2 font-medium whitespace-normal break-words">{result.word}</td>
                         <td className="p-2 whitespace-nowrap">{result.potencyType}{result.potency}</td>
                         <td className="p-2 text-right font-mono whitespace-nowrap">
                           {formatRate12(result.rate)}
