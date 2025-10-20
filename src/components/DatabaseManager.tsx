@@ -71,16 +71,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
 
-  // Anzeige: Copen-Rate auf max. 12 Ziffern begrenzen (ohne Ellipse, mit 3er-Gruppierung)
+  // Anzeige: Copen-Rate vollständig anzeigen (deutsche Gruppierung)
   const formatRate12 = (value: number): string => {
     if (!Number.isFinite(value)) return '';
-
-    // Nur Ganzzahl-Ziffern betrachten
-    const digits = Math.abs(Math.trunc(value)).toString().replace(/\D/g, '');
-    const sliced = digits.length > 12 ? digits.slice(0, 12) : digits;
-
-    // In 3er-Gruppen von rechts formatieren, immer mit Komma
-    return sliced.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    const rounded = Math.trunc(Math.abs(value));
+    return rounded.toLocaleString('de-DE');
   };
 
   // Sortierfunktion
@@ -274,7 +269,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     const clientRate = calculateClientRate(selectedPatient);
     
     // Erstelle Rates-Array für den Java-Algorithmus
-    const useImgSig = selectedPatient.image_signature_active ?? true;
+    const useImgSig = selectedPatient?.image_signature_active ?? false;
     const imgSig = selectedPatient.image_signature ?? undefined;
     
     // Prüfe, ob Datenbank bereits Raten enthält
@@ -497,28 +492,37 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         r.highestLevel ? `Ebene ${r.highestLevel} (${(r.highestLevelValue ?? 0).toFixed(0)}%)` : '-'
       ]);
 
+      const pageWidth = (doc.internal as any).pageSize.getWidth();
+      const margins = { left: 14, right: 14 } as const;
+      const usableWidth = pageWidth - margins.left - margins.right;
+      const colPotency = 16;
+      const colRate = 40;
+      const colRes = 20;
+      const colLevel = 42;
+      const colWord = Math.max(60, usableWidth - (colPotency + colRate + colRes + colLevel));
+
       autoTable(doc, {
         head,
         body,
         startY: 20,
-        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
+        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
         headStyles: { fillColor: [33, 33, 33] },
-        tableWidth: 'auto',
+        margin: margins,
         columnStyles: {
-          0: { cellWidth: 'wrap' },
-          1: { cellWidth: 18 },
-          2: { cellWidth: 30 },
-          3: { cellWidth: 22, halign: 'right' },
-          4: { cellWidth: 34 }
+          0: { cellWidth: colWord },
+          1: { cellWidth: colPotency },
+          2: { cellWidth: colRate, halign: 'right' },
+          3: { cellWidth: colRes, halign: 'right' },
+          4: { cellWidth: colLevel }
         },
         didDrawPage: () => {
           const pageWidth = (doc.internal as any).pageSize.getWidth();
           const pageHeight = (doc.internal as any).pageSize.getHeight();
           doc.setFontSize(8);
-          doc.text(new Date().toLocaleString(), 14, pageHeight - 8);
+          doc.text(new Date().toLocaleString('de-DE'), margins.left, pageHeight - 8);
           const pageNum = (doc as any).getNumberOfPages?.() || 1;
           const current = (doc as any).internal?.getCurrentPageInfo?.().pageNumber || 1;
-          doc.text(`Seite ${current}/${pageNum}` as any, pageWidth - 14, pageHeight - 8, { align: 'right' } as any);
+          doc.text(`Seite ${current}/${pageNum}` as any, pageWidth - margins.right, pageHeight - 8, { align: 'right' } as any);
         }
       });
 
