@@ -16,7 +16,7 @@ export interface HarmonizationSession {
   wordRate: number;
   clientRate: number;
   duration: number;
-  durationUnit: 'seconds' | 'minutes' | 'hours';
+  durationUnit: 'seconds' | 'minutes' | 'hours' | 'days';
   completedAt?: string;
   status: 'running' | 'paused' | 'completed' | 'cancelled';
   testedPotency?: number; // Automatisch getestete Potenz nach Harmonisierung

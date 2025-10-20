@@ -224,12 +224,28 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     const imgSig = selectedPatient.image_signature ?? undefined;
     
     const ratesInput = words.map(word => {
-      // Berechne Copen-Rate für jedes Wort (mit D30 als Standard-Potenz)
-      const result = calculateCopenRate(word, 30, 'D', 'latin', imgSig, useImgSig);
-      return {
-        name: word,
-        copenRate: result.rate
-      };
+      // Prüfe, ob das Wort bereits eine Copen-Rate enthält (Format: "Wort,Rate" oder nur Zahl)
+      const parts = word.split(',').map(p => p.trim());
+      const hasExistingRate = parts.length >= 2 && !isNaN(Number(parts[1]));
+      
+      if (hasExistingRate) {
+        // Nutze die vorhandene Rate
+        const existingRate = Number(parts[1]);
+        console.log(`[DB] Nutze vorhandene Rate für "${parts[0]}": ${existingRate}`);
+        return {
+          name: parts[0],
+          copenRate: existingRate,
+          hasExistingRate: true
+        };
+      } else {
+        // Berechne neue Copen-Rate (mit D30 als Standard-Potenz)
+        const result = calculateCopenRate(word, 30, 'D', 'latin', imgSig, useImgSig);
+        return {
+          name: word,
+          copenRate: result.rate,
+          hasExistingRate: false
+        };
+      }
     });
 
     // Führe Resonanzanalyse nach Java-Algorithmus durch
@@ -237,15 +253,21 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     
     // Konvertiere zu ResonanceResult-Format und berechne Copen Rates mit korrekter Potenz
     const results: ResonanceResult[] = analysisResult.rateObjects.map((rateObj: RateObject) => {
-      // Berechne die Copen Rate für dieses Wort mit der ermittelten Potenz
-      const calculatedRate = calculateCopenRate(
-        rateObj.rateName,
-        rateObj.potency,
-        'D',
-        'latin',
-        imgSig,
-        useImgSig
-      );
+      // Finde den ursprünglichen Input um zu prüfen ob bereits eine Rate existiert
+      const originalInput = ratesInput.find(r => r.name === rateObj.rateName);
+      const hasExistingRate = originalInput?.hasExistingRate || false;
+      
+      // Berechne die Copen Rate für dieses Wort mit der ermittelten Potenz NUR wenn keine Rate existiert
+      const calculatedRate = hasExistingRate 
+        ? { rate: rateObj.copenRate } 
+        : calculateCopenRate(
+            rateObj.rateName,
+            rateObj.potency,
+            'D',
+            'latin',
+            imgSig,
+            useImgSig
+          );
 
       // Berechne Level-Resonanz mit dem originalen Algorithmus
       const levelResonance = calculateLevelResonance(calculatedRate.rate, rateObj.rateName);
@@ -254,16 +276,22 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       // Resonanz-Score aus energeticValue normalisieren
       const resonanceScore = Math.min(100, Math.round((rateObj.energeticValue / 100) * 100));
       
+      // Nutze die dominante Ebene aus der Level-Verteilung (1-12)
+      const dominantLevelFromDistribution = rateObj.dominantLevel;
+      const dominantLevelPercentage = rateObj.levelDistribution[dominantLevelFromDistribution] || 0;
+      
+      console.log(`[Result] ${rateObj.rateName}: Potenz=${rateObj.potency}, DominantLevel=${dominantLevelFromDistribution} (${dominantLevelPercentage}%), HasExistingRate=${hasExistingRate}`);
+      
       return {
         word: rateObj.rateName,
         potency: rateObj.potency,
         potencyType: 'D' as const,
-        rate: calculatedRate.rate, // Verwende die berechnete Rate mit korrekter Potenz
+        rate: calculatedRate.rate,
         resonanceScore,
         clientResonance: clientRate,
         levelResonance,
-        highestLevel: Math.min(highestLevel, 12), // Limitiere auf Ebene 12
-        highestLevelValue: rateObj.levelDistribution[rateObj.dominantLevel] || 0,
+        highestLevel: dominantLevelFromDistribution, // Nutze dominante Ebene aus Verteilung (1-12)
+        highestLevelValue: dominantLevelPercentage, // Zeige Prozent-Wert der dominanten Ebene
       };
     });
     

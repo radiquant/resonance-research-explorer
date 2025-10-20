@@ -130,10 +130,10 @@ function assignPotencyAndLevels(rateName: string): {
   levelDistribution: Record<number, number>;
   dominantLevel: number;
 } {
-  // 1. Potenz = erste gewichtete Ebene
+  // 1. Potenz = erste gewichtete Ebene (1-12)
   const potency = weightedPickLevel();
   
-  // 2. Level-Verteilung: 100 Ziehungen
+  // 2. Level-Verteilung: 100 Ziehungen (1-12)
   const levelDistribution: Record<number, number> = {};
   for (let i = 1; i <= 12; i++) {
     levelDistribution[i] = 0;
@@ -144,9 +144,9 @@ function assignPotencyAndLevels(rateName: string): {
     levelDistribution[level]++;
   }
   
-  // 3. Dominante Ebene = Maximum der Verteilung
+  // 3. Dominante Ebene = Maximum der Verteilung (1-12)
   let dominantLevel = potency;
-  let maxCount = 0;
+  let maxCount = levelDistribution[potency];
   
   for (let level = 1; level <= 12; level++) {
     if (levelDistribution[level] > maxCount) {
@@ -154,6 +154,8 @@ function assignPotencyAndLevels(rateName: string): {
       dominantLevel = level;
     }
   }
+  
+  console.log(`[Level Debug] ${rateName}: Potenz=${potency}, Dominant=${dominantLevel}, Verteilung=`, levelDistribution);
   
   return { potency, levelDistribution, dominantLevel };
 }
