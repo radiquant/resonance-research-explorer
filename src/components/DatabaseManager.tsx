@@ -801,6 +801,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <td className="p-2 font-medium">{result.word}</td>
                         <td className="p-2">{result.potencyType}{result.potency}</td>
                         <td className="p-2 text-right font-mono">
+                          {/* Kompakte Anzeige ohne unnötige Nullen */}
                           {result.rate.toLocaleString()}
                         </td>
                         <td className="p-2 text-right">
