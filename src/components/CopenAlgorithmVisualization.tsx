@@ -952,9 +952,9 @@ const CopenAlgorithmVisualization: React.FC = () => {
                   }`}>
                     <div className="space-y-2">
                       {/* Header - kompakt */}
-                      <div className="flex justify-between items-start gap-2">
+                       <div className="flex justify-between items-start gap-2">
                         <div className="min-w-0 flex-1">
-                          <div className="font-semibold truncate">
+                          <div className="font-semibold text-sm break-words leading-tight">
                             {harm.word} {harm.potencyType}{harm.potency}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">

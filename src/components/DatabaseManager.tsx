@@ -725,12 +725,25 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           </div>
           <div>
             <Label>Datenbank importieren (.txt oder .csv)</Label>
-            <Textarea
-              value={importData}
-              onChange={(e) => setImportData(e.target.value)}
-              placeholder="Fügen Sie Ihre Datenbank ein (Wortenergien oder ganze Sätze)&#10;TXT: Eine Zeile = Ein Datensatz&#10;Beispiel:&#10;ARNICA&#10;Chronische Schmerzen im Kopf&#10;BELLADONNA&#10;&#10;CSV: Eine Zeile pro Datensatz im Format Wort,Potenz,Typ,Alphabet"
-              className="min-h-32 font-mono text-sm"
-            />
+            <div className="relative">
+              <Textarea
+                value={importData}
+                onChange={(e) => setImportData(e.target.value)}
+                placeholder="Fügen Sie Ihre Datenbank ein (Wortenergien oder ganze Sätze)&#10;TXT: Eine Zeile = Ein Datensatz&#10;Beispiel:&#10;ARNICA&#10;Chronische Schmerzen im Kopf&#10;BELLADONNA&#10;&#10;CSV: Eine Zeile pro Datensatz im Format Wort,Potenz,Typ,Alphabet"
+                className="min-h-32 font-mono text-sm"
+              />
+              {importData && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setImportData("")}
+                  className="absolute top-2 right-2"
+                  title="Feld leeren"
+                >
+                  ×
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="border-t pt-4 space-y-2">
