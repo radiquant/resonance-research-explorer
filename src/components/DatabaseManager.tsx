@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2, Archive } from 'lucide-react';
+import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2, Archive, Zap } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, type CopenRateResult } from '@/utils/copenRateGenerator';
 import { analyzeImageWithOllama, compareImageSignatures, checkOllamaConnection } from '@/utils/ollamaClient';
@@ -58,6 +59,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [resonanceResults, setResonanceResults] = useState<ResonanceResult[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedForHarmonization, setSelectedForHarmonization] = useState<Set<string>>(new Set());
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
   const [analyzingImage, setAnalyzingImage] = useState(false);
@@ -871,6 +873,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                   onClick={() => { 
                     setResonanceResults([]); 
                     setInterpretation(null);
+                    setSelectedForHarmonization(new Set());
                     toast({ title: 'Gelöscht', description: 'Alle Analyse-Ergebnisse wurden entfernt' }); 
                   }}
                   variant="destructive"
@@ -878,12 +881,41 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 >
                   Alle löschen
                 </Button>
+                {selectedForHarmonization.size > 0 && (
+                  <Button 
+                    onClick={() => {
+                      toast({
+                        title: "Zur Harmonisierung übergeben",
+                        description: `${selectedForHarmonization.size} Einträge werden vorbereitet`,
+                      });
+                      // TODO: Integration mit Harmonisierung
+                    }}
+                    size="sm"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Zur Harmonisierung ({selectedForHarmonization.size})
+                  </Button>
+                )}
               </div>
 
               <div className="border rounded-lg max-h-96 overflow-y-auto overflow-x-auto">
                 <table className="w-full text-sm table-auto">
                   <thead className="bg-muted sticky top-0">
                     <tr>
+                      <th className="p-0 text-center align-top" style={{ width: 50, minWidth: 50 }}>
+                        <div className="p-2 flex items-center justify-center">
+                          <Checkbox
+                            checked={selectedForHarmonization.size === sortedResults.length && sortedResults.length > 0}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedForHarmonization(new Set(sortedResults.map(r => r.word)));
+                              } else {
+                                setSelectedForHarmonization(new Set());
+                              }
+                            }}
+                          />
+                        </div>
+                      </th>
                       <th className="p-0 text-left align-top" style={{ width: columnSizes.word, minWidth: columnSizes.word }}>
                         <div className="p-2 relative">
                           Wortenergie
@@ -947,6 +979,20 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         result.resonanceScore >= 60 ? 'bg-yellow-50' :
                         ''
                       }`}>
+                        <td className="p-2 text-center" style={{ width: 50, minWidth: 50 }}>
+                          <Checkbox
+                            checked={selectedForHarmonization.has(result.word)}
+                            onCheckedChange={(checked) => {
+                              const newSelected = new Set(selectedForHarmonization);
+                              if (checked) {
+                                newSelected.add(result.word);
+                              } else {
+                                newSelected.delete(result.word);
+                              }
+                              setSelectedForHarmonization(newSelected);
+                            }}
+                          />
+                        </td>
                         <td className="p-2 font-medium whitespace-normal break-words" style={{ width: columnSizes.word, minWidth: columnSizes.word }}>{result.word}</td>
                         <td className="p-2 whitespace-nowrap" style={{ width: columnSizes.potency, minWidth: columnSizes.potency }}>{result.potencyType}{result.potency}</td>
                         <td className="p-2 text-right font-mono whitespace-nowrap" style={{ width: columnSizes.rate, minWidth: columnSizes.rate }}>

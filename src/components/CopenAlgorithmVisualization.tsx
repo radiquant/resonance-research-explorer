@@ -935,91 +935,85 @@ const CopenAlgorithmVisualization: React.FC = () => {
             </div>
           </div>
 
-          {/* Aktive Harmonisierungen */}
+          {/* Aktive Harmonisierungen - Kompakte Grid-Ansicht */}
           {(selectedPatient ? harmonizations.filter(h => h.patientId === selectedPatient.id) : harmonizations).length === 0 ? (
             <p className="text-center text-muted-foreground py-4">
               Keine aktiven Harmonisierungen
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {(selectedPatient ? harmonizations.filter(h => h.patientId === selectedPatient.id) : harmonizations).map(harm => {
                 const totalSeconds = getDurationInSeconds(harm.duration, harm.durationUnit);
                 return (
-                  <div key={harm.id} className={`border-2 rounded-lg p-4 ${
+                  <div key={harm.id} className={`border rounded-lg p-3 ${
                     harm.status === 'completed' ? 'bg-green-50 border-green-400' :
                     harm.status === 'paused' ? 'bg-yellow-50 border-yellow-400' :
                     'bg-blue-50 border-blue-400'
                   }`}>
-                    <div className="space-y-3">
-                      {/* Header */}
-                      <div className="flex justify-between items-start">
-                         <div>
-                           <div className="font-semibold text-lg">
-                             {harm.word} {harm.potencyType}{harm.potency}
-                           </div>
-                           {selectedPatient && harm.patientId === selectedPatient.id && (
-                             <div className="text-sm text-muted-foreground">
-                               🔵 Aktiver Patient: {selectedPatient.first_name} {selectedPatient.last_name}
-                             </div>
-                           )}
-                           {selectedPatient && harm.patientId !== selectedPatient.id && (
-                             <div className="text-sm text-orange-600">
-                               ⚠️ Anderer Patient (nicht aktiv)
-                             </div>
-                           )}
-                         </div>
-                        <div className="flex gap-1">
+                    <div className="space-y-2">
+                      {/* Header - kompakt */}
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold truncate">
+                            {harm.word} {harm.potencyType}{harm.potency}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {selectedPatient && harm.patientId === selectedPatient.id && `🔵 ${selectedPatient.first_name}`}
+                            {selectedPatient && harm.patientId !== selectedPatient.id && '⚠️ Anderer Patient'}
+                          </div>
+                        </div>
+                        <div className="flex gap-0.5 flex-shrink-0">
                           {harm.status === 'running' && (
-                            <Button onClick={() => pauseHarmonization(harm.id)} size="sm" variant="outline">
-                              <Pause className="h-4 w-4" />
+                            <Button onClick={() => pauseHarmonization(harm.id)} size="sm" variant="ghost" className="h-7 w-7 p-0">
+                              <Pause className="h-3 w-3" />
                             </Button>
                           )}
                           {harm.status === 'paused' && (
-                            <Button onClick={() => resumeHarmonization(harm.id)} size="sm" variant="outline">
-                              <Play className="h-4 w-4" />
+                            <Button onClick={() => resumeHarmonization(harm.id)} size="sm" variant="ghost" className="h-7 w-7 p-0">
+                              <Play className="h-3 w-3" />
                             </Button>
                           )}
-                          <Button onClick={() => stopHarmonization(harm.id)} size="sm" variant="outline">
-                            <StopCircle className="h-4 w-4" />
+                          <Button onClick={() => stopHarmonization(harm.id)} size="sm" variant="ghost" className="h-7 w-7 p-0">
+                            <StopCircle className="h-3 w-3" />
                           </Button>
                           {harm.status === 'completed' && (
-                            <Button onClick={() => removeHarmonization(harm.id)} size="sm" variant="outline">
-                              <Trash2 className="h-4 w-4" />
+                            <Button onClick={() => removeHarmonization(harm.id)} size="sm" variant="ghost" className="h-7 w-7 p-0">
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           )}
                         </div>
                       </div>
 
-                      {/* Progress */}
+                      {/* Progress - kompakt */}
                       <div>
-                        <div className="flex justify-between text-sm text-muted-foreground mb-1">
-                          <span>{formatTime(harm.elapsedTime)} / {formatTime(totalSeconds)}</span>
-                          <span>{harm.progress.toFixed(1)}%</span>
+                        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+                          <span>{formatTime(harm.elapsedTime)}</span>
+                          <span>{harm.progress.toFixed(0)}%</span>
                         </div>
-                        <Progress value={harm.progress} className="h-2" />
+                        <Progress value={harm.progress} className="h-1.5" />
                       </div>
 
-                      {/* Raten */}
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="bg-background/50 p-2 rounded">
-                          <div className="text-muted-foreground">Wortenergie-Rate</div>
+                      {/* Raten - kompakt */}
+                      <div className="grid grid-cols-2 gap-1.5 text-xs">
+                        <div className="bg-background/50 p-1.5 rounded">
+                          <div className="text-muted-foreground text-[10px]">Wort</div>
                           <div className={`font-bold ${harm.status === 'running' ? 'animate-pulse' : ''}`}>
                             {harm.wordRate.toLocaleString()}
                           </div>
                         </div>
-                        <div className="bg-background/50 p-2 rounded">
-                          <div className="text-muted-foreground">Klienten-Rate</div>
+                        <div className="bg-background/50 p-1.5 rounded">
+                          <div className="text-muted-foreground text-[10px]">Klient</div>
                           <div className={`font-bold ${harm.status === 'running' ? 'animate-pulse' : ''}`}>
                             {harm.clientRate.toLocaleString()}
                           </div>
                         </div>
                       </div>
 
-                      {/* Status */}
-                      <div className="text-center text-sm font-semibold">
-                        {harm.status === 'running' && '⚡ Läuft...'}
-                        {harm.status === 'paused' && '⏸️ Pausiert'}
-                        {harm.status === 'completed' && '✅ Abgeschlossen'}
+                      {/* Status - kompakt */}
+                      <div className="text-center text-xs font-semibold">
+                        {harm.status === 'running' && '⚡ Läuft'}
+                        {harm.status === 'paused' && '⏸️ Pause'}
+                        {harm.status === 'completed' && '✅ Fertig'}
                       </div>
                     </div>
                   </div>
