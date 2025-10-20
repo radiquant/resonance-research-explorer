@@ -71,21 +71,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
 
-  // Anzeige: Copen-Rate auf max. 12 Ziffern begrenzen
+  // Anzeige: Copen-Rate auf max. 12 Ziffern begrenzen (ohne Ellipse, mit 3er-Gruppierung)
   const formatRate12 = (value: number): string => {
     if (!Number.isFinite(value)) return '';
-    
-    const rounded = Math.round(value);
-    const str = rounded.toString();
-    
-    // Wenn mehr als 12 Ziffern, abschneiden
-    if (str.length > 12) {
-      const truncated = str.slice(0, 12);
-      return Number(truncated).toLocaleString() + '…';
-    }
-    
-    // Sonst normal mit Tausendertrennzeichen formatieren
-    return rounded.toLocaleString();
+
+    // Nur Ganzzahl-Ziffern betrachten
+    const digits = Math.abs(Math.trunc(value)).toString().replace(/\D/g, '');
+    const sliced = digits.length > 12 ? digits.slice(0, 12) : digits;
+
+    // In 3er-Gruppen von rechts formatieren, immer mit Komma
+    return sliced.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
   // Sortierfunktion
@@ -488,37 +483,42 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     }
 
     if (format === 'pdf') {
-      const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: 'landscape' });
       const title = `Resonanz-Analyse für: ${selectedPatient?.first_name ?? ''} ${selectedPatient?.last_name ?? ''}`.trim();
       doc.setFontSize(12);
       doc.text(title, 14, 14);
 
-      const head = [["Wortenergie", "Potenz", "Typ", "Copen-Rate", "Resonanz"]];
+      const head = [["Wortenergie", "Potenz", "Copen-Rate", "Resonanz", "Höchste Ebene"]];
       const body = resonanceResults.map(r => [
         r.word,
-        String(r.potency),
-        r.potencyType,
+        `${r.potencyType}${r.potency}`,
         formatRate12(r.rate),
-        `${r.resonanceScore}%`
+        `${r.resonanceScore}%`,
+        r.highestLevel ? `Ebene ${r.highestLevel} (${(r.highestLevelValue ?? 0).toFixed(0)}%)` : '-'
       ]);
 
       autoTable(doc, {
         head,
         body,
         startY: 20,
-        styles: { fontSize: 8, cellPadding: 2 },
+        styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
         headStyles: { fillColor: [33, 33, 33] },
+        tableWidth: 'auto',
         columnStyles: {
           0: { cellWidth: 'wrap' },
           1: { cellWidth: 18 },
-          2: { cellWidth: 14 },
-          3: { cellWidth: 28 },
-          4: { cellWidth: 22, halign: 'right' }
+          2: { cellWidth: 30 },
+          3: { cellWidth: 22, halign: 'right' },
+          4: { cellWidth: 34 }
         },
         didDrawPage: () => {
+          const pageWidth = (doc.internal as any).pageSize.getWidth();
           const pageHeight = (doc.internal as any).pageSize.getHeight();
           doc.setFontSize(8);
           doc.text(new Date().toLocaleString(), 14, pageHeight - 8);
+          const pageNum = (doc as any).getNumberOfPages?.() || 1;
+          const current = (doc as any).internal?.getCurrentPageInfo?.().pageNumber || 1;
+          doc.text(`Seite ${current}/${pageNum}` as any, pageWidth - 14, pageHeight - 8, { align: 'right' } as any);
         }
       });
 
