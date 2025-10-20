@@ -801,7 +801,10 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <td className="p-2 font-medium">{result.word}</td>
                         <td className="p-2">{result.potencyType}{result.potency}</td>
                         <td className="p-2 text-right font-mono">
-                          {result.rate.toLocaleString('de-DE')}
+                          {result.rate >= 1e12 
+                            ? Number(result.rate.toPrecision(7)).toLocaleString('de-DE')
+                            : result.rate.toLocaleString('de-DE')
+                          }
                         </td>
                         <td className="p-2 text-right">
                           <span className={`font-bold ${
