@@ -790,22 +790,22 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 </Button>
               </div>
 
-              <div className="border rounded-lg max-h-96 overflow-y-auto">
-                <table className="w-full text-sm">
+              <div className="border rounded-lg max-h-96 overflow-y-auto overflow-x-auto">
+                <table className="w-full text-sm table-auto">
                   <thead className="bg-muted sticky top-0">
                     <tr>
-                      <th className="p-2 text-left">Wortenergie</th>
-                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10" onClick={() => handleSort('potency')}>
+                      <th className="p-2 text-left min-w-[200px] max-w-[400px]">Wortenergie</th>
+                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('potency')}>
                         Potenz {sortBy === 'potency' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="p-2 text-right">Copen-Rate</th>
-                      <th className="p-2 text-right cursor-pointer hover:bg-muted-foreground/10" onClick={() => handleSort('resonance')}>
+                      <th className="p-2 text-right whitespace-nowrap">Copen-Rate</th>
+                      <th className="p-2 text-right cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('resonance')}>
                         Resonanz {sortBy === 'resonance' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10" onClick={() => handleSort('level')}>
+                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('level')}>
                         Höchste Ebene {sortBy === 'level' && (sortOrder === 'asc' ? '↑' : '↓')}
                       </th>
-                      <th className="p-2 text-right">Aktionen</th>
+                      <th className="p-2 text-right whitespace-nowrap">Aktionen</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -815,9 +815,9 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         result.resonanceScore >= 60 ? 'bg-yellow-50' :
                         ''
                       }`}>
-                        <td className="p-2 font-medium">{result.word}</td>
-                        <td className="p-2">{result.potencyType}{result.potency}</td>
-                        <td className="p-2 text-right font-mono">
+                        <td className="p-2 font-medium break-words max-w-[400px]">{result.word}</td>
+                        <td className="p-2 whitespace-nowrap">{result.potencyType}{result.potency}</td>
+                        <td className="p-2 text-right font-mono whitespace-nowrap">
                           {formatRate12(result.rate)}
                         </td>
                         <td className="p-2 text-right">
