@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, validateWordEnergy, exportCopenRatesToCSV, type CopenRateResult } from '@/utils/copenRateGenerator';
 import { type AlphabetType } from '@/utils/alphabetSystems';
-import { calculateLevelResonance, findHighestResonanceLevel } from '@/utils/levelResonance';
+import { analyzeRates, DEFAULT_ANALYSIS_CONFIG } from '@/utils/resonanceAnalysis';
 import SingleCalculationForm from '@/components/forms/SingleCalculationForm';
 import ResultsTable from '@/components/tables/ResultsTable';
 import PatientManagerCloud from '@/components/PatientManagerCloud';
@@ -65,9 +65,17 @@ const CopenGeneratorPage: React.FC = () => {
       useImgSig
     );
     
-    // Berechne Ebenen-Resonanz
-    const levelResonance = calculateLevelResonance(result.rate, result.word);
-    const highestLevel = findHighestResonanceLevel(levelResonance);
+    // Berechne Ebenen-Resonanz mit gleichem Algorithmus wie DB-Analyse
+    const analysisResult = analyzeRates(
+      [{ name: result.word, copenRate: result.rate }],
+      { ...DEFAULT_ANALYSIS_CONFIG, maxEntries: 1 }
+    );
+    
+    const rateObject = analysisResult.rateObjects[0];
+    const highestLevel = {
+      level: rateObject.dominantLevel,
+      value: rateObject.levelDistribution[rateObject.dominantLevel]
+    };
     
     // Speichere für Anzeige
     setCurrentCalculatedRate(result.rate);
