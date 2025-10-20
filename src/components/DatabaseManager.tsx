@@ -263,12 +263,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     const useImgSig = selectedPatient.image_signature_active ?? true;
     const imgSig = selectedPatient.image_signature ?? undefined;
     
+    // Prüfe, ob Datenbank bereits Raten enthält
+    let hasAnyExistingRates = false;
+    
     const ratesInput = words.map(word => {
       // Prüfe, ob das Wort bereits eine Copen-Rate enthält (Format: "Wort,Rate" oder nur Zahl)
       const parts = word.split(',').map(p => p.trim());
       const hasExistingRate = parts.length >= 2 && !isNaN(Number(parts[1]));
       
       if (hasExistingRate) {
+        hasAnyExistingRates = true;
         // Nutze die vorhandene Rate
         const existingRate = Number(parts[1]);
         console.log(`[DB] Nutze vorhandene Rate für "${parts[0]}": ${existingRate}`);
@@ -287,6 +291,14 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         };
       }
     });
+    
+    // Zeige Hinweis wenn Datenbank bereits Raten enthält
+    if (hasAnyExistingRates) {
+      toast({
+        title: "ℹ️ Hinweis",
+        description: "Datenbank enthält bereits Raten - diese werden verwendet, keine neue Copen-Rate Berechnung",
+      });
+    }
 
     // Führe Resonanzanalyse nach Java-Algorithmus durch (DB-optimiert: alle Einträge, höhere Max-Ergebnisse)
     const analysisConfig = {
@@ -788,7 +800,9 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                       }`}>
                         <td className="p-2 font-medium">{result.word}</td>
                         <td className="p-2">{result.potencyType}{result.potency}</td>
-                        <td className="p-2 text-right font-mono">{result.rate.toLocaleString()}</td>
+                        <td className="p-2 text-right font-mono">
+                          {result.rate.toLocaleString('de-DE')}
+                        </td>
                         <td className="p-2 text-right">
                           <span className={`font-bold ${
                             result.resonanceScore >= 80 ? 'text-green-600' :
