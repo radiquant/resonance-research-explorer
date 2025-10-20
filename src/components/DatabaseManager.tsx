@@ -81,6 +81,36 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
 
+  // Spaltenbreiten (Drag-Resize)
+  const [columnSizes, setColumnSizes] = useState<ColumnSize>({
+    word: 420,
+    potency: 90,
+    rate: 160,
+    resonance: 120,
+    level: 160,
+    actions: 120,
+  });
+  const [resizing, setResizing] = useState<{ key: keyof ColumnSize | null; startX: number; startWidth: number }>({ key: null, startX: 0, startWidth: 0 });
+  const startResize = (key: keyof ColumnSize, e: React.MouseEvent) => {
+    e.preventDefault();
+    setResizing({ key, startX: e.clientX, startWidth: columnSizes[key] });
+  };
+  useEffect(() => {
+    const onMove = (ev: MouseEvent) => {
+      if (!resizing.key) return;
+      const dx = ev.clientX - resizing.startX;
+      const newWidth = Math.max(80, resizing.startWidth + dx);
+      setColumnSizes(prev => ({ ...prev, [resizing.key!]: newWidth }));
+    };
+    const onUp = () => setResizing(prev => ({ ...prev, key: null }));
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, [resizing]);
+
   // Anzeige: Copen-Rate vollständig anzeigen (deutsche Gruppierung)
   const formatRate12 = (value: number): string => {
     if (!Number.isFinite(value)) return '';
@@ -854,18 +884,60 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 <table className="w-full text-sm table-auto">
                   <thead className="bg-muted sticky top-0">
                     <tr>
-                      <th className="p-2 text-left">Wortenergie</th>
-                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('potency')}>
-                        Potenz {sortBy === 'potency' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      <th className="p-0 text-left align-top" style={{ width: columnSizes.word, minWidth: columnSizes.word }}>
+                        <div className="p-2 relative">
+                          Wortenergie
+                          <span
+                            onMouseDown={(e) => startResize('word', e)}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                          />
+                        </div>
                       </th>
-                      <th className="p-2 text-right whitespace-nowrap">Copen-Rate</th>
-                      <th className="p-2 text-right cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('resonance')}>
-                        Resonanz {sortBy === 'resonance' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      <th className="p-0 text-left align-top" style={{ width: columnSizes.potency, minWidth: columnSizes.potency }}>
+                        <div className="p-2 relative cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('potency')}>
+                          Potenz {sortBy === 'potency' && (sortOrder === 'asc' ? '↑' : '↓')}
+                          <span
+                            onMouseDown={(e) => startResize('potency', e)}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                          />
+                        </div>
                       </th>
-                      <th className="p-2 text-left cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('level')}>
-                        Höchste Ebene {sortBy === 'level' && (sortOrder === 'asc' ? '↑' : '↓')}
+                      <th className="p-0 text-right align-top" style={{ width: columnSizes.rate, minWidth: columnSizes.rate }}>
+                        <div className="p-2 relative whitespace-nowrap">
+                          Copen-Rate
+                          <span
+                            onMouseDown={(e) => startResize('rate', e)}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                          />
+                        </div>
                       </th>
-                      <th className="p-2 text-right whitespace-nowrap">Aktionen</th>
+                      <th className="p-0 text-right align-top" style={{ width: columnSizes.resonance, minWidth: columnSizes.resonance }}>
+                        <div className="p-2 relative cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('resonance')}>
+                          Resonanz {sortBy === 'resonance' && (sortOrder === 'asc' ? '↑' : '↓')}
+                          <span
+                            onMouseDown={(e) => startResize('resonance', e)}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                          />
+                        </div>
+                      </th>
+                      <th className="p-0 text-left align-top" style={{ width: columnSizes.level, minWidth: columnSizes.level }}>
+                        <div className="p-2 relative cursor-pointer hover:bg-muted-foreground/10 whitespace-nowrap" onClick={() => handleSort('level')}>
+                          Höchste Ebene {sortBy === 'level' && (sortOrder === 'asc' ? '↑' : '↓')}
+                          <span
+                            onMouseDown={(e) => startResize('level', e)}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                          />
+                        </div>
+                      </th>
+                      <th className="p-0 text-right align-top" style={{ width: columnSizes.actions, minWidth: columnSizes.actions }}>
+                        <div className="p-2 relative whitespace-nowrap">
+                          Aktionen
+                          <span
+                            onMouseDown={(e) => startResize('actions', e)}
+                            className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize"
+                          />
+                        </div>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -875,12 +947,12 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         result.resonanceScore >= 60 ? 'bg-yellow-50' :
                         ''
                       }`}>
-                        <td className="p-2 font-medium whitespace-normal break-words">{result.word}</td>
-                        <td className="p-2 whitespace-nowrap">{result.potencyType}{result.potency}</td>
-                        <td className="p-2 text-right font-mono whitespace-nowrap">
+                        <td className="p-2 font-medium whitespace-normal break-words" style={{ width: columnSizes.word, minWidth: columnSizes.word }}>{result.word}</td>
+                        <td className="p-2 whitespace-nowrap" style={{ width: columnSizes.potency, minWidth: columnSizes.potency }}>{result.potencyType}{result.potency}</td>
+                        <td className="p-2 text-right font-mono whitespace-nowrap" style={{ width: columnSizes.rate, minWidth: columnSizes.rate }}>
                           {formatRate12(result.rate)}
                         </td>
-                        <td className="p-2 text-right">
+                        <td className="p-2 text-right" style={{ width: columnSizes.resonance, minWidth: columnSizes.resonance }}>
                           <span className={`font-bold ${
                             result.resonanceScore >= 80 ? 'text-green-600' :
                             result.resonanceScore >= 60 ? 'text-yellow-600' :
@@ -889,14 +961,14 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                             {result.resonanceScore}%
                           </span>
                         </td>
-                        <td className="p-2 text-xs">
+                        <td className="p-2 text-xs" style={{ width: columnSizes.level, minWidth: columnSizes.level }}>
                           {result.highestLevel && (
                             <span className="text-primary font-semibold">
                               Ebene {result.highestLevel} ({result.highestLevelValue?.toFixed(0)}%)
                             </span>
                           )}
                         </td>
-                        <td className="p-2 text-right">
+                        <td className="p-2 text-right" style={{ width: columnSizes.actions, minWidth: columnSizes.actions }}>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -907,7 +979,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                           </Button>
                         </td>
                       </tr>
-                    ))}
+                    ))
                   </tbody>
                 </table>
               </div>
