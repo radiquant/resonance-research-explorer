@@ -15,6 +15,7 @@ import { analyzeRates, DEFAULT_ANALYSIS_CONFIG, type RateObject } from '@/utils/
 import { interpretAnalysisResults, type AnalysisInterpretation } from '@/utils/analysisInterpreter';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface CloudPatient {
   id: string;
@@ -40,6 +41,15 @@ interface ResonanceResult {
   levelResonance?: Record<string, number>;
   highestLevel?: number;
   highestLevelValue?: number;
+}
+
+interface ColumnSize {
+  word: number;
+  potency: number;
+  rate: number;
+  resonance: number;
+  level: number;
+  actions: number;
 }
 
 const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) => {
