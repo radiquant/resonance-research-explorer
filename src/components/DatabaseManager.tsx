@@ -248,8 +248,15 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       }
     });
 
-    // Führe Resonanzanalyse nach Java-Algorithmus durch
-    const analysisResult = analyzeRates(ratesInput, DEFAULT_ANALYSIS_CONFIG);
+    // Führe Resonanzanalyse nach Java-Algorithmus durch (DB-optimiert: alle Einträge, höhere Max-Ergebnisse)
+    const analysisConfig = {
+      ...DEFAULT_ANALYSIS_CONFIG,
+      selectionFraction: 1, // ALLE Einträge analysieren
+      minSelection: 1,
+      maxSelection: 10000,
+      maxEntries: 200,
+    } as const;
+    const analysisResult = analyzeRates(ratesInput, analysisConfig);
     
     // Konvertiere zu ResonanceResult-Format und berechne Copen Rates mit korrekter Potenz
     const results: ResonanceResult[] = analysisResult.rateObjects.map((rateObj: RateObject) => {
@@ -726,7 +733,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                     </tr>
                   </thead>
                   <tbody>
-                    {resonanceResults.slice(0, 50).map((result, index) => (
+                    {resonanceResults.slice(0, 200).map((result, index) => (
                       <tr key={index} className={`border-b ${
                         result.resonanceScore >= 80 ? 'bg-green-50' :
                         result.resonanceScore >= 60 ? 'bg-yellow-50' :
@@ -767,11 +774,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 </table>
               </div>
               
-              {resonanceResults.length > 50 && (
-                <p className="text-sm text-muted-foreground text-center">
-                  Zeige Top 50 von {resonanceResults.length} Ergebnissen. Exportieren Sie für alle Ergebnisse.
-                </p>
-              )}
+                {resonanceResults.length > 200 && (
+                  <p className="text-sm text-muted-foreground text-center">
+                    Zeige Top 200 von {resonanceResults.length} Ergebnissen. Exportieren Sie für alle Ergebnisse.
+                  </p>
+                )}
             </div>
           )}
 

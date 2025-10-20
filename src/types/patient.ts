@@ -20,6 +20,7 @@ export interface HarmonizationSession {
   completedAt?: string;
   status: 'running' | 'paused' | 'completed' | 'cancelled';
   testedPotency?: number; // Automatisch getestete Potenz nach Harmonisierung
+  continuous?: boolean; // Dauerbesendung (läuft unbegrenzt)
 }
 
 export interface ActiveHarmonization extends HarmonizationSession {

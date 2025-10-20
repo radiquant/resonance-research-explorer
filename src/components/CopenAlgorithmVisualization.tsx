@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw, StopCircle, Plus, Trash2, Archive } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import type { ActiveHarmonization } from '@/types/patient';
@@ -86,10 +87,10 @@ const CopenAlgorithmVisualization: React.FC = () => {
     return clientFibonacciRate;
   };
 
-  // Mehrere parallele Harmonisierungen
   const [harmonizations, setHarmonizations] = useState<ActiveHarmonization[]>([]);
   const [harmonizationDuration, setHarmonizationDuration] = useState(1);
-  const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours'>('minutes');
+  const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
+  const [continuousMode, setContinuousMode] = useState(false);
 
   const { toast } = useToast();
   const restoredToastShownRef = React.useRef(false);
@@ -574,7 +575,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
         : '';
       const harmonizationWord = autoPotenzDirektive + cleanWord;
 
-      const durationSeconds = getDurationInSeconds(harmonizationDuration, harmonizationUnit);
+      const durationSeconds = continuousMode ? 315360000 : getDurationInSeconds(harmonizationDuration, harmonizationUnit);
       const { data: inserted, error } = await supabase
         .from('harmonization_sessions')
         .insert({
@@ -606,9 +607,10 @@ const CopenAlgorithmVisualization: React.FC = () => {
         clientRate: clientRate,
         duration: harmonizationDuration,
         durationUnit: harmonizationUnit,
-         status: 'running',
+        status: 'running',
         elapsedTime: 0,
-        progress: 0
+        progress: 0,
+        continuous: continuousMode,
       };
       setHarmonizations(prev => [newHarmonization, ...prev]);
 
@@ -883,7 +885,7 @@ const CopenAlgorithmVisualization: React.FC = () => {
         <CardContent className="space-y-4">
           {/* Neue Harmonisierung starten */}
           <div className="border-2 border-dashed rounded-lg p-4 bg-muted/30">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
               <div>
                 <Label>Dauer</Label>
                 <Input
@@ -891,7 +893,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
                   value={harmonizationDuration}
                   onChange={(e) => setHarmonizationDuration(parseInt(e.target.value) || 1)}
                   min={1}
-                  max={24}
+                  max={365}
+                  disabled={continuousMode}
                 />
               </div>
               <div>
@@ -904,8 +907,13 @@ const CopenAlgorithmVisualization: React.FC = () => {
                     <SelectItem value="seconds">Sekunden</SelectItem>
                     <SelectItem value="minutes">Minuten</SelectItem>
                     <SelectItem value="hours">Stunden</SelectItem>
+                    <SelectItem value="days">Tage</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="flex items-center gap-3">
+                <Label className="mb-0">Dauerbesendung</Label>
+                <Switch checked={continuousMode} onCheckedChange={setContinuousMode} />
               </div>
               <Button onClick={startNewHarmonization} className="w-full">
                 <Plus className="h-4 w-4 mr-2" />
