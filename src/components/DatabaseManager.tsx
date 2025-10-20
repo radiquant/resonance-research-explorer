@@ -68,6 +68,19 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   useEffect(() => {
     checkOllamaConnection().then(setOllamaConnected);
   }, []);
+  // Einheitliche Copen-Rate-Formatierung (verhindert riesige Zahlen mit Präzisions-Nullen)
+  const formatCopenRate = (value: number): string => {
+    if (!Number.isFinite(value)) return '';
+    const abs = Math.abs(value);
+    if (abs >= 1e12 || abs >= Number.MAX_SAFE_INTEGER) {
+      // Extrahiere 7 signifikante Ziffern aus wissenschaftlicher Notation
+      const exp = Number(value).toExponential(6); // z.B. '2.785216e+123'
+      const mantissa = exp.split('e')[0].replace('.', ''); // '2785216'
+      const compact = parseInt(mantissa, 10);
+      return compact.toLocaleString();
+    }
+    return Math.round(value).toLocaleString();
+  };
 
   // Sortierfunktion
   const handleSort = (column: 'resonance' | 'level' | 'potency') => {
@@ -477,7 +490,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     } else {
       content = `Resonanz-Analyse für: ${selectedPatient?.first_name} ${selectedPatient?.last_name}\n\n`;
       content += resonanceResults.map(r => 
-        `${r.word} ${r.potencyType}${r.potency} | Rate: ${r.rate.toLocaleString()} | Resonanz: ${r.resonanceScore}%`
+        `${r.word} ${r.potencyType}${r.potency} | Rate: ${formatCopenRate(r.rate)} | Resonanz: ${r.resonanceScore}%`
       ).join('\n');
     }
 
@@ -802,7 +815,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         <td className="p-2">{result.potencyType}{result.potency}</td>
                         <td className="p-2 text-right font-mono">
                           {/* Kompakte Anzeige ohne unnötige Nullen */}
-                          {result.rate.toLocaleString()}
+                          {formatCopenRate(result.rate)}
                         </td>
                         <td className="p-2 text-right">
                           <span className={`font-bold ${
