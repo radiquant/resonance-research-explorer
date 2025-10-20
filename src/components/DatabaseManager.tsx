@@ -979,16 +979,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                           </Button>
                         </td>
                       </tr>
-                    ))
+                    ))}
                   </tbody>
                 </table>
               </div>
               
-                {resonanceResults.length > 200 && (
-                  <p className="text-sm text-muted-foreground text-center">
-                    Zeige Top 200 von {resonanceResults.length} Ergebnissen. Exportieren Sie für alle Ergebnisse.
-                  </p>
-                )}
+              {resonanceResults.length > 200 && (
+                <p className="text-sm text-muted-foreground text-center">
+                  Zeige Top 200 von {resonanceResults.length} Ergebnissen. Exportieren Sie für alle Ergebnisse.
+                </p>
+              )}
             </div>
           )}
 
