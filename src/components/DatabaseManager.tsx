@@ -35,7 +35,7 @@ interface DatabaseManagerProps {
 interface ResonanceResult {
   word: string;
   potency: number;
-  potencyType: 'D' | 'C' | 'LM' | 'M';
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
   rate: number;
   resonanceScore: number;
   clientResonance: number;
@@ -61,10 +61,12 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [isSaving, setIsSaving] = useState(false);
   const [selectedForHarmonization, setSelectedForHarmonization] = useState<Set<string>>(new Set());
   
-  // Dauer für Übergabe an Parallele Harmonisierung V2
   const [batchDuration, setBatchDuration] = useState<number>(10);
   const [batchUnit, setBatchUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [batchContinuousMode, setBatchContinuousMode] = useState(false);
+  
+  // Potenztyp für Analyse
+  const [analysisPotencyType, setAnalysisPotencyType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
@@ -346,8 +348,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           hasExistingRate: true
         };
       } else {
-        // Berechne neue Copen-Rate (mit D30 als Standard-Potenz)
-        const result = calculateCopenRate(word, 30, 'D', 'latin', imgSig, useImgSig);
+        // Berechne neue Copen-Rate (mit ausgewähltem Potenztyp und Standard-Potenz 30)
+        const result = calculateCopenRate(word, 30, analysisPotencyType, 'latin', imgSig, useImgSig);
         return {
           name: word,
           copenRate: result.rate,
@@ -386,7 +388,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         : calculateCopenRate(
             rateObj.rateName,
             rateObj.potency,
-            'D',
+            analysisPotencyType,
             'latin',
             imgSig,
             useImgSig
@@ -408,7 +410,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       return {
         word: rateObj.rateName,
         potency: rateObj.potency,
-        potencyType: 'D' as const,
+        potencyType: analysisPotencyType,
         rate: calculatedRate.rate,
         resonanceScore,
         clientResonance: clientRate,
@@ -823,7 +825,24 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             )}
           </div>
 
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-end">
+            <div>
+              <Label className="text-xs">Potenztyp für Analyse</Label>
+              <Select value={analysisPotencyType} onValueChange={(v) => setAnalysisPotencyType(v as any)}>
+                <SelectTrigger className="h-10 w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="D">D (Dezimal)</SelectItem>
+                  <SelectItem value="C">C (Centesimal)</SelectItem>
+                  <SelectItem value="LM">LM (Q-Potenz)</SelectItem>
+                  <SelectItem value="M">M (Hochpotenz)</SelectItem>
+                  <SelectItem value="F1">F1 (Fibonacci 1)</SelectItem>
+                  <SelectItem value="F2">F2 (Fibonacci 2)</SelectItem>
+                  <SelectItem value="F3">F3 (Fibonacci 3)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button onClick={handleSaveDatabase} disabled={isSaving} variant="secondary">
               {isSaving ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

@@ -10,7 +10,7 @@ import {
 export interface CopenRateResult {
   word: string;
   potency: number;
-  potencyType: 'D' | 'C' | 'LM' | 'M';
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
   rate: number;
   alphabetType: AlphabetType;
   calculation: {
@@ -23,7 +23,7 @@ export interface CopenRateResult {
 export interface WordEnergyInput {
   word: string;
   potency: number;
-  potencyType: 'D' | 'C' | 'LM' | 'M';
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
   alphabetType?: AlphabetType;
 }
 
@@ -65,7 +65,7 @@ export const validateWordEnergy = (word: string): ValidationResult => {
 export const calculateCopenRate = (
   word: string,
   potency: number,
-  potencyType: 'D' | 'C' | 'LM' | 'M',
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3',
   alphabetType: AlphabetType = 'latin',
   imageSignature?: string,
   useImageSignature: boolean = false
@@ -131,6 +131,15 @@ export const calculateCopenRate = (
       case 'M':
         potencyBonus = Math.floor(fibonacciRate * p);
         break;
+      case 'F1':
+        potencyBonus = Math.floor(fibonacciRate * (p / 6));
+        break;
+      case 'F2':
+        potencyBonus = Math.floor(fibonacciRate * (p / 4));
+        break;
+      case 'F3':
+        potencyBonus = Math.floor(fibonacciRate * (p / 3));
+        break;
     }
   }
 
@@ -169,11 +178,11 @@ export const parseWordEnergyData = (csvData: string): WordEnergyInput[] => {
       const [word, potencyStr, potencyType, alphabetType] = parts;
       const potency = parseInt(potencyStr);
       
-      if (!isNaN(potency) && ['D', 'C', 'LM', 'M'].includes(potencyType)) {
+      if (!isNaN(potency) && ['D', 'C', 'LM', 'M', 'F1', 'F2', 'F3'].includes(potencyType)) {
         results.push({
           word,
           potency,
-          potencyType: potencyType as 'D' | 'C' | 'LM' | 'M',
+          potencyType: potencyType as 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3',
           alphabetType: (alphabetType as AlphabetType) || 'latin'
         });
       }
