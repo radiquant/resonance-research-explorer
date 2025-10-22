@@ -22,6 +22,7 @@ export interface RateObject {
   copenRate: number;
   energeticValue: number;
   potency: number; // 1-12, gewichtete Ebene
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'; // Automatisch ermittelte Potenzreihe
   levelDistribution: Record<number, number>; // Verteilung über 100 Ziehungen
   dominantLevel: number; // Ebene mit meisten Treffern
 }
@@ -143,18 +144,37 @@ function chargeRates(
 }
 
 /**
- * Potenz- und Level-Zuweisung
+ * Potenz- und Level-Zuweisung mit automatischer Potenzreihen-Ermittlung
  * DefaultPotencyAssigner.assignPotency() + assignLevels()
+ * Erweitert um alle Potenzreihen (D, C, LM, M, F1, F2, F3)
  */
 function assignPotencyAndLevels(rateName: string): {
   potency: number;
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
   levelDistribution: Record<number, number>;
   dominantLevel: number;
 } {
   // 1. Potenz = erste gewichtete Ebene (1-12)
   const potency = weightedPickLevel();
   
-  // 2. Level-Verteilung: 100 Ziehungen (1-12)
+  // 2. Potenzreihe automatisch ermitteln (gewichtet nach Resonanzstärke)
+  const potencyTypes: Array<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'> = ['D', 'C', 'LM', 'M', 'F1', 'F2', 'F3'];
+  const potencyTypeWeights = [30, 25, 20, 15, 5, 3, 2]; // D am häufigsten, F3 am seltensten
+  const totalPotencyWeight = potencyTypeWeights.reduce((sum, w) => sum + w, 0);
+  
+  const r = Math.random() * totalPotencyWeight;
+  let cumulative = 0;
+  let selectedPotencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3' = 'D';
+  
+  for (let i = 0; i < potencyTypes.length; i++) {
+    cumulative += potencyTypeWeights[i];
+    if (r < cumulative) {
+      selectedPotencyType = potencyTypes[i];
+      break;
+    }
+  }
+  
+  // 3. Level-Verteilung: 100 Ziehungen (1-12)
   const levelDistribution: Record<number, number> = {};
   for (let i = 1; i <= 12; i++) {
     levelDistribution[i] = 0;
@@ -165,7 +185,7 @@ function assignPotencyAndLevels(rateName: string): {
     levelDistribution[level]++;
   }
   
-  // 3. Dominante Ebene = Maximum der Verteilung (1-12)
+  // 4. Dominante Ebene = Maximum der Verteilung (1-12)
   let dominantLevel = potency;
   let maxCount = levelDistribution[potency];
   
@@ -176,9 +196,9 @@ function assignPotencyAndLevels(rateName: string): {
     }
   }
   
-  console.log(`[Level Debug] ${rateName}: Potenz=${potency}, Dominant=${dominantLevel}, Verteilung=`, levelDistribution);
+  console.log(`[Level Debug] ${rateName}: Potenz=${potency}, Typ=${selectedPotencyType}, Dominant=${dominantLevel}, Verteilung=`, levelDistribution);
   
-  return { potency, levelDistribution, dominantLevel };
+  return { potency, potencyType: selectedPotencyType, levelDistribution, dominantLevel };
 }
 
 /**
@@ -196,15 +216,16 @@ export function analyzeRates(
   // 2. Energetisches Laden
   const { energies, trials } = chargeRates(selected, config.chargingThreshold);
   
-  // 3. RateObjects erstellen mit Potenz und Level
+  // 3. RateObjects erstellen mit Potenz, Potenztyp und Level
   const rateObjects: RateObject[] = selected.map(rate => {
-    const { potency, levelDistribution, dominantLevel } = assignPotencyAndLevels(rate.name);
+    const { potency, potencyType, levelDistribution, dominantLevel } = assignPotencyAndLevels(rate.name);
     
     return {
       rateName: rate.name,
       copenRate: rate.copenRate,
       energeticValue: energies[rate.name],
       potency,
+      potencyType,
       levelDistribution,
       dominantLevel,
     };

@@ -65,9 +65,6 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [batchUnit, setBatchUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [batchContinuousMode, setBatchContinuousMode] = useState(false);
   
-  // Potenztyp für Analyse
-  const [analysisPotencyType, setAnalysisPotencyType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
-  
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
   const [analyzingImage, setAnalyzingImage] = useState(false);
@@ -348,8 +345,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           hasExistingRate: true
         };
       } else {
-        // Berechne neue Copen-Rate (mit ausgewähltem Potenztyp und Standard-Potenz 30)
-        const result = calculateCopenRate(word, 30, analysisPotencyType, 'latin', imgSig, useImgSig);
+        // Berechne neue Copen-Rate (Standard D-Potenz 30 als Basis für Analyse)
+        const result = calculateCopenRate(word, 30, 'D', 'latin', imgSig, useImgSig);
         return {
           name: word,
           copenRate: result.rate,
@@ -382,13 +379,13 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       const originalInput = ratesInput.find(r => r.name === rateObj.rateName);
       const hasExistingRate = originalInput?.hasExistingRate || false;
       
-      // Berechne die Copen Rate für dieses Wort mit der ermittelten Potenz NUR wenn keine Rate existiert
+      // Berechne die Copen Rate für dieses Wort mit der ermittelten Potenz und Potenztyp NUR wenn keine Rate existiert
       const calculatedRate = hasExistingRate 
         ? { rate: rateObj.copenRate } 
         : calculateCopenRate(
             rateObj.rateName,
             rateObj.potency,
-            analysisPotencyType,
+            rateObj.potencyType, // Nutze automatisch ermittelten Potenztyp
             'latin',
             imgSig,
             useImgSig
@@ -410,7 +407,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       return {
         word: rateObj.rateName,
         potency: rateObj.potency,
-        potencyType: analysisPotencyType,
+        potencyType: rateObj.potencyType, // Nutze automatisch ermittelten Potenztyp
         rate: calculatedRate.rate,
         resonanceScore,
         clientResonance: clientRate,
@@ -826,23 +823,6 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           </div>
 
           <div className="flex gap-2 flex-wrap items-end">
-            <div>
-              <Label className="text-xs">Potenztyp für Analyse</Label>
-              <Select value={analysisPotencyType} onValueChange={(v) => setAnalysisPotencyType(v as any)}>
-                <SelectTrigger className="h-10 w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="D">D (Dezimal)</SelectItem>
-                  <SelectItem value="C">C (Centesimal)</SelectItem>
-                  <SelectItem value="LM">LM (Q-Potenz)</SelectItem>
-                  <SelectItem value="M">M (Hochpotenz)</SelectItem>
-                  <SelectItem value="F1">F1 (Fibonacci 1)</SelectItem>
-                  <SelectItem value="F2">F2 (Fibonacci 2)</SelectItem>
-                  <SelectItem value="F3">F3 (Fibonacci 3)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <Button onClick={handleSaveDatabase} disabled={isSaving} variant="secondary">
               {isSaving ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
