@@ -664,8 +664,8 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
         elapsedTime: 0,
         progress: 0,
         continuous: continuousMode,
-        pulseSeconds: pulsePauseActive ? pulseSeconds : undefined,
-        pauseSeconds: pulsePauseActive ? pauseSeconds : undefined,
+        pulseSeconds: pulsePauseActive ? (pulseInSeconds ?? undefined) : undefined,
+        pauseSeconds: pulsePauseActive ? (pauseInSeconds ?? undefined) : undefined,
         pulsePauseActive: pulsePauseActive,
       };
       setHarmonizations(prev => [newHarmonization, ...prev]);
