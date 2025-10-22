@@ -31,7 +31,7 @@ serve(async (req) => {
 
     // 1. Pending Sessions auf "active" setzen (Start)
     const { data: pendingSessions, error: fetchPendingError } = await supabase
-      .from('harmonization_sessions')
+      .from('harmonization_sessions_v2')
       .select('*')
       .eq('status', 'pending')
       .is('job_started_at', null)
@@ -51,7 +51,7 @@ serve(async (req) => {
           const nowIso = new Date().toISOString();
 
           const { error: updateError } = await supabase
-            .from('harmonization_sessions')
+            .from('harmonization_sessions_v2')
             .update({
               status: 'running',
               job_started_at: nowIso,
@@ -78,7 +78,7 @@ serve(async (req) => {
 
     // 2. Aktive Sessions ticken lassen (Heartbeat, Restzeit, Abschluss)
     const { data: activeSessions, error: fetchActiveError } = await supabase
-      .from('harmonization_sessions')
+      .from('harmonization_sessions_v2')
       .select('*')
       .eq('status', 'running')
       .limit(100);
@@ -109,7 +109,7 @@ serve(async (req) => {
           if (remaining <= 0) {
             // Abschluss
             const { error: completeError } = await supabase
-              .from('harmonization_sessions')
+              .from('harmonization_sessions_v2')
               .update({
                 status: 'completed',
                 remaining_seconds: 0,
@@ -129,7 +129,7 @@ serve(async (req) => {
           } else {
             // Heartbeat + Fortschritt
             const { error: hbError } = await supabase
-              .from('harmonization_sessions')
+              .from('harmonization_sessions_v2')
               .update({
                 remaining_seconds: remaining,
                 progress,
