@@ -45,7 +45,7 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
           {
             event: '*',
             schema: 'public',
-            table: 'harmonization_sessions',
+            table: 'harmonization_sessions_v2',
           },
           () => {
             loadSessions();
@@ -62,10 +62,10 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
   const loadSessions = async () => {
     try {
       let query = supabase
-        .from('harmonization_sessions')
+        .from('harmonization_sessions_v2')
         .select('*')
-        .in('status', ['completed', 'cancelled'])
-        .order('completed_at', { ascending: false });
+        .in('status', ['completed', 'cancelled', 'running', 'pending'])
+        .order('created_at', { ascending: false });
 
       if (patientId) {
         query = query.eq('patient_id', patientId);
@@ -91,7 +91,7 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
 
     try {
       const { error } = await supabase
-        .from('harmonization_sessions')
+        .from('harmonization_sessions_v2')
         .delete()
         .eq('id', id);
 
