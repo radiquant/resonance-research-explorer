@@ -35,7 +35,7 @@ interface CloudHarmonizationSession {
   created_at: string;
   updated_at: string;
 }
-import PatientManagerCloud from './PatientManagerCloud';
+import PatientManagerCloudV2 from './PatientManagerCloudV2';
 import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
 import HarmonizationTemplates from './HarmonizationTemplates';
 import DatabaseManager from './DatabaseManager';
@@ -749,10 +749,12 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      {/* Patientenverwaltung */}
-      <PatientManagerCloud 
+      {/* Patientenverwaltung V2 */}
+      <PatientManagerCloudV2 
         onSelectPatient={handlePatientSwitch}
         selectedPatient={selectedPatient}
+        rateGeneratorEnabled={rateGeneratorEnabled}
+        analysisEnabled={analysisEnabled}
       />
 
       {/* Kozyrev-Indikatoren */}

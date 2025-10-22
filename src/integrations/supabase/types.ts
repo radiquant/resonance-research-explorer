@@ -421,6 +421,7 @@ export type Database = {
           birth_place: string
           created_at: string
           first_name: string
+          hardware_config: Json | null
           id: string
           image_signature: string | null
           image_signature_active: boolean | null
@@ -433,6 +434,7 @@ export type Database = {
           birth_place: string
           created_at?: string
           first_name: string
+          hardware_config?: Json | null
           id?: string
           image_signature?: string | null
           image_signature_active?: boolean | null
@@ -445,6 +447,7 @@ export type Database = {
           birth_place?: string
           created_at?: string
           first_name?: string
+          hardware_config?: Json | null
           id?: string
           image_signature?: string | null
           image_signature_active?: boolean | null
