@@ -64,6 +64,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   // Dauer für Übergabe an Parallele Harmonisierung V2
   const [batchDuration, setBatchDuration] = useState<number>(10);
   const [batchUnit, setBatchUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
+  const [batchContinuousMode, setBatchContinuousMode] = useState(false);
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
@@ -906,92 +907,103 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 >
                   Alle löschen
                 </Button>
-                {selectedForHarmonization.size > 0 && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-end gap-2">
-                      <div>
-                        <Label className="text-xs">Dauer</Label>
-                        <Input
-                          type="number"
-                          value={batchDuration}
-                          onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
-                          min={1}
-                          className="h-8 w-24"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs">Einheit</Label>
-                        <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
-                          <SelectTrigger className="h-8 w-28">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="seconds">Sekunden</SelectItem>
-                            <SelectItem value="minutes">Minuten</SelectItem>
-                            <SelectItem value="hours">Stunden</SelectItem>
-                            <SelectItem value="days">Tage</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <Button 
-                      onClick={async () => {
-                        if (!user || !selectedPatient) {
-                          toast({
-                            title: 'Fehler',
-                            description: 'Bitte wählen Sie zuerst einen Patienten aus',
-                            variant: 'destructive'
-                          });
-                          return;
-                        }
-
-                        const durationSeconds = getDurationInSeconds(batchDuration, batchUnit);
-                        const selectedResults = resonanceResults.filter(r => selectedForHarmonization.has(r.word));
-                        if (selectedResults.length === 0) return;
-
-                        toast({
-                          title: 'Übergabe gestartet',
-                          description: `${selectedResults.length} Einträge werden in die Harmonisierung übernommen (${batchDuration} ${batchUnit})`
-                        });
-
-                        const inserts = selectedResults.map(r => ({
-                          user_id: user.id,
-                          patient_id: selectedPatient.id,
-                          word: r.word,
-                          copen_rate: r.rate.toString(),
-                          tested_potency: `${r.potency}`,
-                          duration_seconds: durationSeconds,
-                          remaining_seconds: durationSeconds,
-                          status: 'pending' as const,
-                        }));
-
-                        const { error } = await supabase
-                          .from('harmonization_sessions_v2')
-                          .insert(inserts);
-
-                        if (error) {
-                          toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
-                          return;
-                        }
-
-                        try { await supabase.functions.invoke('harmonization-worker'); } catch (_) {}
-
-                        toast({
-                          title: 'Übergeben',
-                          description: `${inserts.length} Sitzung(en) erstellt und gestartet`
-                        });
-
-                        setSelectedForHarmonization(new Set());
-                      }}
-                      size="sm"
-                    >
-                      <Zap className="h-4 w-4 mr-2" />
-                      Zur Harmonisierung ({selectedForHarmonization.size})
-                    </Button>
-                  </div>
-                )}
               </div>
+
+              {/* Harmonisierungs-Optionen in eigener Zeile */}
+              {selectedForHarmonization.size > 0 && (
+                <div className="flex items-end gap-2 p-3 bg-muted/50 rounded-lg border">
+                  <div>
+                    <Label className="text-xs">Dauer</Label>
+                    <Input
+                      type="number"
+                      value={batchDuration}
+                      onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
+                      min={1}
+                      className="h-9 w-24"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Einheit</Label>
+                    <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
+                      <SelectTrigger className="h-9 w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="seconds">Sekunden</SelectItem>
+                        <SelectItem value="minutes">Minuten</SelectItem>
+                        <SelectItem value="hours">Stunden</SelectItem>
+                        <SelectItem value="days">Tage</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="continuous-harmonization"
+                      checked={batchContinuousMode}
+                      onCheckedChange={(checked) => setBatchContinuousMode(checked === true)}
+                    />
+                    <Label htmlFor="continuous-harmonization" className="text-xs cursor-pointer">
+                      Dauerbesendung
+                    </Label>
+                  </div>
+                  <Button 
+                    onClick={async () => {
+                      if (!user || !selectedPatient) {
+                        toast({
+                          title: 'Fehler',
+                          description: 'Bitte wählen Sie zuerst einen Patienten aus',
+                          variant: 'destructive'
+                        });
+                        return;
+                      }
+
+                      const durationSeconds = batchContinuousMode ? 999999999 : getDurationInSeconds(batchDuration, batchUnit);
+                      const selectedResults = resonanceResults.filter(r => selectedForHarmonization.has(r.word));
+                      if (selectedResults.length === 0) return;
+
+                      toast({
+                        title: 'Übergabe gestartet',
+                        description: batchContinuousMode 
+                          ? `${selectedResults.length} Einträge werden als Dauerbesendung übernommen`
+                          : `${selectedResults.length} Einträge werden in die Harmonisierung übernommen (${batchDuration} ${batchUnit})`
+                      });
+
+                      const inserts = selectedResults.map(r => ({
+                        user_id: user.id,
+                        patient_id: selectedPatient.id,
+                        word: r.word,
+                        copen_rate: r.rate.toString(),
+                        tested_potency: `${r.potency}`,
+                        duration_seconds: durationSeconds,
+                        remaining_seconds: durationSeconds,
+                        status: 'pending' as const,
+                      }));
+
+                      const { error } = await supabase
+                        .from('harmonization_sessions_v2')
+                        .insert(inserts);
+
+                      if (error) {
+                        toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+                        return;
+                      }
+
+                      try { await supabase.functions.invoke('harmonization-worker'); } catch (_) {}
+
+                      toast({
+                        title: 'Übergeben',
+                        description: `${inserts.length} Sitzung(en) erstellt und gestartet`
+                      });
+
+                      setSelectedForHarmonization(new Set());
+                    }}
+                    size="sm"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Zur Harmonisierung ({selectedForHarmonization.size})
+                  </Button>
+                </div>
+              )}
 
               <div className="border rounded-lg max-h-96 overflow-y-auto overflow-x-auto">
                 <table className="w-full text-sm table-auto">

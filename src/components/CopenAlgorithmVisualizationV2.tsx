@@ -338,7 +338,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           .from('harmonization_sessions_v2')
           .select('*')
           .eq('patient_id', selectedPatient.id)
-          .eq('status', 'running')
+          .in('status', ['running', 'paused', 'pending'])
           .order('created_at', { ascending: false });
         
         if (error) {
@@ -440,7 +440,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           .from('harmonization_sessions_v2')
           .select('*')
           .eq('patient_id', selectedPatient.id)
-          .eq('status', 'running');
+          .in('status', ['running', 'pending']);
         
         if (sessions && sessions.length > 0) {
           setHarmonizations(prev => 
