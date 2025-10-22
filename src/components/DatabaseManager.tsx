@@ -921,22 +921,19 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
               {/* Harmonisierungs-Optionen in eigener Zeile */}
               {selectedForHarmonization.size > 0 && (
-                <div className="space-y-2 p-3 bg-muted/50 rounded-lg border">
-                  <div className="flex items-end gap-2">
-                    <div>
-                      <Label className="text-xs">Dauer</Label>
+                <div className="space-y-3 p-4 bg-white/5 border-white/20 rounded-lg border">
+                  <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
+                    <Label className="text-xs whitespace-nowrap">Dauer:</Label>
+                    <div className="flex gap-2">
                       <Input
                         type="number"
                         value={batchDuration}
                         onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
                         min={1}
-                        className="h-9 w-24"
+                        className="h-8 w-20"
                       />
-                    </div>
-                    <div>
-                      <Label className="text-xs">Einheit</Label>
                       <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
-                        <SelectTrigger className="h-9 w-28">
+                        <SelectTrigger className="h-8 w-32">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -947,6 +944,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <Label className="text-xs whitespace-nowrap">Modus:</Label>
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="continuous-harmonization"
@@ -960,7 +959,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                   </div>
                   
                   {/* Impuls/Pausen-Modus */}
-                  <div className="flex items-end gap-2 pt-2 border-t">
+                  <div className="grid grid-cols-[auto_1fr] gap-3 items-center pt-2 border-t border-white/10">
+                    <Label className="text-xs whitespace-nowrap">Impuls/Pause:</Label>
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="pulse-pause-mode"
@@ -968,40 +968,40 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         onCheckedChange={(checked) => setPulsePauseActive(checked === true)}
                       />
                       <Label htmlFor="pulse-pause-mode" className="text-xs cursor-pointer">
-                        Impuls/Pausen-Modus
+                        Aktivieren
                       </Label>
                     </div>
+
                     {pulsePauseActive && (
                       <>
-                        <div>
-                          <Label className="text-xs">Impuls (Sek.)</Label>
-                          <Input
-                            type="number"
-                            value={pulseSeconds}
-                            onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
-                            min={1}
-                            max={60}
-                            className="h-9 w-20"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Pause (Sek.)</Label>
-                          <Input
-                            type="number"
-                            value={pauseSeconds}
-                            onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
-                            min={1}
-                            max={60}
-                            className="h-9 w-20"
-                          />
-                        </div>
-                        <div className="text-xs text-muted-foreground self-center">
-                          Zyklus: {pulseSeconds}s / {pauseSeconds}s
+                        <Label className="text-xs whitespace-nowrap">Impuls (Sek.):</Label>
+                        <Input
+                          type="number"
+                          value={pulseSeconds}
+                          onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
+                          min={1}
+                          max={60}
+                          className="h-8 w-20"
+                        />
+
+                        <Label className="text-xs whitespace-nowrap">Pause (Sek.):</Label>
+                        <Input
+                          type="number"
+                          value={pauseSeconds}
+                          onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
+                          min={1}
+                          max={60}
+                          className="h-8 w-20"
+                        />
+
+                        <Label className="text-xs whitespace-nowrap">Zyklus:</Label>
+                        <div className="text-xs text-muted-foreground">
+                          {pulseSeconds}s Impuls / {pauseSeconds}s Pause
                         </div>
                       </>
                     )}
                   </div>
-                  <Button 
+                  <Button
                     onClick={async () => {
                       if (!user || !selectedPatient) {
                         toast({
