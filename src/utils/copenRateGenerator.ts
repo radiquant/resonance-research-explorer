@@ -1,5 +1,11 @@
 
 import { type AlphabetType, alphabetSystems, calculateLetterSum } from './alphabetSystems';
+import { 
+  collectHardwareMetrics, 
+  modulateRateWithHardware, 
+  HardwareConfig,
+  DEFAULT_HARDWARE_CONFIG 
+} from './hardwareAlgorithms';
 
 export interface CopenRateResult {
   word: string;

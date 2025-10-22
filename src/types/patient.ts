@@ -1,3 +1,5 @@
+import { HardwareConfig } from '../utils/hardwareAlgorithms';
+
 export interface Patient {
   id: string;
   firstName: string;
@@ -5,6 +7,10 @@ export interface Patient {
   birthDate: string;
   birthPlace: string;
   createdAt: string;
+  hardwareConfig?: {
+    rateGenerator: HardwareConfig;
+    analysis: HardwareConfig;
+  };
 }
 
 export interface HarmonizationSession {

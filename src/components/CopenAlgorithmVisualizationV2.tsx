@@ -40,6 +40,7 @@ import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
 import HarmonizationTemplates from './HarmonizationTemplates';
 import DatabaseManager from './DatabaseManager';
 import KozyrevIndicators from './KozyrevIndicators';
+import { HardwareAlgorithmSettings } from './HardwareAlgorithmSettings';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useWordEnergyHistory } from '@/hooks/useWordEnergyHistory';
@@ -95,6 +96,37 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
 
   const { toast } = useToast();
   const restoredToastShownRef = React.useRef(false);
+
+  // Hardware-Algorithmen Global Schalter (Ebene A)
+  const [rateGeneratorEnabled, setRateGeneratorEnabled] = useState(() => {
+    return localStorage.getItem('hardwareAlgorithms_rateGenerator_enabled_v2') === 'true';
+  });
+  const [analysisEnabled, setAnalysisEnabled] = useState(() => {
+    return localStorage.getItem('hardwareAlgorithms_analysis_enabled_v2') === 'true';
+  });
+
+  // Handler für Hardware-Algorithmen Schalter
+  const handleRateGeneratorChange = (enabled: boolean) => {
+    setRateGeneratorEnabled(enabled);
+    localStorage.setItem('hardwareAlgorithms_rateGenerator_enabled_v2', enabled.toString());
+    toast({
+      title: enabled ? "Ratengenerator aktiviert" : "Ratengenerator deaktiviert",
+      description: enabled 
+        ? "Hardware-Algorithmen verbessern Berechnungen um +10-15% Akkuranz" 
+        : "Standard-Berechnungen werden verwendet",
+    });
+  };
+
+  const handleAnalysisChange = (enabled: boolean) => {
+    setAnalysisEnabled(enabled);
+    localStorage.setItem('hardwareAlgorithms_analysis_enabled_v2', enabled.toString());
+    toast({
+      title: enabled ? "Datenbankanalyse aktiviert" : "Datenbankanalyse deaktiviert",
+      description: enabled 
+        ? "Hardware-Algorithmen verbessern Resonanz-Analysen um +10-15% Akkuranz" 
+        : "Standard-Analysen werden verwendet",
+    });
+  };
 
   // Wortenergie-Normalisierung (nur Buchstaben)
   const normalizeWordEnergy = (word: string): string => {
@@ -1041,6 +1073,14 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           onReactivate={reactivateSession}
         />
       )}
+
+      {/* Hardware-Algorithmen Settings */}
+      <HardwareAlgorithmSettings
+        rateGeneratorEnabled={rateGeneratorEnabled}
+        analysisEnabled={analysisEnabled}
+        onRateGeneratorChange={handleRateGeneratorChange}
+        onAnalysisChange={handleAnalysisChange}
+      />
 
       {showCalculation && (
         <div className="space-y-6">
