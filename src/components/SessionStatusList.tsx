@@ -101,7 +101,7 @@ export const SessionStatusList: React.FC = () => {
             return (
               <div key={session.id} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded text-xs">
                 <div className="flex-1 min-w-0 mr-2">
-                  <div className="font-medium truncate">{session.word.substring(0, 40)}</div>
+                  <div className="font-medium break-words">{session.word}</div>
                   <div className="text-muted-foreground flex items-center gap-2 mt-0.5">
                     <span>{session.progress}%</span>
                     {session.job_last_heartbeat && (

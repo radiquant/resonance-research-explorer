@@ -556,6 +556,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       const title = `Resonanz-Analyse für: ${selectedPatient?.first_name ?? ''} ${selectedPatient?.last_name ?? ''}`.trim();
       doc.setFontSize(12);
       doc.text(title, 14, 14);
+      
+      if (focusWord.trim()) {
+        doc.setFontSize(10);
+        doc.text(`Fokus: ${focusWord}`, 14, 20);
+      }
 
       const head = [["Wortenergie", "Potenz", "Copen-Rate", "Resonanz", "Höchste Ebene"]];
       const body = resonanceResults.map(r => [
@@ -578,7 +583,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       autoTable(doc, {
         head,
         body,
-        startY: 20,
+        startY: focusWord.trim() ? 25 : 20,
         styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak', cellWidth: 'wrap' },
         headStyles: { fillColor: [33, 33, 33] },
         margin: margins,
@@ -607,12 +612,19 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
     let content = '';
     if (format === 'csv') {
-      content = 'Wortenergie,Potenz,Typ,Copen-Rate,Resonanz-Score,Klienten-Rate\n';
+      if (focusWord.trim()) {
+        content = `Fokus: ${focusWord}\n`;
+      }
+      content += 'Wortenergie,Potenz,Typ,Copen-Rate,Resonanz-Score,Klienten-Rate\n';
       content += resonanceResults.map(r => 
         `${r.word},${r.potency},${r.potencyType},${r.rate},${r.resonanceScore},${r.clientResonance}`
       ).join('\n');
     } else {
-      content = `Resonanz-Analyse für: ${selectedPatient?.first_name} ${selectedPatient?.last_name}\n\n`;
+      content = `Resonanz-Analyse für: ${selectedPatient?.first_name} ${selectedPatient?.last_name}\n`;
+      if (focusWord.trim()) {
+        content += `Fokus: ${focusWord}\n`;
+      }
+      content += '\n';
       content += resonanceResults.map(r => 
         `${r.word} ${r.potencyType}${r.potency} | Rate: ${formatRate12(r.rate)} | Resonanz: ${r.resonanceScore}%`
       ).join('\n');
