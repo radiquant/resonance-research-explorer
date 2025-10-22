@@ -818,22 +818,25 @@ const CopenAlgorithmVisualization: React.FC = () => {
                   <SelectItem value="F3">F/3 (10C·MM - 10MMMMM)</SelectItem>
                 </SelectContent>
               </Select>
-              <div className="text-xs text-muted-foreground mt-1">
-                <label className="flex items-center gap-1 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={kozyrevEnabled}
-                    onChange={(e) => setKozyrevEnabled(e.target.checked)}
-                    className="rounded"
-                  />
-                  Kozyrev-Hardware
-                </label>
-                {kozyrevEnabled && (
-                  <div className="text-xs text-blue-700 mt-1 font-semibold">
-                    ⚡ Quanten-Sensor aktiv
-                  </div>
-                )}
-              </div>
+              {/* Kozyrev-Hardware Option ausgeblendet - Funktionalität bleibt erhalten */}
+              {false && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  <label className="flex items-center gap-1 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={kozyrevEnabled}
+                      onChange={(e) => setKozyrevEnabled(e.target.checked)}
+                      className="rounded"
+                    />
+                    Kozyrev-Hardware
+                  </label>
+                  {kozyrevEnabled && (
+                    <div className="text-xs text-blue-700 mt-1 font-semibold">
+                      ⚡ Quanten-Sensor aktiv
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <Button onClick={handleCalculate} className="w-full">
@@ -845,7 +848,8 @@ const CopenAlgorithmVisualization: React.FC = () => {
           <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-lg text-center border-2">
             <div className="text-lg mb-2">
               "{cleanWord}" {effectiveType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
-              {kozyrevEnabled && ' • Kozyrev aktiv'}
+              {/* Kozyrev Status ausgeblendet */}
+              {false && kozyrevEnabled && ' • Kozyrev aktiv'}
               {autoPotency && <div className="text-sm text-green-700 font-semibold mt-1">
                 📡 Projiziere "{finalRate.toLocaleString()}" in der jeweils benötigten Autopotenz
               </div>}
