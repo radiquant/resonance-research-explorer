@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { ArrowDown, Calculator, Zap, User, Play, Pause, RotateCcw, StopCircle, Plus, Trash2, Archive } from 'lucide-react';
 import { calculateLevelResonance, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { ActiveHarmonization } from '@/types/patient';
 
 interface CloudPatient {
@@ -96,6 +97,9 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   const [harmonizationDuration, setHarmonizationDuration] = useState(1);
   const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [continuousMode, setContinuousMode] = useState(false);
+  const [pulsePauseActive, setPulsePauseActive] = useState(false);
+  const [pulseSeconds, setPulseSeconds] = useState(3);
+  const [pauseSeconds, setPauseSeconds] = useState(7);
 
   const { toast } = useToast();
   const restoredToastShownRef = React.useRef(false);
@@ -626,6 +630,9 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           duration_seconds: durationSeconds,
           remaining_seconds: durationSeconds,
           status: 'pending',
+          pulse_seconds: pulsePauseActive ? pulseSeconds : null,
+          pause_seconds: pulsePauseActive ? pauseSeconds : null,
+          pulse_pause_active: pulsePauseActive,
         })
         .select('*')
         .single();
@@ -650,6 +657,9 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
         elapsedTime: 0,
         progress: 0,
         continuous: continuousMode,
+        pulseSeconds: pulsePauseActive ? pulseSeconds : undefined,
+        pauseSeconds: pulsePauseActive ? pauseSeconds : undefined,
+        pulsePauseActive: pulsePauseActive,
       };
       setHarmonizations(prev => [newHarmonization, ...prev]);
 
@@ -960,40 +970,86 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
         <CardContent className="space-y-4">
           {/* Neue Harmonisierung starten */}
           <div className="border-2 border-dashed rounded-lg p-4 bg-muted/30">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-              <div>
-                <Label>Dauer</Label>
-                <Input
-                  type="number"
-                  value={harmonizationDuration}
-                  onChange={(e) => setHarmonizationDuration(parseInt(e.target.value) || 1)}
-                  min={1}
-                  max={365}
-                  disabled={continuousMode}
-                />
+            <div className="space-y-3">
+              {/* Erste Zeile: Dauer, Einheit, Dauerbesendung */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div>
+                  <Label>Dauer</Label>
+                  <Input
+                    type="number"
+                    value={harmonizationDuration}
+                    onChange={(e) => setHarmonizationDuration(parseInt(e.target.value) || 1)}
+                    min={1}
+                    max={365}
+                    disabled={continuousMode}
+                  />
+                </div>
+                <div>
+                  <Label>Zeiteinheit</Label>
+                  <Select value={harmonizationUnit} onValueChange={(v) => setHarmonizationUnit(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seconds">Sekunden</SelectItem>
+                      <SelectItem value="minutes">Minuten</SelectItem>
+                      <SelectItem value="hours">Stunden</SelectItem>
+                      <SelectItem value="days">Tage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Label className="mb-0">Dauerbesendung</Label>
+                  <Switch checked={continuousMode} onCheckedChange={setContinuousMode} />
+                </div>
+                <Button onClick={startNewHarmonization} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Harmonisierung starten
+                </Button>
               </div>
-              <div>
-                <Label>Zeiteinheit</Label>
-                <Select value={harmonizationUnit} onValueChange={(v) => setHarmonizationUnit(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="seconds">Sekunden</SelectItem>
-                    <SelectItem value="minutes">Minuten</SelectItem>
-                    <SelectItem value="hours">Stunden</SelectItem>
-                    <SelectItem value="days">Tage</SelectItem>
-                  </SelectContent>
-                </Select>
+
+              {/* Zweite Zeile: Impuls/Pausen-Modus */}
+              <div className="flex items-end gap-3 pt-2 border-t">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="pulse-pause-mode-v2"
+                    checked={pulsePauseActive}
+                    onCheckedChange={(checked) => setPulsePauseActive(checked === true)}
+                  />
+                  <Label htmlFor="pulse-pause-mode-v2" className="text-xs cursor-pointer">
+                    Impuls/Pausen-Modus
+                  </Label>
+                </div>
+                {pulsePauseActive && (
+                  <>
+                    <div>
+                      <Label className="text-xs">Impuls (Sek.)</Label>
+                      <Input
+                        type="number"
+                        value={pulseSeconds}
+                        onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
+                        min={1}
+                        max={60}
+                        className="h-9 w-20"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Pause (Sek.)</Label>
+                      <Input
+                        type="number"
+                        value={pauseSeconds}
+                        onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
+                        min={1}
+                        max={60}
+                        className="h-9 w-20"
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground self-center">
+                      Zyklus: {pulseSeconds}s / {pauseSeconds}s
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="flex items-center gap-3">
-                <Label className="mb-0">Dauerbesendung</Label>
-                <Switch checked={continuousMode} onCheckedChange={setContinuousMode} />
-              </div>
-              <Button onClick={startNewHarmonization} className="w-full">
-                <Plus className="h-4 w-4 mr-2" />
-                Harmonisierung starten
-              </Button>
             </div>
           </div>
 
