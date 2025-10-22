@@ -94,12 +94,12 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   };
 
   const [harmonizations, setHarmonizations] = useState<ActiveHarmonization[]>([]);
-  const [harmonizationDuration, setHarmonizationDuration] = useState(1);
+  const [harmonizationDuration, setHarmonizationDuration] = useState(42);
   const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [continuousMode, setContinuousMode] = useState(false);
   const [pulsePauseActive, setPulsePauseActive] = useState(false);
-  const [pulseSeconds, setPulseSeconds] = useState(3);
-  const [pauseSeconds, setPauseSeconds] = useState(7);
+  const [pulseSeconds, setPulseSeconds] = useState(21);
+  const [pauseSeconds, setPauseSeconds] = useState(42);
 
   const { toast } = useToast();
   const restoredToastShownRef = React.useRef(false);
@@ -612,11 +612,11 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
         return;
       }
 
-      // Auto-Potenz-Direktive: Projektion der aktuellen Rate
+      // Auto-Potenz-Direktive: Projektion der aktuellen Rate mit gleichem Format wie DB-Analyse
       const autoPotenzDirektive = autoPotency 
-        ? `Projiziere "${finalRate}" in der jeweils benötigten Autopotenz oder im jeweils benötigten Potenzakkord. `
-        : '';
-      const harmonizationWord = autoPotenzDirektive + cleanWord;
+        ? `Optimale Harmonisierung mit "${cleanWord}" und Projizierung von "${finalRate.toLocaleString('de-DE')}" in der benötigten Autopotenz auf das Ziel.`
+        : cleanWord;
+      const harmonizationWord = autoPotenzDirektive;
 
       const durationSeconds = continuousMode ? 315360000 : getDurationInSeconds(harmonizationDuration, harmonizationUnit);
       const { data: inserted, error } = await supabase

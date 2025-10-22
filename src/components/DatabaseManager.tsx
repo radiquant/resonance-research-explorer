@@ -61,14 +61,14 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [isSaving, setIsSaving] = useState(false);
   const [selectedForHarmonization, setSelectedForHarmonization] = useState<Set<string>>(new Set());
   
-  const [batchDuration, setBatchDuration] = useState<number>(10);
+  const [batchDuration, setBatchDuration] = useState<number>(42);
   const [batchUnit, setBatchUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [batchContinuousMode, setBatchContinuousMode] = useState(false);
   
   // Impuls/Pausen-Modus
   const [pulsePauseActive, setPulsePauseActive] = useState(false);
-  const [pulseSeconds, setPulseSeconds] = useState<number>(3);
-  const [pauseSeconds, setPauseSeconds] = useState<number>(7);
+  const [pulseSeconds, setPulseSeconds] = useState<number>(21);
+  const [pauseSeconds, setPauseSeconds] = useState<number>(42);
 
   // Optionaler Fokus für DB-Analyse
   const [focusWord, setFocusWord] = useState<string>('');
@@ -949,46 +949,47 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
               {/* Harmonisierungs-Optionen in eigener Zeile */}
               {selectedForHarmonization.size > 0 && (
-                <div className="space-y-3 p-4 bg-white/5 border-white/20 rounded-lg border">
-                  <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
-                    <Label className="text-xs whitespace-nowrap">Dauer:</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="number"
-                        value={batchDuration}
-                        onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
-                        min={1}
-                        className="h-8 w-20"
-                      />
-                      <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
-                        <SelectTrigger className="h-8 w-32">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="seconds">Sekunden</SelectItem>
-                          <SelectItem value="minutes">Minuten</SelectItem>
-                          <SelectItem value="hours">Stunden</SelectItem>
-                          <SelectItem value="days">Tage</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Label className="text-xs whitespace-nowrap">Modus:</Label>
+                <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-4 rounded-lg border-2 border-primary/30 space-y-3">
+                  <div className="text-sm font-semibold text-center mb-3">
+                    🎯 Zur Harmonisierung • {selectedForHarmonization.size} ausgewählt
+                  </div>
+                  
+                  {/* Erste Zeile: Dauer, Einheit, Dauerbesendung */}
+                  <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 items-end">
+                    <Label>Dauer</Label>
+                    <Input
+                      type="number"
+                      value={batchDuration}
+                      onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
+                      disabled={batchContinuousMode}
+                      min={1}
+                      className="h-8"
+                    />
+                    <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="seconds">Sekunden</SelectItem>
+                        <SelectItem value="minutes">Minuten</SelectItem>
+                        <SelectItem value="hours">Stunden</SelectItem>
+                        <SelectItem value="days">Tage</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="continuous-harmonization"
                         checked={batchContinuousMode}
                         onCheckedChange={(checked) => setBatchContinuousMode(checked === true)}
                       />
-                      <Label htmlFor="continuous-harmonization" className="text-xs cursor-pointer">
+                      <Label htmlFor="continuous-harmonization" className="text-xs cursor-pointer whitespace-nowrap">
                         Dauerbesendung
                       </Label>
                     </div>
                   </div>
                   
-                  {/* Impuls/Pausen-Modus */}
-                  <div className="grid grid-cols-[auto_1fr] gap-3 items-center pt-2 border-t border-white/10">
-                    <Label className="text-xs whitespace-nowrap">Impuls/Pause:</Label>
+                  {/* Zweite Zeile: Impuls/Pausen-Modus */}
+                  <div className="flex items-end gap-3 pt-2 border-t">
                     <div className="flex items-center gap-2">
                       <Checkbox
                         id="pulse-pause-mode"
@@ -996,35 +997,35 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         onCheckedChange={(checked) => setPulsePauseActive(checked === true)}
                       />
                       <Label htmlFor="pulse-pause-mode" className="text-xs cursor-pointer">
-                        Aktivieren
+                        Impuls/Pausen-Modus
                       </Label>
                     </div>
-
                     {pulsePauseActive && (
                       <>
-                        <Label className="text-xs whitespace-nowrap">Impuls (Sek.):</Label>
-                        <Input
-                          type="number"
-                          value={pulseSeconds}
-                          onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
-                          min={1}
-                          max={60}
-                          className="h-8 w-20"
-                        />
-
-                        <Label className="text-xs whitespace-nowrap">Pause (Sek.):</Label>
-                        <Input
-                          type="number"
-                          value={pauseSeconds}
-                          onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
-                          min={1}
-                          max={60}
-                          className="h-8 w-20"
-                        />
-
-                        <Label className="text-xs whitespace-nowrap">Zyklus:</Label>
-                        <div className="text-xs text-muted-foreground">
-                          {pulseSeconds}s Impuls / {pauseSeconds}s Pause
+                        <div>
+                          <Label className="text-xs">Impuls (Sek.)</Label>
+                          <Input
+                            type="number"
+                            value={pulseSeconds}
+                            onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
+                            min={1}
+                            max={60}
+                            className="h-8 w-20"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Pause (Sek.)</Label>
+                          <Input
+                            type="number"
+                            value={pauseSeconds}
+                            onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
+                            min={1}
+                            max={60}
+                            className="h-8 w-20"
+                          />
+                        </div>
+                        <div className="text-xs text-muted-foreground self-center">
+                          Zyklus: {pulseSeconds}s / {pauseSeconds}s
                         </div>
                       </>
                     )}

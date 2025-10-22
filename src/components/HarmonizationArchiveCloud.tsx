@@ -50,12 +50,12 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
   // Reaktivierungs-Dialog State
   const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState<HarmonizationSession | null>(null);
-  const [reactivateDuration, setReactivateDuration] = useState<number>(10);
+  const [reactivateDuration, setReactivateDuration] = useState<number>(42);
   const [reactivateUnit, setReactivateUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [reactivateContinuous, setReactivateContinuous] = useState(false);
   const [reactivatePulsePauseActive, setReactivatePulsePauseActive] = useState(false);
-  const [reactivatePulseSeconds, setReactivatePulseSeconds] = useState<number>(3);
-  const [reactivatePauseSeconds, setReactivatePauseSeconds] = useState<number>(7);
+  const [reactivatePulseSeconds, setReactivatePulseSeconds] = useState<number>(21);
+  const [reactivatePauseSeconds, setReactivatePauseSeconds] = useState<number>(42);
   const [isReactivating, setIsReactivating] = useState(false);
 
   useEffect(() => {
