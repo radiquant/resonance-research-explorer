@@ -140,6 +140,14 @@ const Index = () => {
       component: CopenAlgorithmVisualization
     },
     {
+      id: "copen-algorithm-v2",
+      title: "Bruce Copen Algorithmus Visualisierung V2",
+      description: "Version 2 mit separater Datenbank und erweiterten Funktionen",
+      icon: Zap,
+      isRoute: true,
+      route: "/copen-visualisierung-v2"
+    },
+    {
       id: "radionik-general",
       title: "Radionik Allgemein",
       description: "Grundlagen und Prinzipien der Radionik als energetische Heilmethode",

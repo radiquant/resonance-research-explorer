@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import ImportPage from "./pages/ImportPage";
 import CopenGeneratorPage from "./pages/CopenGeneratorPage";
+import CopenVisualizationV2Page from "./pages/CopenVisualizationV2Page";
 import FormulasPage from "./pages/FormulasPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/import" element={<ProtectedRoute><ImportPage /></ProtectedRoute>} />
           <Route path="/copen-generator" element={<ProtectedRoute><CopenGeneratorPage /></ProtectedRoute>} />
+          <Route path="/copen-visualisierung-v2" element={<ProtectedRoute><CopenVisualizationV2Page /></ProtectedRoute>} />
           <Route path="/formulas" element={<ProtectedRoute><FormulasPage /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

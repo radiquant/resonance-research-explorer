@@ -101,6 +101,93 @@ export type Database = {
         }
         Relationships: []
       }
+      analysis_archives_v2: {
+        Row: {
+          analysis_timestamp: string
+          copen_rate: string
+          created_at: string
+          database_entries: string[] | null
+          highest_resonance_level: number | null
+          highest_resonance_value: number | null
+          id: string
+          level_1_physical_particles: number | null
+          level_10_causal_alchemy: number | null
+          level_11_atmic_identity: number | null
+          level_12_atmic_love: number | null
+          level_13_creator: number | null
+          level_2_physical_structure: number | null
+          level_3_etheric_prana: number | null
+          level_4_etheric_meridians: number | null
+          level_5_astral_emotions: number | null
+          level_6_astral_thoughts: number | null
+          level_7_mental_time: number | null
+          level_8_mental_constructs: number | null
+          level_9_causal_blueprints: number | null
+          patient_data: Json | null
+          patient_id: string | null
+          tested_potency: string | null
+          updated_at: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          analysis_timestamp?: string
+          copen_rate: string
+          created_at?: string
+          database_entries?: string[] | null
+          highest_resonance_level?: number | null
+          highest_resonance_value?: number | null
+          id?: string
+          level_1_physical_particles?: number | null
+          level_10_causal_alchemy?: number | null
+          level_11_atmic_identity?: number | null
+          level_12_atmic_love?: number | null
+          level_13_creator?: number | null
+          level_2_physical_structure?: number | null
+          level_3_etheric_prana?: number | null
+          level_4_etheric_meridians?: number | null
+          level_5_astral_emotions?: number | null
+          level_6_astral_thoughts?: number | null
+          level_7_mental_time?: number | null
+          level_8_mental_constructs?: number | null
+          level_9_causal_blueprints?: number | null
+          patient_data?: Json | null
+          patient_id?: string | null
+          tested_potency?: string | null
+          updated_at?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          analysis_timestamp?: string
+          copen_rate?: string
+          created_at?: string
+          database_entries?: string[] | null
+          highest_resonance_level?: number | null
+          highest_resonance_value?: number | null
+          id?: string
+          level_1_physical_particles?: number | null
+          level_10_causal_alchemy?: number | null
+          level_11_atmic_identity?: number | null
+          level_12_atmic_love?: number | null
+          level_13_creator?: number | null
+          level_2_physical_structure?: number | null
+          level_3_etheric_prana?: number | null
+          level_4_etheric_meridians?: number | null
+          level_5_astral_emotions?: number | null
+          level_6_astral_thoughts?: number | null
+          level_7_mental_time?: number | null
+          level_8_mental_constructs?: number | null
+          level_9_causal_blueprints?: number | null
+          patient_data?: Json | null
+          patient_id?: string | null
+          tested_potency?: string | null
+          updated_at?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
       harmonization_sessions: {
         Row: {
           completed_at: string | null
@@ -166,7 +253,97 @@ export type Database = {
           },
         ]
       }
+      harmonization_sessions_v2: {
+        Row: {
+          completed_at: string | null
+          copen_rate: string | null
+          created_at: string
+          duration_seconds: number
+          id: string
+          job_last_heartbeat: string | null
+          job_started_at: string | null
+          patient_id: string
+          progress: number | null
+          remaining_seconds: number | null
+          started_at: string | null
+          status: string
+          tested_potency: string | null
+          updated_at: string
+          user_id: string | null
+          word: string
+        }
+        Insert: {
+          completed_at?: string | null
+          copen_rate?: string | null
+          created_at?: string
+          duration_seconds: number
+          id?: string
+          job_last_heartbeat?: string | null
+          job_started_at?: string | null
+          patient_id: string
+          progress?: number | null
+          remaining_seconds?: number | null
+          started_at?: string | null
+          status?: string
+          tested_potency?: string | null
+          updated_at?: string
+          user_id?: string | null
+          word: string
+        }
+        Update: {
+          completed_at?: string | null
+          copen_rate?: string | null
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          job_last_heartbeat?: string | null
+          job_started_at?: string | null
+          patient_id?: string
+          progress?: number | null
+          remaining_seconds?: number | null
+          started_at?: string | null
+          status?: string
+          tested_potency?: string | null
+          updated_at?: string
+          user_id?: string | null
+          word?: string
+        }
+        Relationships: []
+      }
       harmonization_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          patient_id: string
+          sessions: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          patient_id: string
+          sessions: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          patient_id?: string
+          sessions?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      harmonization_templates_v2: {
         Row: {
           created_at: string
           description: string | null
@@ -235,6 +412,45 @@ export type Database = {
           last_name?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      patients_v2: {
+        Row: {
+          birth_date: string
+          birth_place: string
+          created_at: string
+          first_name: string
+          id: string
+          image_signature: string | null
+          image_signature_active: boolean | null
+          last_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          birth_date: string
+          birth_place: string
+          created_at?: string
+          first_name: string
+          id?: string
+          image_signature?: string | null
+          image_signature_active?: boolean | null
+          last_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          birth_date?: string
+          birth_place?: string
+          created_at?: string
+          first_name?: string
+          id?: string
+          image_signature?: string | null
+          image_signature_active?: boolean | null
+          last_name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
