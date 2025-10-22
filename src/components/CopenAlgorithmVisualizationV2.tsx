@@ -757,6 +757,14 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
         analysisEnabled={analysisEnabled}
       />
 
+      {/* Hardware-Algorithmen Globale Einstellungen */}
+      <HardwareAlgorithmSettings
+        rateGeneratorEnabled={rateGeneratorEnabled}
+        analysisEnabled={analysisEnabled}
+        onRateGeneratorChange={handleRateGeneratorChange}
+        onAnalysisChange={handleAnalysisChange}
+      />
+
       {/* Kozyrev-Indikatoren */}
       {kozyrevEnabled && selectedPatient && (
         <KozyrevIndicators 
@@ -1075,14 +1083,6 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           onReactivate={reactivateSession}
         />
       )}
-
-      {/* Hardware-Algorithmen Settings */}
-      <HardwareAlgorithmSettings
-        rateGeneratorEnabled={rateGeneratorEnabled}
-        analysisEnabled={analysisEnabled}
-        onRateGeneratorChange={handleRateGeneratorChange}
-        onAnalysisChange={handleAnalysisChange}
-      />
 
       {showCalculation && (
         <div className="space-y-6">
