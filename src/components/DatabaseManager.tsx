@@ -65,6 +65,11 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [batchUnit, setBatchUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
   const [batchContinuousMode, setBatchContinuousMode] = useState(false);
   
+  // Impuls/Pausen-Modus
+  const [pulsePauseActive, setPulsePauseActive] = useState(false);
+  const [pulseSeconds, setPulseSeconds] = useState<number>(3);
+  const [pauseSeconds, setPauseSeconds] = useState<number>(7);
+  
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
   const [analyzingImage, setAnalyzingImage] = useState(false);
@@ -916,40 +921,85 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
               {/* Harmonisierungs-Optionen in eigener Zeile */}
               {selectedForHarmonization.size > 0 && (
-                <div className="flex items-end gap-2 p-3 bg-muted/50 rounded-lg border">
-                  <div>
-                    <Label className="text-xs">Dauer</Label>
-                    <Input
-                      type="number"
-                      value={batchDuration}
-                      onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
-                      min={1}
-                      className="h-9 w-24"
-                    />
+                <div className="space-y-2 p-3 bg-muted/50 rounded-lg border">
+                  <div className="flex items-end gap-2">
+                    <div>
+                      <Label className="text-xs">Dauer</Label>
+                      <Input
+                        type="number"
+                        value={batchDuration}
+                        onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
+                        min={1}
+                        className="h-9 w-24"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs">Einheit</Label>
+                      <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
+                        <SelectTrigger className="h-9 w-28">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seconds">Sekunden</SelectItem>
+                          <SelectItem value="minutes">Minuten</SelectItem>
+                          <SelectItem value="hours">Stunden</SelectItem>
+                          <SelectItem value="days">Tage</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="continuous-harmonization"
+                        checked={batchContinuousMode}
+                        onCheckedChange={(checked) => setBatchContinuousMode(checked === true)}
+                      />
+                      <Label htmlFor="continuous-harmonization" className="text-xs cursor-pointer">
+                        Dauerbesendung
+                      </Label>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs">Einheit</Label>
-                    <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
-                      <SelectTrigger className="h-9 w-28">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="seconds">Sekunden</SelectItem>
-                        <SelectItem value="minutes">Minuten</SelectItem>
-                        <SelectItem value="hours">Stunden</SelectItem>
-                        <SelectItem value="days">Tage</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="continuous-harmonization"
-                      checked={batchContinuousMode}
-                      onCheckedChange={(checked) => setBatchContinuousMode(checked === true)}
-                    />
-                    <Label htmlFor="continuous-harmonization" className="text-xs cursor-pointer">
-                      Dauerbesendung
-                    </Label>
+                  
+                  {/* Impuls/Pausen-Modus */}
+                  <div className="flex items-end gap-2 pt-2 border-t">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="pulse-pause-mode"
+                        checked={pulsePauseActive}
+                        onCheckedChange={(checked) => setPulsePauseActive(checked === true)}
+                      />
+                      <Label htmlFor="pulse-pause-mode" className="text-xs cursor-pointer">
+                        Impuls/Pausen-Modus
+                      </Label>
+                    </div>
+                    {pulsePauseActive && (
+                      <>
+                        <div>
+                          <Label className="text-xs">Impuls (Sek.)</Label>
+                          <Input
+                            type="number"
+                            value={pulseSeconds}
+                            onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
+                            min={1}
+                            max={60}
+                            className="h-9 w-20"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Pause (Sek.)</Label>
+                          <Input
+                            type="number"
+                            value={pauseSeconds}
+                            onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
+                            min={1}
+                            max={60}
+                            className="h-9 w-20"
+                          />
+                        </div>
+                        <div className="text-xs text-muted-foreground self-center">
+                          Zyklus: {pulseSeconds}s / {pauseSeconds}s
+                        </div>
+                      </>
+                    )}
                   </div>
                   <Button 
                     onClick={async () => {
@@ -982,6 +1032,9 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         duration_seconds: durationSeconds,
                         remaining_seconds: durationSeconds,
                         status: 'pending' as const,
+                        pulse_seconds: pulsePauseActive ? pulseSeconds : null,
+                        pause_seconds: pulsePauseActive ? pauseSeconds : null,
+                        pulse_pause_active: pulsePauseActive,
                       }));
 
                       const { error } = await supabase

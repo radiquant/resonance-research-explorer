@@ -145,8 +145,14 @@ function chargeRates(
 
 /**
  * Potenz- und Level-Zuweisung mit automatischer Potenzreihen-Ermittlung
- * DefaultPotencyAssigner.assignPotency() + assignLevels()
- * Erweitert um alle Potenzreihen (D, C, LM, M, F1, F2, F3)
+ * Verfeinert gemäß Potenzreihen-Spezifikation:
+ * - D (Dezimal 1-100)
+ * - C (Centesimal 1-200)
+ * - LM (50-Millesimal 1-30)
+ * - M (Millennial 1-100MM = 1-100.000.000)
+ * - F1 (1MM - 10C-MMMM = 1.000.000 - 10.000.000.000.000)
+ * - F2 (100MM - 1CC-MMMM = 100.000.000 - 1.000.000.000.000.000)
+ * - F3 (10C-MM - 10MMMMMM = 10.000.000.000 - 10.000.000.000.000.000)
  */
 function assignPotencyAndLevels(rateName: string): {
   potency: number;
@@ -154,8 +160,8 @@ function assignPotencyAndLevels(rateName: string): {
   levelDistribution: Record<number, number>;
   dominantLevel: number;
 } {
-  // 1. Potenz = erste gewichtete Ebene (1-12)
-  const potency = weightedPickLevel();
+  // 1. Gewichtete Ebene ermitteln (1-12)
+  const levelValue = weightedPickLevel();
   
   // 2. Potenzreihe automatisch ermitteln (gewichtet nach Resonanzstärke)
   const potencyTypes: Array<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'> = ['D', 'C', 'LM', 'M', 'F1', 'F2', 'F3'];
@@ -174,7 +180,55 @@ function assignPotencyAndLevels(rateName: string): {
     }
   }
   
-  // 3. Level-Verteilung: 100 Ziehungen (1-12)
+  // 3. Realistische Potenzwerte gemäß Spezifikation generieren
+  let actualPotency: number;
+  
+  switch (selectedPotencyType) {
+    case 'D':
+      // Dezimal: 1-100
+      actualPotency = Math.floor(Math.random() * 100) + 1;
+      break;
+    case 'C':
+      // Centesimal: 1-200
+      actualPotency = Math.floor(Math.random() * 200) + 1;
+      break;
+    case 'LM':
+      // 50-Millesimal: 1-30
+      actualPotency = Math.floor(Math.random() * 30) + 1;
+      break;
+    case 'M':
+      // Millennial: 1 bis 100MM (1-100.000.000)
+      // Logarithmisch verteilt für realistische Werte
+      const mExponent = Math.random() * 8; // 0-8 (10^0 bis 10^8)
+      actualPotency = Math.floor(Math.pow(10, mExponent));
+      actualPotency = Math.min(actualPotency, 100000000);
+      break;
+    case 'F1':
+      // F1: 1MM - 10C-MMMM (1.000.000 - 10.000.000.000.000)
+      // Logarithmisch: 10^6 bis 10^13
+      const f1Exponent = 6 + Math.random() * 7; // 6-13
+      actualPotency = Math.floor(Math.pow(10, f1Exponent));
+      actualPotency = Math.min(actualPotency, 10000000000000);
+      break;
+    case 'F2':
+      // F2: 100MM - 1CC-MMMM (100.000.000 - 1.000.000.000.000.000)
+      // Logarithmisch: 10^8 bis 10^15
+      const f2Exponent = 8 + Math.random() * 7; // 8-15
+      actualPotency = Math.floor(Math.pow(10, f2Exponent));
+      actualPotency = Math.min(actualPotency, 1000000000000000);
+      break;
+    case 'F3':
+      // F3: 10C-MM - 10MMMMMM (10.000.000.000 - 10.000.000.000.000.000)
+      // Logarithmisch: 10^10 bis 10^16
+      const f3Exponent = 10 + Math.random() * 6; // 10-16
+      actualPotency = Math.floor(Math.pow(10, f3Exponent));
+      actualPotency = Math.min(actualPotency, 10000000000000000);
+      break;
+    default:
+      actualPotency = 1;
+  }
+  
+  // 4. Level-Verteilung: 100 Ziehungen (1-12)
   const levelDistribution: Record<number, number> = {};
   for (let i = 1; i <= 12; i++) {
     levelDistribution[i] = 0;
@@ -185,9 +239,9 @@ function assignPotencyAndLevels(rateName: string): {
     levelDistribution[level]++;
   }
   
-  // 4. Dominante Ebene = Maximum der Verteilung (1-12)
-  let dominantLevel = potency;
-  let maxCount = levelDistribution[potency];
+  // 5. Dominante Ebene = Maximum der Verteilung (1-12)
+  let dominantLevel = levelValue;
+  let maxCount = levelDistribution[levelValue];
   
   for (let level = 1; level <= 12; level++) {
     if (levelDistribution[level] > maxCount) {
@@ -196,9 +250,19 @@ function assignPotencyAndLevels(rateName: string): {
     }
   }
   
-  console.log(`[Level Debug] ${rateName}: Potenz=${potency}, Typ=${selectedPotencyType}, Dominant=${dominantLevel}, Verteilung=`, levelDistribution);
+  // Formatierte Ausgabe mit Potenzwert
+  const potencyDisplay = selectedPotencyType === 'D' || selectedPotencyType === 'C' || selectedPotencyType === 'LM' 
+    ? actualPotency 
+    : actualPotency.toExponential(2);
   
-  return { potency, potencyType: selectedPotencyType, levelDistribution, dominantLevel };
+  console.log(`[Potenz Debug] ${rateName}: Potenz=${actualPotency} (${potencyDisplay}), Typ=${selectedPotencyType}, Dominant=${dominantLevel}`);
+  
+  return { 
+    potency: actualPotency, 
+    potencyType: selectedPotencyType, 
+    levelDistribution, 
+    dominantLevel 
+  };
 }
 
 /**

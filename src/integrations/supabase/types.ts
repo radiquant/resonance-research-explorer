@@ -263,7 +263,10 @@ export type Database = {
           job_last_heartbeat: string | null
           job_started_at: string | null
           patient_id: string
+          pause_seconds: number | null
           progress: number | null
+          pulse_pause_active: boolean | null
+          pulse_seconds: number | null
           remaining_seconds: number | null
           started_at: string | null
           status: string
@@ -281,7 +284,10 @@ export type Database = {
           job_last_heartbeat?: string | null
           job_started_at?: string | null
           patient_id: string
+          pause_seconds?: number | null
           progress?: number | null
+          pulse_pause_active?: boolean | null
+          pulse_seconds?: number | null
           remaining_seconds?: number | null
           started_at?: string | null
           status?: string
@@ -299,7 +305,10 @@ export type Database = {
           job_last_heartbeat?: string | null
           job_started_at?: string | null
           patient_id?: string
+          pause_seconds?: number | null
           progress?: number | null
+          pulse_pause_active?: boolean | null
+          pulse_seconds?: number | null
           remaining_seconds?: number | null
           started_at?: string | null
           status?: string

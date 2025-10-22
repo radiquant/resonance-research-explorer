@@ -14,6 +14,9 @@ interface HarmonizationSession {
   remaining_seconds: number | null;
   job_started_at: string | null;
   job_last_heartbeat: string | null;
+  pulse_seconds: number | null;
+  pause_seconds: number | null;
+  pulse_pause_active: boolean | null;
 }
 
 serve(async (req) => {
@@ -101,8 +104,26 @@ serve(async (req) => {
           let elapsed = Math.floor((now.getTime() - last.getTime()) / 1000);
           if (!Number.isFinite(elapsed) || elapsed < 1) elapsed = 1;
 
+          // Berücksichtige Impuls/Pausen-Modus
+          let effectiveElapsed = elapsed;
+          if (session.pulse_pause_active && session.pulse_seconds && session.pause_seconds) {
+            const cycleLength = session.pulse_seconds + session.pause_seconds;
+            const cycles = Math.floor(elapsed / cycleLength);
+            const remainder = elapsed % cycleLength;
+            
+            // Nur die Impuls-Zeiten zählen als effektive Zeit
+            effectiveElapsed = cycles * session.pulse_seconds;
+            if (remainder <= session.pulse_seconds) {
+              effectiveElapsed += remainder;
+            } else {
+              effectiveElapsed += session.pulse_seconds;
+            }
+            
+            console.log(`⚡ Impuls/Pausen-Modus für ${session.id}: ${elapsed}s real → ${effectiveElapsed}s effektiv (Impuls: ${session.pulse_seconds}s, Pause: ${session.pause_seconds}s)`);
+          }
+
           const prevRemaining = session.remaining_seconds ?? session.duration_seconds;
-          const remaining = Math.max(0, (prevRemaining || 0) - elapsed);
+          const remaining = Math.max(0, (prevRemaining || 0) - effectiveElapsed);
           const duration = session.duration_seconds || 1;
           const progress = Math.min(100, Math.floor(((duration - remaining) / duration) * 100));
 
