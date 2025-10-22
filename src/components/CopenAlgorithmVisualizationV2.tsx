@@ -1165,27 +1165,59 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
                       </div>
 
                       {/* Impuls/Pausen-Anzeige */}
-                      {harm.pulsePauseActive && harm.pulseSeconds && harm.pauseSeconds && (
-                        <div className="bg-background/70 p-1.5 rounded border border-primary/30">
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1">
-                            <span>⚡ Impuls/Pause Modus</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="flex-1 bg-green-500/20 h-2 rounded-sm relative overflow-hidden">
-                              <div className={`h-full bg-green-500 ${harm.status === 'running' ? 'animate-pulse' : ''}`} 
-                                   style={{ width: '100%' }}>
-                              </div>
+                      {harm.pulsePauseActive && harm.pulseSeconds && harm.pauseSeconds && (() => {
+                        // Berechne den aktuellen Zyklus-Status
+                        const cycleLength = harm.pulseSeconds + harm.pauseSeconds;
+                        const cyclePosition = harm.elapsedTime % cycleLength;
+                        const isInPulsePhase = cyclePosition < harm.pulseSeconds;
+                        
+                        return (
+                          <div className="bg-background/70 p-1.5 rounded border border-primary/30">
+                            <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1">
+                              <span>⚡ Impuls/Pause Modus</span>
+                              <span className="font-bold ml-auto">
+                                {harm.status === 'running' && (
+                                  isInPulsePhase 
+                                    ? <span className="text-green-600">● IMPULS</span>
+                                    : <span className="text-orange-600">● PAUSE</span>
+                                )}
+                              </span>
                             </div>
-                            <span className="text-[9px] font-mono">{formatPulseTime(harm.pulseSeconds)}</span>
-                            <div className="flex-1 bg-orange-500/20 h-2 rounded-sm relative overflow-hidden">
-                              <div className={`h-full bg-orange-500 ${harm.status === 'running' ? 'animate-pulse' : ''}`} 
-                                   style={{ width: '100%' }}>
+                            <div className="flex items-center gap-1">
+                              <div className="flex-1 h-3 rounded relative overflow-hidden border border-green-500/30">
+                                <div 
+                                  className={`h-full transition-all duration-300 ${
+                                    harm.status === 'running' && isInPulsePhase
+                                      ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]' 
+                                      : 'bg-green-500/20'
+                                  }`} 
+                                  style={{ width: '100%' }}>
+                                </div>
                               </div>
+                              <span className={`text-[9px] font-mono font-bold ${
+                                harm.status === 'running' && isInPulsePhase ? 'text-green-600' : 'text-muted-foreground'
+                              }`}>
+                                {formatPulseTime(harm.pulseSeconds)}
+                              </span>
+                              <div className="flex-1 h-3 rounded relative overflow-hidden border border-orange-500/30">
+                                <div 
+                                  className={`h-full transition-all duration-300 ${
+                                    harm.status === 'running' && !isInPulsePhase
+                                      ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.8)]' 
+                                      : 'bg-orange-500/20'
+                                  }`} 
+                                  style={{ width: '100%' }}>
+                                </div>
+                              </div>
+                              <span className={`text-[9px] font-mono font-bold ${
+                                harm.status === 'running' && !isInPulsePhase ? 'text-orange-600' : 'text-muted-foreground'
+                              }`}>
+                                {formatPulseTime(harm.pauseSeconds)}
+                              </span>
                             </div>
-                            <span className="text-[9px] font-mono">{formatPulseTime(harm.pauseSeconds)}</span>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Status - kompakt */}
                       <div className="text-center text-xs font-semibold">
