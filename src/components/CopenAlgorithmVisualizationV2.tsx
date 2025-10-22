@@ -768,6 +768,14 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     return duration;
   };
 
+  // Formatiert Sekunden intelligent zu lesbarer Form (z.B. "21s" oder "2m")
+  const formatPulseTime = (seconds: number): string => {
+    if (seconds >= 60 && seconds % 60 === 0) {
+      return `${seconds / 60}m`;
+    }
+    return `${seconds}s`;
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       {/* Patientenverwaltung V2 */}
@@ -1168,13 +1176,13 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
                                    style={{ width: '100%' }}>
                               </div>
                             </div>
-                            <span className="text-[9px] font-mono">{harm.pulseSeconds}s</span>
+                            <span className="text-[9px] font-mono">{formatPulseTime(harm.pulseSeconds)}</span>
                             <div className="flex-1 bg-orange-500/20 h-2 rounded-sm relative overflow-hidden">
                               <div className={`h-full bg-orange-500 ${harm.status === 'running' ? 'animate-pulse' : ''}`} 
                                    style={{ width: '100%' }}>
                               </div>
                             </div>
-                            <span className="text-[9px] font-mono">{harm.pauseSeconds}s</span>
+                            <span className="text-[9px] font-mono">{formatPulseTime(harm.pauseSeconds)}</span>
                           </div>
                         </div>
                       )}
