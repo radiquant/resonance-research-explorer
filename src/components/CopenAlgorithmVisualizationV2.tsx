@@ -1178,8 +1178,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       {/* Archiv */}
       {selectedPatient && (
         <HarmonizationArchiveCloud 
-          patientId={selectedPatient.id} 
-          onReactivate={reactivateSession}
+          patientId={selectedPatient.id}
         />
       )}
 

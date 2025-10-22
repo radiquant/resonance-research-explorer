@@ -69,6 +69,9 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   const [pulsePauseActive, setPulsePauseActive] = useState(false);
   const [pulseSeconds, setPulseSeconds] = useState<number>(3);
   const [pauseSeconds, setPauseSeconds] = useState<number>(7);
+
+  // Optionaler Fokus für DB-Analyse
+  const [focusWord, setFocusWord] = useState<string>('');
   
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageSignature, setImageSignature] = useState<string>('');
@@ -324,7 +327,19 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     }
 
     setIsAnalyzing(true);
-    const words = parseImportData(importData);
+    let words = parseImportData(importData);
+    
+    // Wenn Fokus-Wort gesetzt, füge es am Anfang hinzu
+    if (focusWord.trim()) {
+      const trimmedFocus = focusWord.trim();
+      // Entferne Fokus-Wort aus Liste falls bereits vorhanden und füge am Anfang ein
+      words = [trimmedFocus, ...words.filter(w => w.toLowerCase() !== trimmedFocus.toLowerCase())];
+      toast({
+        title: "ℹ️ Fokus-Analyse",
+        description: `Analyse mit Fokus auf: ${trimmedFocus}`,
+      });
+    }
+    
     const clientRate = calculateClientRate(selectedPatient);
     
     // Erstelle Rates-Array für den Java-Algorithmus
@@ -767,6 +782,19 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 </Button>
               )}
             </div>
+          </div>
+
+          <div>
+            <Label>Fokus-Wortenergie (optional)</Label>
+            <Input
+              value={focusWord}
+              onChange={(e) => setFocusWord(e.target.value)}
+              placeholder="z.B. Gelenkschmerzen, Angst, Migräne..."
+              className="font-medium"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Optionale Referenz zur Analyse - wird priorisiert analysiert
+            </p>
           </div>
 
           <div className="border-t pt-4 space-y-2">

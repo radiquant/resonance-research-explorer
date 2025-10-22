@@ -5,33 +5,58 @@ import { Archive, Trash2, Eye, Play, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface HarmonizationSession {
   id: string;
   user_id: string;
+  patient_id: string;
   word: string;
+  copen_rate: string | null;
   tested_potency: string | null;
   duration_seconds: number;
   status: string;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+  pulse_seconds?: number | null;
+  pause_seconds?: number | null;
+  pulse_pause_active?: boolean | null;
 }
 
 interface HarmonizationArchiveCloudProps {
   patientId?: string;
-  onReactivate?: (session: HarmonizationSession) => void;
 }
 
 const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({ 
-  patientId, 
-  onReactivate 
+  patientId
 }) => {
   const [sessions, setSessions] = useState<HarmonizationSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Reaktivierungs-Dialog State
+  const [reactivateDialogOpen, setReactivateDialogOpen] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<HarmonizationSession | null>(null);
+  const [reactivateDuration, setReactivateDuration] = useState<number>(10);
+  const [reactivateUnit, setReactivateUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
+  const [reactivateContinuous, setReactivateContinuous] = useState(false);
+  const [reactivatePulsePauseActive, setReactivatePulsePauseActive] = useState(false);
+  const [reactivatePulseSeconds, setReactivatePulseSeconds] = useState<number>(3);
+  const [reactivatePauseSeconds, setReactivatePauseSeconds] = useState<number>(7);
+  const [isReactivating, setIsReactivating] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -107,6 +132,65 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
         title: "Fehler",
         description: error.message,
       });
+    }
+  };
+
+  const openReactivateDialog = (session: HarmonizationSession) => {
+    setSelectedSession(session);
+    setReactivateDialogOpen(true);
+  };
+
+  const getDurationInSeconds = (duration: number, unit: 'seconds' | 'minutes' | 'hours' | 'days') => {
+    if (unit === 'days') return duration * 86400;
+    if (unit === 'hours') return duration * 3600;
+    if (unit === 'minutes') return duration * 60;
+    return duration;
+  };
+
+  const handleReactivate = async () => {
+    if (!selectedSession || !user) return;
+
+    setIsReactivating(true);
+    try {
+      const durationSeconds = reactivateContinuous ? 0 : getDurationInSeconds(reactivateDuration, reactivateUnit);
+
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .insert({
+          user_id: user.id,
+          patient_id: selectedSession.patient_id,
+          word: selectedSession.word,
+          copen_rate: selectedSession.copen_rate,
+          tested_potency: selectedSession.tested_potency,
+          duration_seconds: durationSeconds,
+          status: 'pending',
+          pulse_seconds: reactivatePulsePauseActive ? reactivatePulseSeconds : null,
+          pause_seconds: reactivatePulsePauseActive ? reactivatePauseSeconds : null,
+          pulse_pause_active: reactivatePulsePauseActive,
+        });
+
+      if (error) throw error;
+
+      // Invoke Worker
+      await supabase.functions.invoke('harmonization-worker', {
+        body: { action: 'tick' }
+      });
+
+      toast({
+        title: "Erfolg",
+        description: "Harmonisierung reaktiviert und gestartet",
+      });
+
+      setReactivateDialogOpen(false);
+      setSelectedSession(null);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Fehler",
+        description: error.message,
+      });
+    } finally {
+      setIsReactivating(false);
     }
   };
 
@@ -191,16 +275,14 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
                     )}
                   </div>
                   <div className="flex gap-1">
-                    {onReactivate && (
-                      <Button
-                        onClick={() => onReactivate(session)}
-                        variant="ghost"
-                        size="sm"
-                        title="Harmonisierung reaktivieren"
-                      >
-                        <Play className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <Button
+                      onClick={() => openReactivateDialog(session)}
+                      variant="ghost"
+                      size="sm"
+                      title="Harmonisierung reaktivieren"
+                    >
+                      <Play className="h-4 w-4" />
+                    </Button>
                     <Button
                       onClick={() => setExpandedId(expandedId === session.id ? null : session.id)}
                       variant="ghost"
@@ -222,6 +304,106 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
           </div>
         )}
       </CardContent>
+
+      {/* Reaktivierungs-Dialog */}
+      <Dialog open={reactivateDialogOpen} onOpenChange={setReactivateDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Harmonisierung reaktivieren</DialogTitle>
+          </DialogHeader>
+          
+          {selectedSession && (
+            <div className="space-y-4">
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="font-medium">{selectedSession.word}</div>
+                <div className="text-sm text-muted-foreground">
+                  {selectedSession.tested_potency && `Potenz: ${selectedSession.tested_potency}`}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-[auto_1fr] gap-3 items-center">
+                <Label className="text-right">Dauer:</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={reactivateDuration}
+                    onChange={(e) => setReactivateDuration(Number(e.target.value))}
+                    disabled={reactivateContinuous}
+                    className="w-20 h-8"
+                    min="1"
+                  />
+                  <Select
+                    value={reactivateUnit}
+                    onValueChange={(v: any) => setReactivateUnit(v)}
+                    disabled={reactivateContinuous}
+                  >
+                    <SelectTrigger className="w-32 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seconds">Sekunden</SelectItem>
+                      <SelectItem value="minutes">Minuten</SelectItem>
+                      <SelectItem value="hours">Stunden</SelectItem>
+                      <SelectItem value="days">Tage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Label className="text-right">Dauersendung:</Label>
+                <Checkbox
+                  checked={reactivateContinuous}
+                  onCheckedChange={(checked) => setReactivateContinuous(!!checked)}
+                />
+
+                <Label className="text-right">Impuls/Pause:</Label>
+                <Checkbox
+                  checked={reactivatePulsePauseActive}
+                  onCheckedChange={(checked) => setReactivatePulsePauseActive(!!checked)}
+                />
+
+                {reactivatePulsePauseActive && (
+                  <>
+                    <Label className="text-right">Impuls (s):</Label>
+                    <Input
+                      type="number"
+                      value={reactivatePulseSeconds}
+                      onChange={(e) => setReactivatePulseSeconds(Number(e.target.value))}
+                      className="w-20 h-8"
+                      min="1"
+                    />
+
+                    <Label className="text-right">Pause (s):</Label>
+                    <Input
+                      type="number"
+                      value={reactivatePauseSeconds}
+                      onChange={(e) => setReactivatePauseSeconds(Number(e.target.value))}
+                      className="w-20 h-8"
+                      min="1"
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setReactivateDialogOpen(false)}
+              disabled={isReactivating}
+            >
+              Abbrechen
+            </Button>
+            <Button
+              onClick={handleReactivate}
+              disabled={isReactivating}
+            >
+              {isReactivating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Reaktivieren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
