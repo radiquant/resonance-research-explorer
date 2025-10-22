@@ -56,6 +56,8 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
   const [reactivatePulsePauseActive, setReactivatePulsePauseActive] = useState(false);
   const [reactivatePulseSeconds, setReactivatePulseSeconds] = useState<number>(21);
   const [reactivatePauseSeconds, setReactivatePauseSeconds] = useState<number>(42);
+  const [reactivatePulseUnit, setReactivatePulseUnit] = useState<'seconds' | 'minutes'>('seconds');
+  const [reactivatePauseUnit, setReactivatePauseUnit] = useState<'seconds' | 'minutes'>('seconds');
   const [isReactivating, setIsReactivating] = useState(false);
 
   useEffect(() => {
@@ -154,6 +156,10 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
     try {
       const durationSeconds = reactivateContinuous ? 0 : getDurationInSeconds(reactivateDuration, reactivateUnit);
 
+      // Konvertiere Impuls und Pause in Sekunden
+      const pulseInSeconds = reactivatePulsePauseActive ? (reactivatePulseUnit === 'minutes' ? reactivatePulseSeconds * 60 : reactivatePulseSeconds) : null;
+      const pauseInSeconds = reactivatePulsePauseActive ? (reactivatePauseUnit === 'minutes' ? reactivatePauseSeconds * 60 : reactivatePauseSeconds) : null;
+
       const { error } = await supabase
         .from('harmonization_sessions_v2')
         .insert({
@@ -164,8 +170,8 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
           tested_potency: selectedSession.tested_potency,
           duration_seconds: durationSeconds,
           status: 'pending',
-          pulse_seconds: reactivatePulsePauseActive ? reactivatePulseSeconds : null,
-          pause_seconds: reactivatePulsePauseActive ? reactivatePauseSeconds : null,
+          pulse_seconds: pulseInSeconds,
+          pause_seconds: pauseInSeconds,
           pulse_pause_active: reactivatePulsePauseActive,
         });
 
@@ -363,23 +369,47 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
 
                 {reactivatePulsePauseActive && (
                   <>
-                    <Label className="text-right">Impuls (s):</Label>
-                    <Input
-                      type="number"
-                      value={reactivatePulseSeconds}
-                      onChange={(e) => setReactivatePulseSeconds(Number(e.target.value))}
-                      className="w-20 h-8"
-                      min="1"
-                    />
+                    <Label className="text-right">Impuls:</Label>
+                    <div className="flex gap-1">
+                      <Input
+                        type="number"
+                        value={reactivatePulseSeconds}
+                        onChange={(e) => setReactivatePulseSeconds(Number(e.target.value))}
+                        className="w-16 h-8"
+                        min="1"
+                        max="999"
+                      />
+                      <Select value={reactivatePulseUnit} onValueChange={(v: any) => setReactivatePulseUnit(v)}>
+                        <SelectTrigger className="w-20 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seconds">Sek.</SelectItem>
+                          <SelectItem value="minutes">Min.</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                    <Label className="text-right">Pause (s):</Label>
-                    <Input
-                      type="number"
-                      value={reactivatePauseSeconds}
-                      onChange={(e) => setReactivatePauseSeconds(Number(e.target.value))}
-                      className="w-20 h-8"
-                      min="1"
-                    />
+                    <Label className="text-right">Pause:</Label>
+                    <div className="flex gap-1">
+                      <Input
+                        type="number"
+                        value={reactivatePauseSeconds}
+                        onChange={(e) => setReactivatePauseSeconds(Number(e.target.value))}
+                        className="w-16 h-8"
+                        min="1"
+                        max="999"
+                      />
+                      <Select value={reactivatePauseUnit} onValueChange={(v: any) => setReactivatePauseUnit(v)}>
+                        <SelectTrigger className="w-20 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seconds">Sek.</SelectItem>
+                          <SelectItem value="minutes">Min.</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </>
                 )}
               </div>

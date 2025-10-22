@@ -100,6 +100,8 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   const [pulsePauseActive, setPulsePauseActive] = useState(false);
   const [pulseSeconds, setPulseSeconds] = useState(21);
   const [pauseSeconds, setPauseSeconds] = useState(42);
+  const [pulseUnit, setPulseUnit] = useState<'seconds' | 'minutes'>('seconds');
+  const [pauseUnit, setPauseUnit] = useState<'seconds' | 'minutes'>('seconds');
 
   const { toast } = useToast();
   const restoredToastShownRef = React.useRef(false);
@@ -619,6 +621,11 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       const harmonizationWord = autoPotenzDirektive;
 
       const durationSeconds = continuousMode ? 315360000 : getDurationInSeconds(harmonizationDuration, harmonizationUnit);
+      
+      // Konvertiere Impuls und Pause in Sekunden
+      const pulseInSeconds = pulsePauseActive ? (pulseUnit === 'minutes' ? pulseSeconds * 60 : pulseSeconds) : null;
+      const pauseInSeconds = pulsePauseActive ? (pauseUnit === 'minutes' ? pauseSeconds * 60 : pauseSeconds) : null;
+      
       const { data: inserted, error } = await supabase
         .from('harmonization_sessions_v2')
         .insert({
@@ -630,8 +637,8 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           duration_seconds: durationSeconds,
           remaining_seconds: durationSeconds,
           status: 'pending',
-          pulse_seconds: pulsePauseActive ? pulseSeconds : null,
-          pause_seconds: pulsePauseActive ? pauseSeconds : null,
+          pulse_seconds: pulseInSeconds,
+          pause_seconds: pauseInSeconds,
           pulse_pause_active: pulsePauseActive,
         })
         .select('*')
@@ -1020,32 +1027,54 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
                     Impuls/Pausen-Modus
                   </Label>
                 </div>
-                {pulsePauseActive && (
+              {pulsePauseActive && (
                   <>
                     <div>
-                      <Label className="text-xs">Impuls (Sek.)</Label>
-                      <Input
-                        type="number"
-                        value={pulseSeconds}
-                        onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
-                        min={1}
-                        max={60}
-                        className="h-9 w-20"
-                      />
+                      <Label className="text-xs">Impuls</Label>
+                      <div className="flex gap-1">
+                        <Input
+                          type="number"
+                          value={pulseSeconds}
+                          onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
+                          min={1}
+                          max={999}
+                          className="h-9 w-16"
+                        />
+                        <Select value={pulseUnit} onValueChange={(v: any) => setPulseUnit(v)}>
+                          <SelectTrigger className="h-9 w-20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="seconds">Sek.</SelectItem>
+                            <SelectItem value="minutes">Min.</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div>
-                      <Label className="text-xs">Pause (Sek.)</Label>
-                      <Input
-                        type="number"
-                        value={pauseSeconds}
-                        onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
-                        min={1}
-                        max={60}
-                        className="h-9 w-20"
-                      />
+                      <Label className="text-xs">Pause</Label>
+                      <div className="flex gap-1">
+                        <Input
+                          type="number"
+                          value={pauseSeconds}
+                          onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
+                          min={1}
+                          max={999}
+                          className="h-9 w-16"
+                        />
+                        <Select value={pauseUnit} onValueChange={(v: any) => setPauseUnit(v)}>
+                          <SelectTrigger className="h-9 w-20">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="seconds">Sek.</SelectItem>
+                            <SelectItem value="minutes">Min.</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                     <div className="text-xs text-muted-foreground self-center">
-                      Zyklus: {pulseSeconds}s / {pauseSeconds}s
+                      Zyklus: {pulseSeconds}{pulseUnit === 'minutes' ? 'm' : 's'} / {pauseSeconds}{pauseUnit === 'minutes' ? 'm' : 's'}
                     </div>
                   </>
                 )}
