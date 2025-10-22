@@ -780,6 +780,12 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
             <Zap className="h-6 w-6" />
             Bruce Copen Algorithmus V2
           </CardTitle>
+          {selectedPatient && (
+            <p className="text-center text-sm font-semibold text-primary mt-2">
+              <User className="h-4 w-4 inline mr-1" />
+              Aktiver Klient: {selectedPatient.first_name} {selectedPatient.last_name}
+            </p>
+          )}
           <p className="text-center text-sm text-muted-foreground mt-2">
             ✓ Authentischer Algorithmus • ✓ Automatische Potenzermittlung • ✓ Parallele Harmonisierungen • ✓ Separate V2-Datenbank
           </p>
@@ -936,6 +942,12 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
             <Zap className="h-6 w-6" />
             Parallele Harmonisierungen V2
           </CardTitle>
+          {selectedPatient && (
+            <p className="text-center text-sm font-semibold text-primary mt-2">
+              <User className="h-4 w-4 inline mr-1" />
+              Aktiver Klient: {selectedPatient.first_name} {selectedPatient.last_name}
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Neue Harmonisierung starten */}

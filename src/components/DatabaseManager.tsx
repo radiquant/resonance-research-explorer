@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2, Archive, Zap } from 'lucide-react';
+import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2, Archive, Zap, User } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, type CopenRateResult } from '@/utils/copenRateGenerator';
@@ -714,6 +714,12 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             <Database className="h-5 w-5" />
             Datenbank-Import & Resonanz-Analyse
           </CardTitle>
+          {selectedPatient && (
+            <p className="text-sm font-semibold text-primary mt-2">
+              <User className="h-4 w-4 inline mr-1" />
+              Aktiver Klient: {selectedPatient.first_name} {selectedPatient.last_name}
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm">
