@@ -649,9 +649,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
 
       toast({
         title: "Harmonisierung V2 gestartet",
-        description: autoPotency 
-          ? `Auto-Potenz-Projektion aktiv • ${cleanWord}`
-          : `${cleanWord} ${potencyType}${effectivePotency}`,
+        description: autoPotency ? `Auto-Potenz-Projektion aktiv • ${cleanWord}` : `${cleanWord}`,
       });
     } catch (err: any) {
       console.error('Start-Fehler V2', err);
@@ -726,7 +724,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     setHarmonizations(prev => [...prev, reactivatedHarmonization]);
     toast({
       title: "Harmonisierung V2 reaktiviert",
-      description: `${session.word} ${session.potencyType}${session.potency}`,
+      description: `${session.word}`,
     });
   };
 
@@ -895,7 +893,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
           {/* LIVE PREVIEW der finalen Rate */}
           <div className="bg-gradient-to-r from-primary/10 to-primary/20 p-4 rounded-lg text-center border-2">
             <div className="text-lg mb-2">
-              "{cleanWord}" {effectiveType}{effectivePotency}{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
+              "{cleanWord}"{effectivePotency === 0 ? ' (Ursubstanz)' : ''}
               {/* Kozyrev Status ausgeblendet */}
               {false && kozyrevEnabled && ' • Kozyrev aktiv'}
               {autoPotency && <div className="text-sm text-green-700 font-semibold mt-1">
@@ -1013,7 +1011,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
                        <div className="flex justify-between items-start gap-2">
                         <div className="min-w-0 flex-1">
                           <div className="font-semibold text-sm break-words leading-tight">
-                            {harm.word} {harm.potencyType}{harm.potency}
+                            {harm.word}
                           </div>
                           <div className="text-xs text-muted-foreground truncate">
                             {selectedPatient && harm.patientId === selectedPatient.id && `🔵 ${selectedPatient.first_name}`}
