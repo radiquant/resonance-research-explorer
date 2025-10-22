@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import CopenAlgorithmVisualizationV2 from "@/components/CopenAlgorithmVisualizationV2";
 import { WorkerStatusMonitor } from "@/components/WorkerStatusMonitor";
+import { SessionStatusList } from "@/components/SessionStatusList";
 
 const CopenVisualizationV2Page = () => {
   const navigate = useNavigate();
@@ -17,11 +18,12 @@ const CopenVisualizationV2Page = () => {
           ← Zurück zur Übersicht
         </Button>
         
-        <div className="mb-6">
+        <CopenAlgorithmVisualizationV2 />
+        
+        <div className="mt-6 space-y-4">
+          <SessionStatusList />
           <WorkerStatusMonitor />
         </div>
-        
-        <CopenAlgorithmVisualizationV2 />
       </div>
     </div>
   );

@@ -34,6 +34,9 @@ interface CloudHarmonizationSession {
   completed_at: string | null;
   created_at: string;
   updated_at: string;
+  pulse_seconds: number | null;
+  pause_seconds: number | null;
+  pulse_pause_active: boolean | null;
 }
 import PatientManagerCloudV2 from './PatientManagerCloudV2';
 import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
@@ -384,7 +387,10 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
               status: 'running',
               elapsedTime: elapsedTime,
               progress: progress,
-              remainingSeconds: remainingTime // Speichere remaining_seconds für Backend-Sync
+              remainingSeconds: remainingTime, // Speichere remaining_seconds für Backend-Sync
+              pulseSeconds: session.pulse_seconds || undefined,
+              pauseSeconds: session.pause_seconds || undefined,
+              pulsePauseActive: session.pulse_pause_active || false,
             };
           });
           
@@ -1064,6 +1070,29 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Impuls/Pausen-Anzeige */}
+                      {harm.pulsePauseActive && harm.pulseSeconds && harm.pauseSeconds && (
+                        <div className="bg-background/70 p-1.5 rounded border border-primary/30">
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground mb-1">
+                            <span>⚡ Impuls/Pause Modus</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="flex-1 bg-green-500/20 h-2 rounded-sm relative overflow-hidden">
+                              <div className={`h-full bg-green-500 ${harm.status === 'running' ? 'animate-pulse' : ''}`} 
+                                   style={{ width: '100%' }}>
+                              </div>
+                            </div>
+                            <span className="text-[9px] font-mono">{harm.pulseSeconds}s</span>
+                            <div className="flex-1 bg-orange-500/20 h-2 rounded-sm relative overflow-hidden">
+                              <div className={`h-full bg-orange-500 ${harm.status === 'running' ? 'animate-pulse' : ''}`} 
+                                   style={{ width: '100%' }}>
+                              </div>
+                            </div>
+                            <span className="text-[9px] font-mono">{harm.pauseSeconds}s</span>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Status - kompakt */}
                       <div className="text-center text-xs font-semibold">
