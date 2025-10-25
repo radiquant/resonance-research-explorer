@@ -978,13 +978,13 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       {/* Parallele Harmonisierungen */}
       <Card className="border-2 border-primary">
         <CardHeader>
-          <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
-            <Zap className="h-6 w-6" />
+          <CardTitle className="text-base text-center flex items-center justify-center gap-2">
+            <Zap className="h-5 w-5" />
             Parallele Harmonisierungen V2
           </CardTitle>
           {selectedPatient && (
-            <p className="text-center text-sm font-semibold text-primary mt-2">
-              <User className="h-4 w-4 inline mr-1" />
+            <p className="text-center text-xs font-semibold text-primary mt-2">
+              <User className="h-3 w-3 inline mr-1" />
               Aktiver Klient: {selectedPatient.first_name} {selectedPatient.last_name}
             </p>
           )}

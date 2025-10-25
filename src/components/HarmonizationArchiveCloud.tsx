@@ -239,22 +239,22 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Archive className="h-5 w-5" />
+      <CardHeader className="py-3">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Archive className="h-4 w-4" />
           Harmonisierungs-Archiv (Cloud)
-          <span className="text-sm font-normal text-muted-foreground ml-2">
+          <span className="text-xs font-normal text-muted-foreground ml-2">
             ({sessions.length} Sitzungen)
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="py-3">
         {sessions.length === 0 ? (
-          <p className="text-center text-muted-foreground py-4">
+          <p className="text-center text-muted-foreground py-2 text-xs">
             Keine archivierten Sitzungen vorhanden
           </p>
         ) : (
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-80 overflow-y-auto">
             {sessions.map(session => (
               <div key={session.id} className="border rounded-lg p-3">
                 <div className="flex justify-between items-start">
