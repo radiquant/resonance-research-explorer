@@ -18,6 +18,7 @@ interface CloudPatient {
   last_name: string;
   birth_date: string;
   birth_place: string;
+  personal_rate?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -72,6 +73,12 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   };
   
   const calculateClientRateFor = (patient: CloudPatient, wordEnergy: string): number => {
+    // Wenn eine personalisierte Rate vorhanden ist (8-12 Stellen), verwende sie
+    if (patient.personal_rate && patient.personal_rate.length >= 8) {
+      return parseInt(patient.personal_rate, 10);
+    }
+    
+    // Standard-Berechnung basierend auf Patientendaten
     const clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
     const cleanClientData = normalizeWordEnergy(clientData);
     

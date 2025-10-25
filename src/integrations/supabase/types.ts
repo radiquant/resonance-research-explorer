@@ -435,6 +435,7 @@ export type Database = {
           image_signature: string | null
           image_signature_active: boolean | null
           last_name: string
+          personal_rate: string | null
           updated_at: string
           user_id: string
         }
@@ -448,6 +449,7 @@ export type Database = {
           image_signature?: string | null
           image_signature_active?: boolean | null
           last_name: string
+          personal_rate?: string | null
           updated_at?: string
           user_id: string
         }
@@ -461,6 +463,7 @@ export type Database = {
           image_signature?: string | null
           image_signature_active?: boolean | null
           last_name?: string
+          personal_rate?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Users, Plus, Trash2, Edit2, Check, X, Loader2, Image as ImageIcon, Sparkles, Settings } from 'lucide-react';
+import { Users, Plus, Trash2, Edit2, Check, X, Loader2, Image as ImageIcon, Sparkles, Settings, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +37,7 @@ interface Patient {
   image_signature?: string | null;
   image_signature_active?: boolean;
   hardware_config?: any | null; // Supabase JSONB type
+  personal_rate?: string | null; // Optionale personalisierte Rate (8-12 Stellen)
   created_at: string;
   updated_at: string;
 }
@@ -77,7 +78,8 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
     last_name: '',
     birth_date: '',
     birth_place: '',
-    image_signature: ''
+    image_signature: '',
+    personal_rate: ''
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [analyzingImage, setAnalyzingImage] = useState(false);
@@ -222,13 +224,14 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
           image_signature: formData.image_signature || null,
           image_signature_active: imageSignatureActive,
           hardware_config: hardwareConfig as any,
+          personal_rate: formData.personal_rate || null,
         }])
         .select()
         .single();
 
       if (error) throw error;
 
-      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '' });
+      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '', personal_rate: '' });
       setImageFile(null);
       setHardwareConfig({
         rateGenerator: DEFAULT_HARDWARE_CONFIG,
@@ -257,7 +260,8 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
       last_name: patient.last_name,
       birth_date: patient.birth_date,
       birth_place: patient.birth_place,
-      image_signature: patient.image_signature || ''
+      image_signature: patient.image_signature || '',
+      personal_rate: patient.personal_rate || ''
     });
     setImageSignatureActive(patient.image_signature_active ?? true);
     const parsedConfig = parseHardwareConfig(patient.hardware_config);
@@ -279,6 +283,7 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
         birth_place: formData.birth_place,
         image_signature_active: imageSignatureActive,
         hardware_config: hardwareConfig as any,
+        personal_rate: formData.personal_rate || null,
       };
       if (formData.image_signature && formData.image_signature.trim() !== '') {
         updateData.image_signature = formData.image_signature;
@@ -291,7 +296,7 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
       if (error) throw error;
 
       setEditingId(null);
-      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '' });
+      setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '', personal_rate: '' });
       setHardwareConfig({
         rateGenerator: DEFAULT_HARDWARE_CONFIG,
         analysis: DEFAULT_HARDWARE_CONFIG
@@ -356,7 +361,7 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '' });
+    setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '', personal_rate: '' });
     setImageFile(null);
     setErrors({});
     setHardwareConfig({
@@ -491,6 +496,34 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
                       </label>
                     </div>
                   </div>
+                 )}
+              </div>
+              
+              {/* Personalisierte Rate (Optional) */}
+              <div>
+                <Label>Personalisierte Rate (Optional, 8-12 Stellen)</Label>
+                <Input
+                  value={formData.personal_rate}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Nur Zahlen erlauben und auf 12 Stellen begrenzen
+                    if (/^\d{0,12}$/.test(value)) {
+                      setFormData({...formData, personal_rate: value});
+                    }
+                  }}
+                  placeholder="z.B. 12345678"
+                  disabled={submitting}
+                  maxLength={12}
+                />
+                {formData.personal_rate && formData.personal_rate.length < 8 && (
+                  <p className="text-sm text-yellow-600 mt-1">
+                    Mindestens 8 Stellen erforderlich
+                  </p>
+                )}
+                {formData.personal_rate && formData.personal_rate.length >= 8 && (
+                  <p className="text-sm text-green-600 mt-1">
+                    ✓ Personalisierte Rate wird in Berechnungen einbezogen
+                  </p>
                 )}
               </div>
             </div>
@@ -581,10 +614,16 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
                         Bildsignatur vorhanden
                       </div>
                     )}
-                    {patient.hardware_config && (
+                     {patient.hardware_config && (
                       <div className="text-xs text-blue-500 mt-1 flex items-center gap-1">
                         <Settings className="h-3 w-3" />
                         Hardware-Algorithmen konfiguriert
+                      </div>
+                    )}
+                    {patient.personal_rate && patient.personal_rate.length >= 8 && (
+                      <div className="text-xs text-purple-500 mt-1 flex items-center gap-1">
+                        <Zap className="h-3 w-3" />
+                        Personalisierte Rate: {patient.personal_rate}
                       </div>
                     )}
                   </div>

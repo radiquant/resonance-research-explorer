@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CopenAlgorithmVisualizationV2 from "@/components/CopenAlgorithmVisualizationV2";
 import { WorkerStatusMonitor } from "@/components/WorkerStatusMonitor";
 import { SessionStatusList } from "@/components/SessionStatusList";
+import AnalysisArchiveCloud from "@/components/AnalysisArchiveCloud";
 
 const CopenVisualizationV2Page = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const CopenVisualizationV2Page = () => {
         <CopenAlgorithmVisualizationV2 />
         
         <div className="mt-6 space-y-4">
+          <AnalysisArchiveCloud />
           <SessionStatusList />
           <WorkerStatusMonitor />
         </div>

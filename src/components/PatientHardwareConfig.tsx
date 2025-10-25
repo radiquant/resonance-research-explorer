@@ -68,12 +68,14 @@ export const PatientHardwareConfig = ({
   const updateRateGenConfig = (key: keyof HardwareConfig, value: 'auto' | 'on' | 'off') => {
     const newConfig = { ...rateGenConfig, [key]: value };
     setRateGenConfig(newConfig);
+    // Immediate callback to parent
     onChange({ rateGenerator: newConfig, analysis: analysisConfig });
   };
 
   const updateAnalysisConfig = (key: keyof HardwareConfig, value: 'auto' | 'on' | 'off') => {
     const newConfig = { ...analysisConfig, [key]: value };
     setAnalysisConfig(newConfig);
+    // Immediate callback to parent
     onChange({ rateGenerator: rateGenConfig, analysis: newConfig });
   };
 
@@ -108,7 +110,13 @@ export const PatientHardwareConfig = ({
             </TooltipProvider>
           </div>
         </div>
-        <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <Select 
+          value={value} 
+          onValueChange={(val) => {
+            onChange(val as 'auto' | 'on' | 'off');
+          }} 
+          disabled={disabled}
+        >
           <SelectTrigger className="w-28">
             <SelectValue />
           </SelectTrigger>
