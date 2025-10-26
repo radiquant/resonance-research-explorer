@@ -755,9 +755,9 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
           )}
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-sm">
-            <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">💡 Hinweis zur Datenbank-Analyse:</p>
-            <ul className="text-blue-800 dark:text-blue-200 space-y-0.5 list-disc list-inside">
+          <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-xs">
+            <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">💡 Hinweis zur Datenbank-Analyse:</p>
+            <ul className="text-blue-800 dark:text-blue-200 space-y-0.5 list-disc list-inside text-xs">
               <li>Bei Datenbanken mit bestehenden Zahlenraten wird <strong>keine neue Copen-Rate</strong> berechnet</li>
               <li>Format mit Rate: <code>Wortenergie,12345</code> (Rate wird übernommen)</li>
               <li>Format ohne Rate: <code>Wortenergie</code> (neue Rate wird berechnet)</li>

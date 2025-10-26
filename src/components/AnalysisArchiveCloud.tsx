@@ -144,10 +144,10 @@ export const AnalysisArchiveCloud = () => {
   return (
     <>
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-2">
+        <CardHeader className="py-3">
+          <CardTitle className="flex items-center justify-between gap-2 text-sm">
             <span className="flex items-center gap-2">
-              <Archive className="h-5 w-5" />
+              <Archive className="h-4 w-4" />
               Analysearchiv (12+1 Ebenen)
             </span>
             {archives.length > 0 && (
@@ -174,35 +174,35 @@ export const AnalysisArchiveCloud = () => {
             )}
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="max-h-80 overflow-y-auto">
           {archives.length === 0 ? (
-            <p className="text-center text-muted-foreground py-4">
+            <p className="text-center text-muted-foreground py-4 text-xs">
               Keine archivierten Analysen vorhanden
             </p>
           ) : (
-            <Table>
+            <Table className="text-xs">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Wortenergie</TableHead>
-                  <TableHead>Copen-Rate</TableHead>
-                  <TableHead>Höchste Ebene</TableHead>
-                  <TableHead>Resonanz</TableHead>
-                  <TableHead>Datum</TableHead>
-                  <TableHead className="text-right">Aktionen</TableHead>
+                  <TableHead className="text-xs">Wortenergie</TableHead>
+                  <TableHead className="text-xs">Copen-Rate</TableHead>
+                  <TableHead className="text-xs">Höchste Ebene</TableHead>
+                  <TableHead className="text-xs">Resonanz</TableHead>
+                  <TableHead className="text-xs">Datum</TableHead>
+                  <TableHead className="text-right text-xs">Aktionen</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {archives.map((archive) => (
                   <TableRow key={archive.id}>
-                    <TableCell className="font-medium">{archive.word}</TableCell>
-                    <TableCell>{archive.copen_rate}</TableCell>
+                    <TableCell className="font-medium text-xs">{archive.word}</TableCell>
+                    <TableCell className="text-xs">{archive.copen_rate}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">
+                      <Badge variant="outline" className="text-xs">
                         {getLevelDisplayName(archive.highest_resonance_level || 1)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{archive.highest_resonance_value?.toFixed(1)}%</TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs">{archive.highest_resonance_value?.toFixed(1)}%</TableCell>
+                    <TableCell className="text-xs">
                       {new Date(archive.analysis_timestamp).toLocaleDateString('de-DE')}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
@@ -211,14 +211,14 @@ export const AnalysisArchiveCloud = () => {
                         variant="outline"
                         onClick={() => handleViewDetails(archive)}
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3 w-3" />
                       </Button>
                       <Button
                         size="sm"
                         variant="destructive"
                         onClick={() => handleDelete(archive.id)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </TableCell>
                   </TableRow>
