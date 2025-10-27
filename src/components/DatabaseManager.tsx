@@ -1095,7 +1095,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                       const inserts = selectedResults.map(r => ({
                         user_id: user.id,
                         patient_id: selectedPatient.id,
-                        word: `Optimale Harmonisierung mit "${r.word}" und Projizierung von "${r.rate.toLocaleString('de-DE')}" in der benötigten Autopotenz auf das Ziel.`,
+                        word: `Harmonisierung mit ${r.rate.toLocaleString('de-DE')}`,
                         copen_rate: r.rate.toString(),
                         tested_potency: null,
                         duration_seconds: durationSeconds,

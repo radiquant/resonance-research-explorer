@@ -174,7 +174,7 @@ const CopenGeneratorPage: React.FC = () => {
     const sessionData = {
       user_id: user.id,
       patient_id: selectedPatient.id,
-      word: singleWord,
+      word: `Harmonisierung mit ${currentCalculatedRate.toLocaleString('de-DE')}`,
       copen_rate: currentCalculatedRate.toString(),
       tested_potency: `${singlePotencyType}${singlePotency}`,
       duration_seconds: durationSeconds,
