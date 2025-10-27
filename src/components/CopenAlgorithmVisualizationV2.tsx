@@ -622,7 +622,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       }
 
       // Neue vereinfachte Syntax: Nur die ermittelte Rate wird verwendet
-      const harmonizationWord = `Harmonisierung "${finalRate}"`;
+      const harmonizationWord = `Harmonisierung mit ${finalRate}`;
 
       const durationSeconds = continuousMode ? 315360000 : getDurationInSeconds(harmonizationDuration, harmonizationUnit);
       

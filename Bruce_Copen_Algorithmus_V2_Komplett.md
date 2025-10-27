@@ -9,16 +9,16 @@ Der Bruce Copen Algorithmus V2 ist ein hochentwickeltes System zur Berechnung, V
 - **Auto-Potenz-Projektion**: Automatische Ermittlung der optimalen Potenz
 - **Parallele Harmonisierungen**: Mehrere Behandlungen gleichzeitig
 - **Cloud-Synchronisation**: Persistente Backend-Speicherung
-- **Neue Harmonisierungs-Syntax**: `Harmonisierung "ermittelte Rate"`
+- **Neue Harmonisierungs-Syntax**: `Harmonisierung mit [ermittelte Rate]`
 
 ## Harmonisierungs-Syntax (NEU)
 
 ### Aktuelle Syntax
 ```
-Harmonisierung "1234567"
+Harmonisierung mit 1234567
 ```
 
-**Wichtig**: Es wird nur noch die ermittelte Rate zur Besendung verwendet - keine zusätzlichen Texte oder Beschreibungen mehr.
+**Wichtig**: Es wird nur noch die ermittelte Rate zur Besendung verwendet - keine zusätzlichen Texte oder Beschreibungen mehr. Die Rate wird ohne Anführungszeichen übermittelt.
 
 ### Frühere Syntax (veraltet)
 ```
