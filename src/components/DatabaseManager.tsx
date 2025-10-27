@@ -17,6 +17,7 @@ import { interpretAnalysisResults, type AnalysisInterpretation } from '@/utils/a
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { convertPotencyNumbersToWords } from '@/utils/potencyText';
 
 interface CloudPatient {
   id: string;
@@ -206,7 +207,8 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         entries.push(line);
       } else {
         // TXT-Modus: eine Zeile = ein Datensatz (Sätze bleiben zusammen, Kommata werden NICHT aufgetrennt)
-        entries.push(line);
+        // Hier Zahlen in Potenzen in ausgeschriebene Wörter umwandeln (z.B. D6 -> Dsechs, C100 -> CEinhundert)
+        entries.push(convertPotencyNumbersToWords(line));
       }
     }
 
