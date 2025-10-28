@@ -204,7 +204,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
       if (anyCsv) {
         // CSV-Modus: jede Zeile ist ein Datensatz (auch wenn sie Kommata enthält)
-        entries.push(line);
+        // Konvertiere nur die erste Spalte (Wortenergie) bzgl. Potenzen: z.B. D6 -> Dsechs, C100 -> CEinhundert
+        const firstCommaIdx = line.indexOf(',');
+        if (firstCommaIdx === -1) {
+          entries.push(convertPotencyNumbersToWords(line));
+        } else {
+          const first = line.slice(0, firstCommaIdx);
+          const rest = line.slice(firstCommaIdx + 1);
+          const firstConverted = convertPotencyNumbersToWords(first);
+          entries.push(`${firstConverted},${rest}`);
+        }
       } else {
         // TXT-Modus: eine Zeile = ein Datensatz (Sätze bleiben zusammen, Kommata werden NICHT aufgetrennt)
         // Hier Zahlen in Potenzen in ausgeschriebene Wörter umwandeln (z.B. D6 -> Dsechs, C100 -> CEinhundert)
