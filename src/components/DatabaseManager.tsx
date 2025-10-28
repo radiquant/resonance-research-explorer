@@ -17,6 +17,7 @@ import { interpretAnalysisResults, type AnalysisInterpretation } from '@/utils/a
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { convertPotencyNumbersToWords } from '@/utils/potencyText';
 
 interface CloudPatient {
   id: string;
@@ -203,10 +204,16 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
 
       if (anyCsv) {
         // CSV-Modus: jede Zeile ist ein Datensatz (auch wenn sie Kommata enthält)
-        entries.push(line);
+        // Konvertiere Potenz-Zahlen in Worte (nur für erste Spalte/Wortenergie)
+        const parts = line.split(',').map(p => p.trim());
+        const convertedWord = convertPotencyNumbersToWords(parts[0]);
+        parts[0] = convertedWord;
+        entries.push(parts.join(','));
       } else {
         // TXT-Modus: eine Zeile = ein Datensatz (Sätze bleiben zusammen, Kommata werden NICHT aufgetrennt)
-        entries.push(line);
+        // Konvertiere Potenz-Zahlen in Worte
+        const convertedLine = convertPotencyNumbersToWords(line);
+        entries.push(convertedLine);
       }
     }
 
@@ -1095,7 +1102,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                       const inserts = selectedResults.map(r => ({
                         user_id: user.id,
                         patient_id: selectedPatient.id,
-                        word: `Optimale Harmonisierung mit "${r.word}" und Projizierung von "${r.rate.toLocaleString('de-DE')}" in der benötigten Autopotenz auf das Ziel.`,
+                        word: `Harmonisierung mit ${r.rate.toLocaleString('de-DE')}`,
                         copen_rate: r.rate.toString(),
                         tested_potency: null,
                         duration_seconds: durationSeconds,
