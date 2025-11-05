@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Calculator } from 'lucide-react';
 import { alphabetSystems, type AlphabetType } from '@/utils/alphabetSystems';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,12 @@ interface SingleCalculationFormProps {
   potency: number;
   potencyType: 'D' | 'C' | 'LM' | 'M';
   alphabetType: AlphabetType;
+  useAdaptiveFibonacci: boolean;
   onWordChange: (word: string) => void;
   onPotencyChange: (potency: number) => void;
   onPotencyTypeChange: (type: 'D' | 'C' | 'LM' | 'M') => void;
   onAlphabetTypeChange: (type: AlphabetType) => void;
+  onAdaptiveFibonacciChange: (value: boolean) => void;
   onCalculate: () => void;
   calculatedRate?: number;
   highestLevel?: { level: number; value: number };
@@ -28,10 +31,12 @@ const SingleCalculationForm: React.FC<SingleCalculationFormProps> = ({
   potency,
   potencyType,
   alphabetType,
+  useAdaptiveFibonacci,
   onWordChange,
   onPotencyChange,
   onPotencyTypeChange,
   onAlphabetTypeChange,
+  onAdaptiveFibonacciChange,
   onCalculate,
   calculatedRate,
   highestLevel
@@ -105,7 +110,26 @@ const SingleCalculationForm: React.FC<SingleCalculationFormProps> = ({
         </div>
       </div>
       
-      <Button 
+      <div className="flex items-center justify-between p-4 bg-white/10 rounded-lg border border-white/20">
+        <div className="space-y-1">
+          <Label htmlFor="adaptive-fib" className="text-white font-medium">
+            Wortlängen-adaptive Fibonacci-Modulation
+          </Label>
+          <div className="text-xs text-blue-200">
+            {useAdaptiveFibonacci 
+              ? '🔄 Aktiv: Fibonacci-Paare passen sich an Wortlänge an (1-4: 13/21, 5-10: 21/34, 11-20: 34/55, >20: 55/89)'
+              : '🔒 Authentisch: Festes Verhältnis 21/34 (Original Bruce Copen 1978-1995)'
+            }
+          </div>
+        </div>
+        <Switch
+          id="adaptive-fib"
+          checked={useAdaptiveFibonacci}
+          onCheckedChange={onAdaptiveFibonacciChange}
+        />
+      </div>
+      
+      <Button
         onClick={onCalculate} 
         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
         size="lg"

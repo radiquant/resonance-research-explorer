@@ -43,6 +43,7 @@ const CopenGeneratorPage: React.FC = () => {
   const [singlePotency, setSinglePotency] = useState(6);
   const [singlePotencyType, setSinglePotencyType] = useState<'D' | 'C' | 'LM' | 'M'>('D');
   const [singleAlphabetType, setSingleAlphabetType] = useState<AlphabetType>('latin');
+  const [useAdaptiveFibonacci, setUseAdaptiveFibonacci] = useState(false);
   const [results, setResults] = useState<CopenRateResult[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
   const [currentCalculatedRate, setCurrentCalculatedRate] = useState<number | undefined>(undefined);
@@ -77,7 +78,8 @@ const CopenGeneratorPage: React.FC = () => {
       singlePotencyType, 
       singleAlphabetType,
       imgSig,
-      useImgSig
+      useImgSig,
+      useAdaptiveFibonacci
     );
     
     // Berechne Ebenen-Resonanz mit gleichem Algorithmus wie DB-Analyse
@@ -245,10 +247,12 @@ const CopenGeneratorPage: React.FC = () => {
                 potency={singlePotency}
                 potencyType={singlePotencyType}
                 alphabetType={singleAlphabetType}
+                useAdaptiveFibonacci={useAdaptiveFibonacci}
                 onWordChange={setSingleWord}
                 onPotencyChange={setSinglePotency}
                 onPotencyTypeChange={setSinglePotencyType}
                 onAlphabetTypeChange={setSingleAlphabetType}
+                onAdaptiveFibonacciChange={setUseAdaptiveFibonacci}
                 onCalculate={handleSingleCalculation}
                 calculatedRate={currentCalculatedRate}
                 highestLevel={currentHighestLevel}

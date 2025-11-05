@@ -17,7 +17,9 @@ export interface CopenRateResult {
     letterSum: number;
     baseRate: number;
     fibonacciRate: number;
+    fibonacciPair?: { div: number; mult: number }; // Nur bei adaptiver Modulation
   };
+  isAdaptive?: boolean;
 }
 
 export interface WordEnergyInput {
@@ -45,6 +47,39 @@ const getFibonacciMultiplier = (n: number): number => {
   return b;
 };
 
+/**
+ * Wortlängen-adaptive Fibonacci-Modulation
+ * Wählt Fibonacci-Paare basierend auf der Länge der Wortenergie
+ * 
+ * @param wordLength - Anzahl der Buchstaben (ohne Leerzeichen)
+ * @returns Fibonacci-Paar { div, mult } zur Modulation
+ */
+export const getAdaptiveFibonacciPair = (wordLength: number): { div: number; mult: number } => {
+  // Fibonacci-Sequenz: 1,1,2,3,5,8,13,21,34,55,89,144...
+  
+  if (wordLength <= 0) {
+    return { div: 21, mult: 34 }; // Fallback auf Standard
+  }
+  
+  if (wordLength >= 1 && wordLength <= 4) {
+    // Sehr kurze Wörter: OM, LUX, GOLD
+    return { div: 13, mult: 21 }; // Verhältnis ≈ 1.615
+  }
+  
+  if (wordLength >= 5 && wordLength <= 10) {
+    // Mittlere Wörter: ARNICA, HEILUNG, GESUNDHEIT (Standard)
+    return { div: 21, mult: 34 }; // Verhältnis ≈ 1.619 (Original Copen)
+  }
+  
+  if (wordLength >= 11 && wordLength <= 20) {
+    // Lange Wörter: ARSENICUM ALBUM, CALCAREA CARBONICA
+    return { div: 34, mult: 55 }; // Verhältnis ≈ 1.618
+  }
+  
+  // Sehr lange Wörter: > 20 Buchstaben
+  return { div: 55, mult: 89 }; // Verhältnis ≈ 1.618
+};
+
 interface ValidationResult {
   valid: boolean;
   error?: string;
@@ -68,7 +103,8 @@ export const calculateCopenRate = (
   potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3',
   alphabetType: AlphabetType = 'latin',
   imageSignature?: string,
-  useImageSignature: boolean = false
+  useImageSignature: boolean = false,
+  useAdaptiveFibonacci: boolean = false
 ): CopenRateResult => {
   // 1) Normalisierung nach Bruce Copen
   const normalize = (w: string) =>
@@ -111,8 +147,25 @@ export const calculateCopenRate = (
 
   // 2) Baserate
   const baseRate = primarySum * 1000;
-  // 3) Fibonacci-Modulation (34/21)
-  const fibonacciRate = Math.floor((baseRate / 21) * 34);
+  
+  // 3) Fibonacci-Modulation
+  let fibonacciRate: number;
+  let fibonacciPair: { div: number; mult: number } | undefined;
+  
+  if (useAdaptiveFibonacci) {
+    // Wortlängen-adaptive Modulation
+    const wordLengthWithoutSpaces = cleanWord.replace(/\s/g, '').length;
+    fibonacciPair = getAdaptiveFibonacciPair(wordLengthWithoutSpaces);
+    fibonacciRate = Math.floor((baseRate / fibonacciPair.div) * fibonacciPair.mult);
+    console.log('🔄 Adaptive Fibonacci-Modulation:', { 
+      wortlänge: wordLengthWithoutSpaces, 
+      pair: fibonacciPair, 
+      verhältnis: (fibonacciPair.mult / fibonacciPair.div).toFixed(4) 
+    });
+  } else {
+    // Original Copen: Feste Modulation (21/34)
+    fibonacciRate = Math.floor((baseRate / 21) * 34);
+  }
 
   // 4) Potenz-Bonus nach Dokumentation
   let potencyBonus = 0;
@@ -155,7 +208,9 @@ export const calculateCopenRate = (
       letterSum: primarySum, // historisch: Primärsumme
       baseRate,
       fibonacciRate,
+      fibonacciPair: useAdaptiveFibonacci ? fibonacciPair : undefined,
     },
+    isAdaptive: useAdaptiveFibonacci,
   };
 };
 

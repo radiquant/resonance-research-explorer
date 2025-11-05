@@ -21,6 +21,7 @@ const CopenRateGenerator: React.FC = () => {
   const [singlePotency, setSinglePotency] = useState(6);
   const [singlePotencyType, setSinglePotencyType] = useState<'D' | 'C' | 'LM' | 'M'>('D');
   const [singleAlphabetType, setSingleAlphabetType] = useState<AlphabetType>('latin');
+  const [useAdaptiveFibonacci, setUseAdaptiveFibonacci] = useState(false);
   const [results, setResults] = useState<CopenRateResult[]>([]);
   const [csvInput, setCsvInput] = useState('');
   const { toast } = useToast();
@@ -36,12 +37,20 @@ const CopenRateGenerator: React.FC = () => {
       return;
     }
 
-    const result = calculateCopenRate(singleWord, singlePotency, singlePotencyType, singleAlphabetType);
+    const result = calculateCopenRate(
+      singleWord, 
+      singlePotency, 
+      singlePotencyType, 
+      singleAlphabetType,
+      undefined,
+      false,
+      useAdaptiveFibonacci
+    );
     setResults(prev => [result, ...prev]);
     
     toast({
       title: 'Rate berechnet',
-      description: `${result.word} ${result.potencyType}${result.potency}: ${result.rate}`
+      description: `${result.word} ${result.potencyType}${result.potency}: ${result.rate}${result.isAdaptive ? ' (adaptiv)' : ''}`
     });
   };
 
@@ -152,10 +161,12 @@ const CopenRateGenerator: React.FC = () => {
           potency={singlePotency}
           potencyType={singlePotencyType}
           alphabetType={singleAlphabetType}
+          useAdaptiveFibonacci={useAdaptiveFibonacci}
           onWordChange={setSingleWord}
           onPotencyChange={setSinglePotency}
           onPotencyTypeChange={setSinglePotencyType}
           onAlphabetTypeChange={setSingleAlphabetType}
+          onAdaptiveFibonacciChange={setUseAdaptiveFibonacci}
           onCalculate={handleSingleCalculation}
         />
 
