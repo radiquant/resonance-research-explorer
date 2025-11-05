@@ -58,6 +58,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   const [autoCalculatedType, setAutoCalculatedType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
   const [autoCalculatedPotency, setAutoCalculatedPotency] = useState(6);
   const [kozyrevEnabled, setKozyrevEnabled] = useState(false);
+  const [useAdaptiveFibonacci, setUseAdaptiveFibonacci] = useState(false);
   const [showCalculation, setShowCalculation] = useState(false);
   const [showHistoryDropdown, setShowHistoryDropdown] = useState(false);
 
@@ -273,8 +274,25 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   // Schritt 3: Baserate
   const baseRate = primarySum * 1000;
 
-  // Schritt 4: Fibonacci-Modulation
-  const fibonacciRate = Math.floor((baseRate / 21) * 34);
+  // Schritt 4: Fibonacci-Modulation (adaptiv oder fest)
+  const getAdaptiveFibonacciPair = (wordLength: number): { div: number; mult: number } => {
+    if (wordLength <= 0) return { div: 21, mult: 34 };
+    if (wordLength >= 1 && wordLength <= 4) return { div: 13, mult: 21 };
+    if (wordLength >= 5 && wordLength <= 10) return { div: 21, mult: 34 };
+    if (wordLength >= 11 && wordLength <= 20) return { div: 34, mult: 55 };
+    return { div: 55, mult: 89 };
+  };
+
+  let fibonacciRate: number;
+  let fibonacciPair: { div: number; mult: number } | undefined;
+  
+  if (useAdaptiveFibonacci) {
+    const wordLengthWithoutSpaces = cleanWord.replace(/\s/g, '').length;
+    fibonacciPair = getAdaptiveFibonacciPair(wordLengthWithoutSpaces);
+    fibonacciRate = Math.floor((baseRate / fibonacciPair.div) * fibonacciPair.mult);
+  } else {
+    fibonacciRate = Math.floor((baseRate / 21) * 34);
+  }
 
   // Schritt 5: Potenzanpassung
   const getPotencyModifier = () => {
@@ -923,6 +941,27 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
               )}
             </div>
           </div>
+          
+          {/* Wortlängen-adaptive Fibonacci-Modulation Toggle */}
+          <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border">
+            <div className="space-y-1 flex-1">
+              <Label htmlFor="adaptive-fib" className="font-medium cursor-pointer">
+                Wortlängen-adaptive Fibonacci-Modulation
+              </Label>
+              <div className="text-xs text-muted-foreground">
+                {useAdaptiveFibonacci 
+                  ? '🔄 Aktiv: Fibonacci-Paare passen sich an Wortlänge an (1-4: 13/21, 5-10: 21/34, 11-20: 34/55, >20: 55/89)'
+                  : '🔒 Authentisch: Festes Verhältnis 21/34 (Original Bruce Copen 1978-1995)'
+                }
+              </div>
+            </div>
+            <Switch
+              id="adaptive-fib"
+              checked={useAdaptiveFibonacci}
+              onCheckedChange={setUseAdaptiveFibonacci}
+            />
+          </div>
+
           <Button onClick={handleCalculate} className="w-full">
             <Calculator className="h-4 w-4 mr-2" />
             Algorithmus visualisieren
