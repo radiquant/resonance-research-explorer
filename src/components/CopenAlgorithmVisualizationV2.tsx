@@ -68,6 +68,30 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   // Ausgewählter Patient
   const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
   
+  // Wortenergie-Normalisierung (Bruce Copen Klassik V4: Buchstaben + Zahlen)
+  const normalizeWordEnergy = (word: string): string => {
+    return word
+      .toUpperCase()
+      .replace(/Ä/g, 'AE')
+      .replace(/Ö/g, 'OE') 
+      .replace(/Ü/g, 'UE')
+      .replace(/ß/g, 'SS')
+      .replace(/\s*[DCLMF]+\d+/g, '')
+      .replace(/[^A-Z0-9]/g, '') // Nur Buchstaben und Zahlen behalten
+      .trim();
+  };
+
+  // Zeichenwerte: Buchstaben A=1..Z=26, Zahlen 0-9
+  const getCharValue = (char: string): number => {
+    if (char >= 'A' && char <= 'Z') {
+      return char.charCodeAt(0) - 64; // A=1..Z=26
+    }
+    if (char >= '0' && char <= '9') {
+      return parseInt(char, 10); // 0-9
+    }
+    return 0;
+  };
+
   // Patient-Switch-Handler: nur Auswahl setzen, keine Mutation bestehender Sitzungen
   const handlePatientSwitch = (patient: CloudPatient | null) => {
     setSelectedPatient(patient);
@@ -141,30 +165,6 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
         ? "Hardware-Algorithmen verbessern Resonanz-Analysen um +10-15% Akkuranz" 
         : "Standard-Analysen werden verwendet",
     });
-  };
-
-  // Wortenergie-Normalisierung (Bruce Copen Klassik V4: Buchstaben + Zahlen)
-  const normalizeWordEnergy = (word: string): string => {
-    return word
-      .toUpperCase()
-      .replace(/Ä/g, 'AE')
-      .replace(/Ö/g, 'OE') 
-      .replace(/Ü/g, 'UE')
-      .replace(/ß/g, 'SS')
-      .replace(/\s*[DCLMF]+\d+/g, '')
-      .replace(/[^A-Z0-9]/g, '') // Nur Buchstaben und Zahlen behalten
-      .trim();
-  };
-
-  // Zeichenwerte: Buchstaben A=1..Z=26, Zahlen 0-9
-  const getCharValue = (char: string): number => {
-    if (char >= 'A' && char <= 'Z') {
-      return char.charCodeAt(0) - 64; // A=1..Z=26
-    }
-    if (char >= '0' && char <= '9') {
-      return parseInt(char, 10); // 0-9
-    }
-    return 0;
   };
 
   const cleanWord = normalizeWordEnergy(word);
