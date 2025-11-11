@@ -106,7 +106,7 @@ export const calculateCopenRate = (
   useImageSignature: boolean = false,
   useAdaptiveFibonacci: boolean = false
 ): CopenRateResult => {
-  // 1) Normalisierung nach Bruce Copen
+  // 1) Normalisierung nach Bruce Copen Klassik V4 (mit Zahlenverarbeitung)
   const normalize = (w: string) =>
     w
       .toUpperCase()
@@ -114,20 +114,27 @@ export const calculateCopenRate = (
       .replace(/Ö/g, 'OE')
       .replace(/Ü/g, 'UE')
       .replace(/ß/g, 'SS')
-      .replace(/\s*[DCLM]+\d+/g, '') // Potenzangaben entfernen
-      .replace(/\d+/g, '')            // Zahlen entfernen
-      .replace(/[^A-Z\s]/g, '')       // Sonderzeichen entfernen
-      .replace(/\s+/g, ' ')
+      .replace(/\s*[DCLMF]+\d+/g, '') // Potenzangaben entfernen (D, C, LM, M, F)
+      .replace(/[^A-Z0-9]/g, '')       // Nur Buchstaben und Zahlen behalten, alle anderen Zeichen entfernen
       .trim();
 
-  const getLetterValue = (ch: string) => ch.charCodeAt(0) - 64; // A=1..Z=26
+  const getCharValue = (ch: string): number => {
+    // A-Z = 1-26, 0-9 = 0-9
+    if (ch >= 'A' && ch <= 'Z') {
+      return ch.charCodeAt(0) - 64; // A=1..Z=26
+    }
+    if (ch >= '0' && ch <= '9') {
+      return parseInt(ch, 10); // 0-9
+    }
+    return 0;
+  };
 
   const computePrimarySum = (text: string) => {
     let sum = 0;
     let pos = 1;
     for (const ch of text) {
-      if (ch === ' ') continue;
-      sum += getLetterValue(ch) * pos;
+      const value = getCharValue(ch);
+      sum += value * pos;
       pos++;
     }
     return sum;

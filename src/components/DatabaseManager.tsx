@@ -227,14 +227,27 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
       clientData += ` ${patient.image_signature}`;
     }
     
-    let sum = 0;
+    // Bruce Copen Klassik V4: Normalisierung mit Zahlen
+    const normalizedData = clientData
+      .toUpperCase()
+      .replace(/Ä/g, 'AE')
+      .replace(/Ö/g, 'OE')
+      .replace(/Ü/g, 'UE')
+      .replace(/ß/g, 'SS')
+      .replace(/[^A-Z0-9]/g, ''); // Nur Buchstaben und Zahlen
     
-    for (const char of clientData.toUpperCase().replace(/[^A-Z0-9]/g, '')) {
+    let sum = 0;
+    let position = 1;
+    
+    for (const char of normalizedData) {
+      let value = 0;
       if (char >= 'A' && char <= 'Z') {
-        sum += char.charCodeAt(0) - 64;
-      } else {
-        sum += parseInt(char);
+        value = char.charCodeAt(0) - 64; // A=1..Z=26
+      } else if (char >= '0' && char <= '9') {
+        value = parseInt(char, 10); // 0-9
       }
+      sum += value * position;
+      position++;
     }
     
     const clientBaseRate = sum * 1000;

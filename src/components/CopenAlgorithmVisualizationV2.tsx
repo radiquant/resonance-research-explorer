@@ -79,7 +79,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       return parseInt(patient.personal_rate, 10);
     }
     
-    // Standard-Berechnung basierend auf Patientendaten
+    // Standard-Berechnung basierend auf Patientendaten (Bruce Copen Klassik V4)
     const clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
     const cleanClientData = normalizeWordEnergy(clientData);
     
@@ -88,9 +88,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     
     for (let i = 0; i < cleanClientData.length; i++) {
       const char = cleanClientData[i];
-      if (char === ' ') continue;
-      
-      const value = getLetterValue(char);
+      const value = getCharValue(char);
       clientSum += value * position;
       position++;
     }
@@ -145,7 +143,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     });
   };
 
-  // Wortenergie-Normalisierung (nur Buchstaben)
+  // Wortenergie-Normalisierung (Bruce Copen Klassik V4: Buchstaben + Zahlen)
   const normalizeWordEnergy = (word: string): string => {
     return word
       .toUpperCase()
@@ -153,16 +151,20 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       .replace(/Ö/g, 'OE') 
       .replace(/Ü/g, 'UE')
       .replace(/ß/g, 'SS')
-      .replace(/\s*[DCLM]+\d+/g, '')
-      .replace(/\d+/g, '')
-      .replace(/[^A-Z\s]/g, '')
-      .replace(/\s+/g, ' ')
+      .replace(/\s*[DCLMF]+\d+/g, '')
+      .replace(/[^A-Z0-9]/g, '') // Nur Buchstaben und Zahlen behalten
       .trim();
   };
 
-  // Buchstabenwerte A=1, B=2, etc.
-  const getLetterValue = (letter: string): number => {
-    return letter.toUpperCase().charCodeAt(0) - 64;
+  // Zeichenwerte: Buchstaben A=1..Z=26, Zahlen 0-9
+  const getCharValue = (char: string): number => {
+    if (char >= 'A' && char <= 'Z') {
+      return char.charCodeAt(0) - 64; // A=1..Z=26
+    }
+    if (char >= '0' && char <= '9') {
+      return parseInt(char, 10); // 0-9
+    }
+    return 0;
   };
 
   const cleanWord = normalizeWordEnergy(word);
@@ -174,10 +176,22 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     // Kombinierte Datengrundlage: Wortenergie + Klientendaten
     const combinedData = `${word} ${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
     
-    // ASCII-Summe
+    // ASCII-Summe (Bruce Copen Klassik V4)
+    const normalizedData = combinedData
+      .toUpperCase()
+      .replace(/Ä/g, 'AE')
+      .replace(/Ö/g, 'OE')
+      .replace(/Ü/g, 'UE')
+      .replace(/ß/g, 'SS')
+      .replace(/[^A-Z0-9]/g, '');
+    
     let sum = 0;
-    for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
-      sum += char.charCodeAt(0) - 64;
+    for (const char of normalizedData) {
+      if (char >= 'A' && char <= 'Z') {
+        sum += char.charCodeAt(0) - 64; // A=1..Z=26
+      } else if (char >= '0' && char <= '9') {
+        sum += parseInt(char, 10); // 0-9
+      }
     }
 
     // Geburtsjahr-Faktor (nur bei Kozyrev aktiv)
@@ -237,24 +251,13 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   const effectivePotency = potency;
   const effectiveType = potencyType;
 
-  // Schritt 1: Buchstabenwerte berechnen
+  // Schritt 1: Zeichenwerte berechnen (Buchstaben + Zahlen)
   const letterValues = [];
   let position = 1;
   
   for (let i = 0; i < cleanWord.length; i++) {
     const char = cleanWord[i];
-    if (char === ' ') {
-      letterValues.push({
-        letter: ' ',
-        value: 0,
-        position: '-',
-        weighted: 0,
-        isSpace: true
-      });
-      continue;
-    }
-    
-    const value = getLetterValue(char);
+    const value = getCharValue(char);
     
     letterValues.push({
       letter: char,
@@ -266,10 +269,8 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     position++;
   }
 
-  // Schritt 2: Primärsumme (nur Buchstaben, keine Leerzeichen)
-  const primarySum = letterValues
-    .filter(item => !item.isSpace)
-    .reduce((sum, item) => sum + item.weighted, 0);
+  // Schritt 2: Primärsumme (alle Zeichen gewichtet)
+  const primarySum = letterValues.reduce((sum, item) => sum + item.weighted, 0);
 
   // Schritt 3: Baserate
   const baseRate = primarySum * 1000;
@@ -321,7 +322,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   const potencyModifier = getPotencyModifier();
   const finalRate = fibonacciRate + potencyModifier;
 
-  // KOZYREV-ERWEITERTE Klienten-Rate berechnen
+  // KOZYREV-ERWEITERTE Klienten-Rate berechnen (Bruce Copen Klassik V4)
   const calculateClientRate = () => {
     if (!selectedPatient) return 0;
 
@@ -333,9 +334,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     
     for (let i = 0; i < cleanClientData.length; i++) {
       const char = cleanClientData[i];
-      if (char === ' ') continue;
-      
-      const value = getLetterValue(char);
+      const value = getCharValue(char);
       clientSum += value * position;
       position++;
     }
@@ -391,8 +390,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
             let pos = 1;
             for (let i = 0; i < normalizedWord.length; i++) {
               const char = normalizedWord[i];
-              if (char === ' ') continue;
-              const value = getLetterValue(char);
+              const value = getCharValue(char);
               sum += value * pos;
               pos++;
             }
@@ -540,9 +538,21 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
             const patient = selectedPatient;
             if (patient) {
               const combinedData = `${harm.word} ${patient.first_name} ${patient.last_name} ${patient.birth_date}`;
+              const normalizedData = combinedData
+                .toUpperCase()
+                .replace(/Ä/g, 'AE')
+                .replace(/Ö/g, 'OE')
+                .replace(/Ü/g, 'UE')
+                .replace(/ß/g, 'SS')
+                .replace(/[^A-Z0-9]/g, '');
+              
               let sum = 0;
-              for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
-                sum += char.charCodeAt(0) - 64;
+              for (const char of normalizedData) {
+                if (char >= 'A' && char <= 'Z') {
+                  sum += char.charCodeAt(0) - 64;
+                } else if (char >= '0' && char <= '9') {
+                  sum += parseInt(char, 10);
+                }
               }
 
               const ranges = {
