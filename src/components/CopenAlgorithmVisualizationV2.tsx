@@ -651,8 +651,8 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
 
       // Auto-Potenz-Direktive: Projektion der aktuellen Rate mit gleichem Format wie DB-Analyse
       const autoPotenzDirektive = autoPotency 
-        ? `Optimale Harmonisierung mit "${cleanWord}" und Projizierung von "${finalRate.toLocaleString('de-DE')}" in der benötigten Autopotenz auf das Ziel.`
-        : cleanWord;
+        ? `Optimale Harmonisierung mit "${word}" und Projizierung von "${finalRate.toLocaleString('de-DE')}" in der benötigten Autopotenz auf das Ziel.`
+        : word;
       const harmonizationWord = autoPotenzDirektive;
 
       const durationSeconds = continuousMode ? 315360000 : getDurationInSeconds(harmonizationDuration, harmonizationUnit);
