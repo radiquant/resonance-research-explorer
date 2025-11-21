@@ -46,6 +46,14 @@ const Index = () => {
       component: KozyrevDioden
     },
     {
+      id: "morphic-field-engine",
+      title: "Morphisches Feld-Engine",
+      description: "Quantenbasierte Feldberechnung mit Numerik, Geometrie und Intention",
+      icon: Waves,
+      isRoute: true,
+      route: "/morphic-field"
+    },
+    {
       id: "formulas-compendium",
       title: "Formeln & Algorithmen Kompendium",
       description: "Strukturierte Sammlung aller mathematischen Grundlagen und Schlüssel-Resultate",
