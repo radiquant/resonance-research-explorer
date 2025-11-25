@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Upload, Download, Database, FileText, FileSpreadsheet, Image as ImageIcon, Sparkles, Save, Loader2, Archive, Zap, User } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { calculateCopenRate, type CopenRateResult } from '@/utils/copenRateGenerator';
 import { analyzeImageWithOllama, compareImageSignatures, checkOllamaConnection } from '@/utils/ollamaClient';
@@ -91,6 +92,10 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
   // Sortierung für Analyseergebnisse
   const [sortBy, setSortBy] = useState<'resonance' | 'level' | 'potency' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Direkte Raten-Harmonisierung
+  const [directRatesInput, setDirectRatesInput] = useState('');
+  const [isHarmonizingDirectRates, setIsHarmonizingDirectRates] = useState(false);
 
   useEffect(() => {
     if (user) loadSavedDatabases();
@@ -759,13 +764,95 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
     }
   };
 
+  const handleDirectRateHarmonization = async () => {
+    if (!user || !selectedPatient) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte wählen Sie zuerst einen Patienten aus',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    if (!directRatesInput.trim()) {
+      toast({
+        title: 'Fehler',
+        description: 'Bitte geben Sie mindestens eine Rate ein',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setIsHarmonizingDirectRates(true);
+
+    try {
+      // Parse Raten (eine pro Zeile, nur Zahlen)
+      const rates = directRatesInput
+        .split('\n')
+        .map(line => line.trim().replace(/\./g, '').replace(/,/g, ''))
+        .filter(line => line.length > 0 && !isNaN(Number(line)))
+        .map(line => Number(line));
+
+      if (rates.length === 0) {
+        toast({
+          title: 'Fehler',
+          description: 'Keine gültigen Raten gefunden',
+          variant: 'destructive'
+        });
+        setIsHarmonizingDirectRates(false);
+        return;
+      }
+
+      const durationSeconds = batchContinuousMode ? 999999999 : getDurationInSeconds(batchDuration, batchUnit);
+      const pulseInSeconds = pulsePauseActive ? (pulseUnit === 'minutes' ? pulseSeconds * 60 : pulseSeconds) : null;
+      const pauseInSeconds = pulsePauseActive ? (pauseUnit === 'minutes' ? pauseSeconds * 60 : pauseSeconds) : null;
+
+      const inserts = rates.map(rate => ({
+        user_id: user.id,
+        patient_id: selectedPatient.id,
+        word: `Kohärente Harmonisierung mit ${rate.toLocaleString('de-DE')}`,
+        copen_rate: rate.toString(),
+        tested_potency: null,
+        duration_seconds: durationSeconds,
+        remaining_seconds: durationSeconds,
+        status: 'pending' as const,
+        pulse_seconds: pulseInSeconds,
+        pause_seconds: pauseInSeconds,
+        pulse_pause_active: pulsePauseActive,
+      }));
+
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .insert(inserts);
+
+      if (error) throw error;
+
+      try { await supabase.functions.invoke('harmonization-worker'); } catch (_) {}
+
+      toast({
+        title: 'Harmonisierung gestartet',
+        description: `${inserts.length} direkte Raten-Harmonisierung(en) erstellt`
+      });
+
+      setDirectRatesInput('');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: error.message
+      });
+    } finally {
+      setIsHarmonizingDirectRates(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Database className="h-5 w-5" />
-            Datenbank-Import & Resonanz-Analyse
+            Datenbank-Manager
           </CardTitle>
           {selectedPatient && (
             <p className="text-sm font-semibold text-primary mt-2">
@@ -774,7 +861,14 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
             </p>
           )}
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
+          <Tabs defaultValue="analysis" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="analysis">DB-Analyse</TabsTrigger>
+              <TabsTrigger value="direct">Direkte Raten</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="analysis" className="space-y-4 mt-4">
           <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-xs">
             <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">💡 Hinweis zur Datenbank-Analyse:</p>
             <ul className="text-blue-800 dark:text-blue-200 space-y-0.5 list-disc list-inside text-xs">
@@ -1332,6 +1426,152 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
               </div>
             </div>
           )}
+            </TabsContent>
+
+            <TabsContent value="direct" className="space-y-4 mt-4">
+              <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded p-3 text-xs">
+                <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs">💡 Direkte Raten-Harmonisierung:</p>
+                <ul className="text-blue-800 dark:text-blue-200 space-y-0.5 list-disc list-inside text-xs">
+                  <li>Geben Sie numerische Raten direkt ein (eine pro Zeile)</li>
+                  <li>Keine Analyse, keine Berechnung - nur direkte Harmonisierung</li>
+                  <li>Format: "Kohärente Harmonisierung mit [Rate]"</li>
+                  <li>Ideal für bereits bekannte Copen-Raten</li>
+                </ul>
+              </div>
+
+              <div>
+                <Label>Raten eingeben (eine pro Zeile)</Label>
+                <Textarea
+                  value={directRatesInput}
+                  onChange={(e) => setDirectRatesInput(e.target.value)}
+                  placeholder="Beispiel:&#10;123.456.789&#10;987.654.321&#10;555.111.222&#10;&#10;Oder ohne Punkte:&#10;123456789&#10;987654321"
+                  className="min-h-32 font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Punkte werden automatisch entfernt - nur Zahlen werden erkannt
+                </p>
+              </div>
+
+              {/* Harmonisierungs-Optionen */}
+              <div className="bg-gradient-to-r from-primary/20 to-secondary/20 p-4 rounded-lg border-2 border-primary/30 space-y-3">
+                <div className="text-sm font-semibold text-center mb-3">
+                  ⚙️ Harmonisierungs-Einstellungen
+                </div>
+                
+                {/* Erste Zeile: Dauer, Einheit, Dauerbesendung */}
+                <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 items-end">
+                  <Label>Dauer</Label>
+                  <Input
+                    type="number"
+                    value={batchDuration}
+                    onChange={(e) => setBatchDuration(parseInt(e.target.value) || 1)}
+                    disabled={batchContinuousMode}
+                    min={1}
+                    className="h-8"
+                  />
+                  <Select value={batchUnit} onValueChange={(v) => setBatchUnit(v as any)}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seconds">Sekunden</SelectItem>
+                      <SelectItem value="minutes">Minuten</SelectItem>
+                      <SelectItem value="hours">Stunden</SelectItem>
+                      <SelectItem value="days">Tage</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="direct-continuous-harmonization"
+                      checked={batchContinuousMode}
+                      onCheckedChange={(checked) => setBatchContinuousMode(checked === true)}
+                    />
+                    <Label htmlFor="direct-continuous-harmonization" className="text-xs cursor-pointer whitespace-nowrap">
+                      Dauerbesendung
+                    </Label>
+                  </div>
+                </div>
+                
+                {/* Zweite Zeile: Impuls/Pausen-Modus */}
+                <div className="flex items-end gap-3 pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="direct-pulse-pause-mode"
+                      checked={pulsePauseActive}
+                      onCheckedChange={(checked) => setPulsePauseActive(checked === true)}
+                    />
+                    <Label htmlFor="direct-pulse-pause-mode" className="text-xs cursor-pointer">
+                      Impuls/Pausen-Modus
+                    </Label>
+                  </div>
+                  {pulsePauseActive && (
+                    <>
+                      <div>
+                        <Label className="text-xs">Impuls</Label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="number"
+                            value={pulseSeconds}
+                            onChange={(e) => setPulseSeconds(parseInt(e.target.value) || 1)}
+                            min={1}
+                            max={999}
+                            className="h-8 w-16"
+                          />
+                          <Select value={pulseUnit} onValueChange={(v: any) => setPulseUnit(v)}>
+                            <SelectTrigger className="h-8 w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="seconds">Sek.</SelectItem>
+                              <SelectItem value="minutes">Min.</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Pause</Label>
+                        <div className="flex gap-1">
+                          <Input
+                            type="number"
+                            value={pauseSeconds}
+                            onChange={(e) => setPauseSeconds(parseInt(e.target.value) || 1)}
+                            min={1}
+                            max={999}
+                            className="h-8 w-16"
+                          />
+                          <Select value={pauseUnit} onValueChange={(v: any) => setPauseUnit(v)}>
+                            <SelectTrigger className="h-8 w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="seconds">Sek.</SelectItem>
+                              <SelectItem value="minutes">Min.</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground self-center">
+                        Zyklus: {pulseSeconds}{pulseUnit === 'minutes' ? 'm' : 's'} / {pauseSeconds}{pauseUnit === 'minutes' ? 'm' : 's'}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <Button 
+                onClick={handleDirectRateHarmonization}
+                disabled={isHarmonizingDirectRates || !selectedPatient || !directRatesInput.trim()}
+                className="w-full"
+              >
+                {isHarmonizingDirectRates ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Zap className="h-4 w-4 mr-2" />
+                )}
+                {isHarmonizingDirectRates ? 'Erstelle Harmonisierungen...' : 'Alle Raten harmonisieren'}
+              </Button>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
