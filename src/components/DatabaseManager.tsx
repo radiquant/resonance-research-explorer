@@ -1558,18 +1558,30 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                 </div>
               </div>
 
-              <Button 
-                onClick={handleDirectRateHarmonization}
-                disabled={isHarmonizingDirectRates || !selectedPatient || !directRatesInput.trim()}
-                className="w-full"
-              >
-                {isHarmonizingDirectRates ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Zap className="h-4 w-4 mr-2" />
+              <div className="space-y-2">
+                {!selectedPatient && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+                    ⚠️ Bitte wählen Sie zuerst einen Patienten aus
+                  </p>
                 )}
-                {isHarmonizingDirectRates ? 'Erstelle Harmonisierungen...' : 'Alle Raten harmonisieren'}
-              </Button>
+                {selectedPatient && !directRatesInput.trim() && (
+                  <p className="text-xs text-amber-600 dark:text-amber-400 text-center">
+                    ⚠️ Bitte geben Sie Raten ein
+                  </p>
+                )}
+                <Button 
+                  onClick={handleDirectRateHarmonization}
+                  disabled={isHarmonizingDirectRates || !selectedPatient || !directRatesInput.trim()}
+                  className="w-full"
+                >
+                  {isHarmonizingDirectRates ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Zap className="h-4 w-4 mr-2" />
+                  )}
+                  {isHarmonizingDirectRates ? 'Erstelle Harmonisierungen...' : 'Alle Raten harmonisieren'}
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
