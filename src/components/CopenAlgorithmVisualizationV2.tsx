@@ -517,6 +517,87 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
     return () => clearInterval(syncTimer);
   }, [selectedPatient]);
 
+  // Export aktive Harmonisierungen als Datenbank
+  const exportActiveHarmonizationsToDatabase = async () => {
+    if (!selectedPatient) {
+      toast({
+        title: 'Kein Patient ausgewählt',
+        description: 'Bitte wählen Sie einen Patienten aus.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: 'Nicht angemeldet',
+          description: 'Sie müssen angemeldet sein.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Hole aktive Sessions aus Supabase
+      const { data: sessions, error } = await supabase
+        .from('harmonization_sessions_v2')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('patient_id', selectedPatient.id)
+        .in('status', ['running', 'pending']);
+
+      if (error) throw error;
+
+      if (!sessions || sessions.length === 0) {
+        toast({
+          title: 'Keine aktiven Harmonisierungen',
+          description: 'Es gibt keine laufenden Harmonisierungen für diesen Patienten.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Extrahiere Wortenergien aus dem word-Feld
+      const entries = sessions.map(session => {
+        // Parse "Harmonisierung mit 123.456.789" oder ähnliches
+        const match = session.word.match(/mit\s+([\d.]+)/i);
+        if (match) {
+          return match[1]; // Gibt die Rate zurück
+        }
+        // Falls kein Pattern, nimm das gesamte word-Feld
+        return session.word;
+      });
+
+      // Erstelle Datenbank-Namen mit Patient und Zeitstempel
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const databaseName = `${selectedPatient.first_name}_${selectedPatient.last_name}_Aktive_${timestamp}`;
+
+      // Speichere in word_databases
+      const { error: insertError } = await supabase
+        .from('word_databases')
+        .insert({
+          user_id: user.id,
+          name: databaseName,
+          entries: entries,
+        });
+
+      if (insertError) throw insertError;
+
+      toast({
+        title: 'Datenbank erstellt ✅',
+        description: `${entries.length} Einträge in "${databaseName}" gespeichert.`,
+      });
+    } catch (error) {
+      console.error('Export-Fehler:', error);
+      toast({
+        title: 'Fehler beim Export',
+        description: 'Konnte Datenbank nicht erstellen.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   // Lokaler UI-Timer für flüssige Anzeige (zwischen Backend-Syncs)
   useEffect(() => {
     const interval = setInterval(() => {
@@ -1027,10 +1108,23 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
       {/* Parallele Harmonisierungen */}
       <Card className="border-2 border-primary">
         <CardHeader>
-          <CardTitle className="text-base text-center flex items-center justify-center gap-2">
-            <Zap className="h-5 w-5" />
-            Parallele Harmonisierungen V2
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Zap className="h-5 w-5" />
+              Parallele Harmonisierungen V2
+            </CardTitle>
+            {selectedPatient && harmonizations.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportActiveHarmonizationsToDatabase}
+                className="gap-2"
+              >
+                <Archive className="h-4 w-4" />
+                Als DB speichern
+              </Button>
+            )}
+          </div>
           {selectedPatient && (
             <p className="text-center text-xs font-semibold text-primary mt-2">
               <User className="h-3 w-3 inline mr-1" />
