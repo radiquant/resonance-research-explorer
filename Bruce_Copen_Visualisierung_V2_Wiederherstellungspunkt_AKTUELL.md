@@ -1,210 +1,227 @@
-# Bruce Copen Algorithmus Visualisierung V2 - Wiederherstellungspunkt (Aktueller Stand)
+# Bruce Copen Visualisierung V2 - Komplette Wiederherstellungs-Dokumentation
 
-## Dokumentstatus
-- **Version**: 2.1 (Aktuell)
-- **Stand**: 2025-10-28
-- **Autor**: AI-Assistent
-- **Zweck**: Vollständige Dokumentation aller Features, Algorithmen und Implementierungsdetails
+**Version:** 2.4.0  
+**Datum:** 2025-01-16  
+**Zweck:** Exakte Wiederherstellung auf anderen Plattformen
 
 ---
 
-## 📋 Inhaltsverzeichnis
+## Inhaltsverzeichnis
 
-1. [Überblick](#überblick)
-2. [Architektur](#architektur)
-3. [Komponenten-Details](#komponenten-details)
-4. [Datenstrukturen](#datenstrukturen)
-5. [Algorithmen](#algorithmen)
-6. [Cloud-Integration](#cloud-integration)
-7. [Features & Funktionalitäten](#features--funktionalitäten)
-8. [Standard-Werte](#standard-werte)
-9. [Export-Funktionen](#export-funktionen)
-10. [Worker-System](#worker-system)
-11. [UI/UX-Spezifikationen](#uiux-spezifikationen)
-12. [Code-Referenzen](#code-referenzen)
-13. [Wiederherstellungs-Checkliste](#wiederherstellungs-checkliste)
-14. [Changelog](#changelog)
+1. [Bruce Copen Algorithmus V2](#1-bruce-copen-algorithmus-v2)
+2. [Patientenmanagement V2](#2-patientenmanagement-v2)
+3. [Datenbank-Manager](#3-datenbank-manager)
+4. [Datenbank-Analyse](#4-datenbank-analyse)
+5. [Parallele Harmonisierungen V2](#5-parallele-harmonisierungen-v2)
+6. [13-Ebenen Resonanzmodell](#6-13-ebenen-resonanzmodell)
+7. [Hardware-Algorithmen (Kozyrev)](#7-hardware-algorithmen-kozyrev)
+8. [LLM-Interpretation](#8-llm-interpretation)
+9. [Supabase Cloud-Integration](#9-supabase-cloud-integration)
+10. [UI/UX Layout-Struktur](#10-uiux-layout-struktur)
+11. [Wiederherstellungsanleitung](#11-wiederherstellungsanleitung)
 
 ---
 
-## 🎯 Überblick
+## 1. Bruce Copen Algorithmus V2
 
-Das **Bruce Copen Algorithmus Visualisierung V2 System** ist eine vollständig cloud-synchronisierte Anwendung zur Berechnung, Verwaltung und Harmonisierung von Copen-Raten basierend auf Wortenergien und Klientendaten.
-
-### Hauptfunktionen
-
-1. **Ratengenerator mit Auto-Potenz-Projektion**
-   - Intelligente Berechnung der optimalen Potenz basierend auf Klienten- und Wortdaten
-   - Support für Standard-Potenzen (D, C, LM, M) und F-Spektren (F1, F2, F3)
-   - Kozyrev-erweiterte Modulation mit Alters- und Ortsenergien
-
-2. **Parallele Harmonisierungs-Sessions (Cloud-Sync)**
-   - Unbegrenzte gleichzeitige Harmonisierungen pro Patient
-   - Echtzeit-Synchronisation via Supabase
-   - Impuls/Pausen-Modus Support
-   - Dauersendungs-Modus
-
-3. **Datenbank-Analyse mit Fokus-Funktion**
-   - Import von Wort-Datenbanken (CSV/TXT)
-   - **Fokus-Wort Feature**: Priorisierte Analyse eines spezifischen Wortes
-   - Automatische Potenz-Zahlen zu Worten Konvertierung (D6 → Dsechs)
-   - Resonanz-Analyse mit 13 Ebenen
-   - Export zu Archiv oder Harmonisierungen
-
-4. **Harmonisierungs-Archiv (Cloud)**
-   - Alle abgeschlossenen Sessions werden archiviert
-   - Reaktivierungs-Funktion mit anpassbaren Parametern
-   - DSGVO-konforme Löschfunktion
-
-5. **Worker-Status-Monitoring**
-   - Echtzeit-Überwachung der Edge Function
-   - Heartbeat-Mechanismus alle 60 Sekunden
-   - Status-Anzeige mit Zeitstempel
-
-6. **Kozyrev-Indikatoren**
-   - Zeit-Energie-Analyse
-   - Morphogenetisches Feld
-   - Solar-Einfluss
-   - Bewusstseins-Resonanz
-
-7. **Export-Funktionen**
-   - PDF-Export mit vollständiger Dokumentation
-   - CSV-Export für Datenanalyse
-   - TXT-Export für einfache Weitergabe
-   - **Fokus-Wort Integration** in allen Exporten
-
-8. **Patient-Management V2**
-   - Personalisierte Raten (8-12 Stellen)
-   - Bildsignatur-Integration (Ollama llava)
-   - Hardware-Algorithmen Konfiguration pro Patient
-   - DSGVO-konforme Datenverwaltung
-
----
-
-## 🏗️ Architektur
-
-### Komponenten-Hierarchie
-
+### 1.1 Datei-Lokation
 ```
-CopenVisualizationV2Page
-├── CopenAlgorithmVisualizationV2 (Haupt-Steuerung)
-│   ├── PatientManagerCloudV2
-│   │   ├── PatientHardwareConfig
-│   │   └── Ollama Bildsignatur-Analyse
-│   ├── HardwareAlgorithmSettings (Global Toggle)
-│   ├── KozyrevIndicators
-│   ├── Word Energy Input & Auto-Potenz
-│   ├── Parallele Harmonisierungen Grid
-│   ├── DatabaseManager
-│   │   ├── Fokus-Wort Input
-│   │   ├── Import (TXT/CSV/Bild)
-│   │   ├── Potenz-Zahlen zu Worten Konvertierung
-│   │   ├── Resonanz-Analyse
-│   │   └── Export (PDF/CSV/TXT)
-│   ├── HarmonizationArchiveCloud
-│   │   └── Reaktivierungs-Dialog
-│   └── HarmonizationTemplates
-├── AnalysisArchiveCloud
-├── SessionStatusList
-└── WorkerStatusMonitor
+src/components/CopenAlgorithmVisualizationV2.tsx (1479 Zeilen)
 ```
 
-### Datenfluss-Diagramm
+### 1.2 Kernkonzept
+Der Bruce Copen Algorithmus V2 berechnet eine eindeutige "Copen-Rate" basierend auf:
+- Wortenergie (Text-Input)
+- Potenz und Potenztyp
+- Klientendaten (Name, Geburtsdatum, Geburtsort)
+- Optionale Fibonacci-Modulation (adaptiv oder fest)
 
-```mermaid
-graph TD
-    A[User Input: Wortenergie] --> B[Normalisierung]
-    B --> C[Buchstabenwerte berechnen]
-    C --> D[Positionsgewichtung]
-    D --> E[Primärsumme]
-    E --> F[Baserate × 1000]
-    F --> G[Fibonacci-Modulation /21 × 34]
-    G --> H[Potenz-Anpassung]
-    H --> I[Finale Copen-Rate]
-    
-    J[Patient-Daten] --> K[Klienten-Rate berechnen]
-    K --> L[Kozyrev-Modulation]
-    
-    I --> M[Harmonisierung Session]
-    L --> M
-    M --> N[Supabase harmonization_sessions_v2]
-    N --> O[Edge Function Worker]
-    O --> P[Realtime Update]
-    P --> M
+### 1.3 Schritt-für-Schritt Berechnungsalgorithmus
+
+#### Schritt 1: Normalisierung
+```typescript
+const normalizeWordEnergy = (word: string): string => {
+  return word
+    .toUpperCase()
+    .replace(/Ä/g, 'AE')
+    .replace(/Ö/g, 'OE') 
+    .replace(/Ü/g, 'UE')
+    .replace(/ß/g, 'SS')
+    .replace(/\s*[DCLMF]+\d+/g, '') // Entferne Potenz-Suffixe
+    .replace(/[^A-Z0-9]/g, '')       // Nur Buchstaben und Zahlen
+    .trim();
+};
 ```
 
----
+#### Schritt 2: Zeichenwert-Berechnung
+```typescript
+const getCharValue = (char: string): number => {
+  if (char >= 'A' && char <= 'Z') {
+    return char.charCodeAt(0) - 64; // A=1, B=2, ... Z=26
+  }
+  if (char >= '0' && char <= '9') {
+    return parseInt(char, 10);       // 0-9
+  }
+  return 0;
+};
+```
 
-## 🧩 Komponenten-Details
+#### Schritt 3: Positionsgewichtete Primärsumme
+```typescript
+let position = 1;
+let primarySum = 0;
 
-### 1. CopenAlgorithmVisualizationV2.tsx
+for (let i = 0; i < cleanWord.length; i++) {
+  const char = cleanWord[i];
+  const value = getCharValue(char);
+  primarySum += value * position;  // S = Σ(W(ch) × position)
+  position++;
+}
+```
 
-**Hauptsteuerung** für den gesamten V2-Workflow.
+#### Schritt 4: Basisrate
+```typescript
+const baseRate = primarySum * 1000;  // B = S × 1000
+```
 
-#### State-Management
+#### Schritt 5: Fibonacci-Modulation
+
+**Standard (Authentisch 1978-1995):**
+```typescript
+const fibonacciRate = Math.floor((baseRate / 21) * 34);
+```
+
+**Adaptiv (Wortlängen-basiert):**
+```typescript
+const getAdaptiveFibonacciPair = (wordLength: number): { div: number; mult: number } => {
+  if (wordLength <= 0) return { div: 21, mult: 34 };
+  if (wordLength >= 1 && wordLength <= 4) return { div: 13, mult: 21 };
+  if (wordLength >= 5 && wordLength <= 10) return { div: 21, mult: 34 };
+  if (wordLength >= 11 && wordLength <= 20) return { div: 34, mult: 55 };
+  return { div: 55, mult: 89 };
+};
+```
+
+#### Schritt 6: Potenz-Modifikation
+```typescript
+const getPotencyModifier = () => {
+  switch (effectiveType) {
+    case 'D':  return Math.floor(fibonacciRate * (effectivePotency / 10));
+    case 'C':  return Math.floor(fibonacciRate * (effectivePotency / 5));
+    case 'LM': return Math.floor(fibonacciRate * (effectivePotency / 2));
+    case 'M':  return Math.floor(fibonacciRate * effectivePotency);
+    case 'F1': return Math.floor(fibonacciRate * (effectivePotency / 6));
+    case 'F2': return Math.floor(fibonacciRate * (effectivePotency / 4));
+    case 'F3': return Math.floor(fibonacciRate * (effectivePotency / 3));
+    default:   return 0;
+  }
+};
+```
+
+#### Schritt 7: Finale Rate
+```typescript
+const finalRate = fibonacciRate + potencyModifier;  // R = F + P
+```
+
+### 1.4 Potenztypen-Spezifikation
+
+| Typ | Name | Bereich | Divisor |
+|-----|------|---------|---------|
+| D | Dezimal | 1-100 | /10 |
+| C | Centesimal | 1-200 | /5 |
+| LM | 50-Millesimal | 1-30 | /2 |
+| M | Millennial | 1-100.000.000 | ×1 |
+| F1 | Frequenz 1 | 30-100 | /6 |
+| F2 | Frequenz 2 | 50-100 | /4 |
+| F3 | Frequenz 3 | 80-100 | /3 |
+
+### 1.5 Beispielberechnung
+
+**Input:** "NUX VOMICA" mit D6
+
+```
+Normalisiert: NUXVOMICA
+N(14)×1 = 14
+U(21)×2 = 42
+X(24)×3 = 72
+V(22)×4 = 88
+O(15)×5 = 75
+M(13)×6 = 78
+I(9)×7  = 63
+C(3)×8  = 24
+A(1)×9  = 9
+
+Primärsumme: 465
+Basisrate: 465.000
+Fibonacci-Rate: ⌊(465.000 / 21) × 34⌋ = 752.857
+Potenz-Bonus: ⌊752.857 × (6/10)⌋ = 451.714
+Finale Rate: 752.857 + 451.714 = 1.204.571
+```
+
+### 1.6 Klienten-Rate Berechnung
 
 ```typescript
-// Wortenergie & Potenz
-const [word, setWord] = useState('NUX VOMICA');
-const [potency, setPotency] = useState(6);
-const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
+const calculateClientRate = () => {
+  if (!selectedPatient) return 0;
 
-// Auto-Potenz
-const [autoPotency, setAutoPotency] = useState(false);
-const [autoCalculatedType, setAutoCalculatedType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
-const [autoCalculatedPotency, setAutoCalculatedPotency] = useState(6);
-
-// Kozyrev
-const [kozyrevEnabled, setKozyrevEnabled] = useState(false);
-
-// Harmonisierungen
-const [harmonizations, setHarmonizations] = useState<ActiveHarmonization[]>([]);
-const [harmonizationDuration, setHarmonizationDuration] = useState(42);
-const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
-const [pulsePauseActive, setPulsePauseActive] = useState(false);
-const [pulseSeconds, setPulseSeconds] = useState(21);
-const [pauseSeconds, setPauseSeconds] = useState(42);
-
-// Patient
-const [selectedPatient, setSelectedPatient] = useState<CloudPatient | null>(null);
-
-// Hardware-Algorithmen
-const [rateGeneratorEnabled, setRateGeneratorEnabled] = useState(() => {
-  return localStorage.getItem('hardwareAlgorithms_rateGenerator_enabled_v2') === 'true';
-});
-const [analysisEnabled, setAnalysisEnabled] = useState(() => {
-  return localStorage.getItem('hardwareAlgorithms_analysis_enabled_v2') === 'true';
-});
-```
-
-#### Auto-Potenz-Berechnung
-
-Intelligente Ermittlung der optimalen Potenz basierend auf Klientendaten und Wortenergie.
-
-```typescript
-const calculateAutoPotency = (): { type: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3', potency: number } => {
-  if (!selectedPatient) return { type: 'D', potency: 6 };
-
-  // Kombinierte Datengrundlage
-  const combinedData = `${word} ${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
-  
-  // ASCII-Summe
-  let sum = 0;
-  for (const char of combinedData.toUpperCase().replace(/[^A-Z]/g, '')) {
-    sum += char.charCodeAt(0) - 64;
+  // Wenn personalisierte Rate vorhanden (8-12 Stellen)
+  if (selectedPatient.personal_rate && selectedPatient.personal_rate.length >= 8) {
+    return parseInt(selectedPatient.personal_rate, 10);
   }
 
-  // Kozyrev-Modulatoren (nur wenn aktiviert)
+  const clientData = `${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
+  const cleanClientData = normalizeWordEnergy(clientData);
+  
+  let position = 1;
+  let clientSum = 0;
+  
+  for (let i = 0; i < cleanClientData.length; i++) {
+    const char = cleanClientData[i];
+    const value = getCharValue(char);
+    clientSum += value * position;
+    position++;
+  }
+  
+  const clientBaseRate = clientSum * 1000;
+  return Math.floor((clientBaseRate / 21) * 34);
+};
+```
+
+### 1.7 Auto-Potenz Berechnung
+
+Die Auto-Potenz ermittelt automatisch die optimale Potenz und den Potenztyp basierend auf:
+- Wortenergie
+- Klientendaten (Name, Geburtsdatum, Geburtsort)
+- Kozyrev-Modulatoren (falls aktiviert)
+
+```typescript
+const calculateAutoPotency = (): { type: PotencyType, potency: number } => {
+  if (!selectedPatient) return { type: 'D', potency: 6 };
+
+  const combinedData = `${word} ${selectedPatient.first_name} ${selectedPatient.last_name} ${selectedPatient.birth_date} ${selectedPatient.birth_place}`;
+  
+  const normalizedData = combinedData
+    .toUpperCase()
+    .replace(/Ä/g, 'AE').replace(/Ö/g, 'OE').replace(/Ü/g, 'UE').replace(/ß/g, 'SS')
+    .replace(/[^A-Z0-9]/g, '');
+  
+  let sum = 0;
+  for (const char of normalizedData) {
+    if (char >= 'A' && char <= 'Z') sum += char.charCodeAt(0) - 64;
+    else if (char >= '0' && char <= '9') sum += parseInt(char, 10);
+  }
+
+  // Kozyrev-Modulatoren
   const birthYear = parseInt(selectedPatient.birth_date.split('-')[0]);
   const age = new Date().getFullYear() - birthYear;
-  const ageModulator = kozyrevEnabled ? (1 + (age % 7) / 20) : 1; // 7-Jahres-Zyklus
+  const ageModulator = kozyrevEnabled ? (1 + (age % 7) / 20) : 1;
   
   const placeEnergy = selectedPatient.birth_place.replace(/[^A-Z]/gi, '').length;
   const placeModulator = kozyrevEnabled ? (1 + (placeEnergy % 10) / 30) : 1;
   
   const modulatedSum = Math.round(sum * ageModulator * placeModulator);
 
-  // Alle verfügbaren Potenz-Bereiche inkl. F-Spektren
+  // Beste Potenz finden über alle Bereiche
   const allRanges = [
     { type: 'D', min: 1, max: 100, divisor: 4 },
     { type: 'C', min: 1, max: 200, divisor: 3 },
@@ -215,12 +232,11 @@ const calculateAutoPotency = (): { type: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 
     { type: 'F3', min: 80, max: 100, divisor: 1.8 },
   ];
 
-  // Beste Potenz finden
   let bestMatch = { type: 'D', potency: 1, score: Infinity };
   
   for (const range of allRanges) {
     const calculated = Math.max(range.min, Math.min(range.max, Math.floor(modulatedSum / range.divisor)));
-    const score = Math.abs(modulatedSum - (calculated * range.divisor));
+    const score = Math.abs(modulatedSum - calculated * range.divisor);
     
     if (score < bestMatch.score) {
       bestMatch = { type: range.type, potency: calculated, score };
@@ -231,309 +247,175 @@ const calculateAutoPotency = (): { type: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 
 };
 ```
 
-#### Wortenergie-Normalisierung
+---
 
-```typescript
-const normalizeWordEnergy = (word: string): string => {
-  return word
-    .toUpperCase()
-    .replace(/Ä/g, 'AE')
-    .replace(/Ö/g, 'OE') 
-    .replace(/Ü/g, 'UE')
-    .replace(/ß/g, 'SS')
-    .replace(/\s*[DCLM]+\d+/g, '')  // Entferne Potenz-Angaben
-    .replace(/\d+/g, '')             // Entferne Zahlen
-    .replace(/[^A-Z\s]/g, '')        // Nur Buchstaben + Leerzeichen
-    .replace(/\s+/g, ' ')
-    .trim();
-};
+## 2. Patientenmanagement V2
+
+### 2.1 Datei-Lokation
+```
+src/components/PatientManagerCloudV2.tsx (664 Zeilen)
 ```
 
-#### Buchstabenwerte
+### 2.2 Datenstruktur
 
 ```typescript
-const getLetterValue = (letter: string): number => {
-  return letter.toUpperCase().charCodeAt(0) - 64; // A=1, B=2, ..., Z=26
-};
-```
-
-#### Copen-Rate Berechnung
-
-```typescript
-// Schritt 1: Buchstabenwerte mit Positionsgewichtung
-const letterValues = [];
-let position = 1;
-
-for (let i = 0; i < cleanWord.length; i++) {
-  const char = cleanWord[i];
-  if (char === ' ') continue;
-  
-  const value = getLetterValue(char);
-  letterValues.push({
-    letter: char,
-    value: value,
-    position: position,
-    weighted: value * position,
-  });
-  position++;
+interface Patient {
+  id: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  birth_date: string;          // Format: YYYY-MM-DD
+  birth_place: string;
+  image_signature?: string | null;
+  image_signature_active?: boolean;
+  hardware_config?: HardwareConfig | null;
+  personal_rate?: string | null;  // 8-12 stellige personalisierte Rate
+  created_at: string;
+  updated_at: string;
 }
-
-// Schritt 2: Primärsumme
-const primarySum = letterValues.reduce((sum, item) => sum + item.weighted, 0);
-
-// Schritt 3: Baserate
-const baseRate = primarySum * 1000;
-
-// Schritt 4: Fibonacci-Modulation
-const fibonacciRate = Math.floor((baseRate / 21) * 34);
-
-// Schritt 5: Potenzanpassung
-const getPotencyModifier = () => {
-  switch (effectiveType) {
-    case 'D': return Math.floor(fibonacciRate * (effectivePotency / 10));
-    case 'C': return Math.floor(fibonacciRate * (effectivePotency / 5));
-    case 'LM': return Math.floor(fibonacciRate * (effectivePotency / 2));
-    case 'M': return Math.floor(fibonacciRate * effectivePotency);
-    case 'F1': return Math.floor(fibonacciRate * (effectivePotency / 6));
-    case 'F2': return Math.floor(fibonacciRate * (effectivePotency / 4));
-    case 'F3': return Math.floor(fibonacciRate * (effectivePotency / 3));
-    default: return 0;
-  }
-};
-
-const finalRate = fibonacciRate + getPotencyModifier();
 ```
 
-#### Klienten-Rate mit Kozyrev-Erweiterung
+### 2.3 Supabase Tabelle: `patients_v2`
 
-```typescript
-const calculateClientRateFor = (patient: CloudPatient, wordEnergy: string): number => {
-  // Prüfe auf personalisierte Rate
-  if (patient.personal_rate && patient.personal_rate.length >= 8) {
-    return parseInt(patient.personal_rate, 10);
-  }
-  
-  // Standard-Berechnung
-  const clientData = `${patient.first_name} ${patient.last_name} ${patient.birth_date} ${patient.birth_place}`;
-  const cleanClientData = normalizeWordEnergy(clientData);
-  
-  let position = 1;
-  let clientSum = 0;
-  
-  for (let i = 0; i < cleanClientData.length; i++) {
-    const char = cleanClientData[i];
-    if (char === ' ') continue;
-    
-    const value = getLetterValue(char);
-    clientSum += value * position;
-    position++;
-  }
-  
-  const clientBaseRate = clientSum * 1000;
-  const clientFibonacciRate = Math.floor((clientBaseRate / 21) * 34);
-  
-  return clientFibonacciRate;
-};
+```sql
+CREATE TABLE public.patients_v2 (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  birth_date TEXT NOT NULL,
+  birth_place TEXT NOT NULL,
+  image_signature TEXT,
+  image_signature_active BOOLEAN DEFAULT true,
+  hardware_config JSONB,
+  personal_rate TEXT,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- RLS Policies
+ALTER TABLE public.patients_v2 ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own patients v2" ON public.patients_v2
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own patients v2" ON public.patients_v2
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own patients v2" ON public.patients_v2
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own patients v2" ON public.patients_v2
+  FOR DELETE USING (auth.uid() = user_id);
 ```
 
-#### Cloud-Synchronisation
+### 2.4 Funktionen
+
+| Funktion | Beschreibung |
+|----------|--------------|
+| `loadPatients()` | Lädt alle Patienten des Users |
+| `handleAdd()` | Erstellt neuen Patienten |
+| `handleEdit(patient)` | Bearbeitet Patienten |
+| `handleUpdate()` | Speichert Änderungen |
+| `handleDelete(id)` | Löscht Patienten (DSGVO-konform) |
+| `handleImageUpload(e)` | Analysiert Bild mit Ollama llava |
+
+### 2.5 Bildsignatur-Integration
+
+Die Bildsignatur wird via Ollama llava erstellt und optional in Resonanzanalysen verwendet:
 
 ```typescript
-// Lade aktive Harmonisierungen beim Mount
-useEffect(() => {
-  const loadActiveHarmonizations = async () => {
-    if (!selectedPatient) return;
-    
-    const { data: sessions, error } = await supabase
-      .from('harmonization_sessions_v2')
-      .select('*')
-      .eq('patient_id', selectedPatient.id)
-      .in('status', ['running', 'paused', 'pending'])
-      .order('created_at', { ascending: false });
-    
-    if (sessions) {
-      const activeHarms = sessions.map(session => ({
-        id: session.id,
-        patientId: session.patient_id,
-        word: session.word,
-        wordRate: calculateWordRate(session.word),
-        clientRate: calculateClientRateFor(selectedPatient, session.word),
-        duration: Math.floor(session.duration_seconds / 60),
-        status: 'running',
-        elapsedTime: session.duration_seconds - (session.remaining_seconds || 0),
-        progress: ((session.duration_seconds - (session.remaining_seconds || 0)) / session.duration_seconds) * 100,
-        // ... weitere Felder
-      }));
-      
-      setHarmonizations(activeHarms);
-    }
-  };
-  
-  loadActiveHarmonizations();
-  
-  // Realtime-Subscription
-  const channel = supabase
-    .channel('harmonization_changes_v2')
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'harmonization_sessions_v2',
-      filter: `patient_id=eq.${selectedPatient?.id}`
-    }, () => {
-      loadActiveHarmonizations();
-    })
-    .subscribe();
-  
-  return () => {
-    supabase.removeChannel(channel);
-  };
-}, [selectedPatient]);
-```
-
-#### Backend-Sync Timer
-
-```typescript
-// Backend-Sync alle 2 Sekunden für korrekte Zeitanzeige
-useEffect(() => {
-  const syncTimer = setInterval(async () => {
-    if (!selectedPatient) return;
-    
-    const { data: sessions } = await supabase
-      .from('harmonization_sessions_v2')
-      .select('*')
-      .eq('patient_id', selectedPatient.id)
-      .in('status', ['running', 'pending']);
-    
-    if (sessions) {
-      setHarmonizations(prev =>
-        prev.map(harm => {
-          const backendSession = sessions.find(s => s.id === harm.id);
-          if (backendSession) {
-            const totalDuration = backendSession.duration_seconds;
-            const remainingTime = backendSession.remaining_seconds || 0;
-            const elapsedTime = totalDuration - remainingTime;
-            const progress = (elapsedTime / totalDuration) * 100;
-            
-            return {
-              ...harm,
-              elapsedTime,
-              progress,
-              remainingSeconds: remainingTime
-            };
-          }
-          return harm;
-        })
-      );
-    }
-  }, 2000);
-  
-  return () => clearInterval(syncTimer);
-}, [selectedPatient]);
-```
-
-#### Harmonisierung Starten
-
-```typescript
-const handleStartHarmonization = async () => {
-  if (!selectedPatient || !word) return;
-  
-  const durationSeconds = continuousMode ? 0 : getDurationInSeconds(harmonizationDuration, harmonizationUnit);
-  const pulseInSeconds = pulsePauseActive ? (pulseUnit === 'minutes' ? pulseSeconds * 60 : pulseSeconds) : null;
-  const pauseInSeconds = pulsePauseActive ? (pauseUnit === 'minutes' ? pauseSeconds * 60 : pauseSeconds) : null;
-  
-  const { data, error } = await supabase
-    .from('harmonization_sessions_v2')
-    .insert({
-      user_id: user.id,
-      patient_id: selectedPatient.id,
-      word: word, // WICHTIG: Originale Wortenergie, nicht die Rate!
-      copen_rate: finalRate.toString(),
-      tested_potency: `${potencyType}${potency}`,
-      duration_seconds: durationSeconds,
-      status: 'pending',
-      pulse_seconds: pulseInSeconds,
-      pause_seconds: pauseInSeconds,
-      pulse_pause_active: pulsePauseActive,
-    })
-    .select()
-    .single();
-  
-  if (data) {
-    // Invoke Worker
-    await supabase.functions.invoke('harmonization-worker', {
-      body: { action: 'tick' }
-    });
-    
-    toast({
-      title: "Harmonisierung gestartet",
-      description: `"${word}" wird harmonisiert`
-    });
-  }
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  const result = await analyzeImageWithOllama(file);
+  setFormData(prev => ({ ...prev, image_signature: result.signature }));
 };
 ```
+
+### 2.6 Hardware-Konfiguration pro Patient
+
+Jeder Patient kann individuelle Hardware-Algorithmus-Einstellungen haben:
+
+```typescript
+interface HardwareConfig {
+  cpuQuantumJitter: 'auto' | 'on' | 'off';
+  ramEntropy: 'auto' | 'on' | 'off';
+  timeSourceCoherence: 'auto' | 'on' | 'off';
+  gpuRenderingEntropy: 'auto' | 'on' | 'off';
+  networkLatency: 'auto' | 'on' | 'off';
+  combinedAlgorithm: 'auto' | 'on' | 'off';
+}
+```
+
+### 2.7 Personalisierte Rate (personal_rate)
+
+Optionales 8-12 stelliges Feld für individuelle Klienten-Rate:
+- Wenn vorhanden und gültig (8-12 Stellen): wird anstelle berechneter Raten verwendet
+- Visueller Indikator (Zap-Icon) in der Patientenliste
 
 ---
 
-### 2. DatabaseManager.tsx
+## 3. Datenbank-Manager
 
-**Datenbank-Import, Analyse und Export-Manager** mit erweiterten Features.
-
-#### Neue Features
-
-1. **Fokus-Wort Analyse**
-   - Optionales Input-Feld für ein priorisiertes Wort
-   - Wird automatisch an erste Position der Analyse-Liste gesetzt
-   - Integration in alle Exports
-
-2. **Potenz-Zahlen zu Worten Konvertierung**
-   - Automatische Umwandlung beim Import
-   - D6 → Dsechs, C100 → CEinhundert
-   - Unterstützt CSV und TXT Formate
-
-#### Fokus-Wort Implementation
-
-```typescript
-const [focusWord, setFocusWord] = useState<string>('');
-
-const handleAnalyzeDatabase = () => {
-  let words = parseImportData(importData);
-  
-  // Wenn Fokus-Wort gesetzt, füge es am Anfang hinzu
-  if (focusWord.trim()) {
-    const trimmedFocus = focusWord.trim();
-    words = [trimmedFocus, ...words.filter(w => w.toLowerCase() !== trimmedFocus.toLowerCase())];
-    
-    toast({
-      title: "ℹ️ Fokus-Analyse",
-      description: `Analyse mit Fokus auf: ${trimmedFocus}`,
-    });
-  }
-  
-  // ... Rest der Analyse
-};
+### 3.1 Datei-Lokation
+```
+src/components/DatabaseManager.tsx (1593 Zeilen)
 ```
 
-#### Potenz-Zahlen Konvertierung
+### 3.2 Haupt-Tabs
+
+| Tab | Funktion |
+|-----|----------|
+| **DB-Analyse** | Importiert und analysiert Wortenergie-Datenbanken |
+| **Direkte Raten** | Harmonisiert Raten direkt ohne Analyse |
+
+### 3.3 Datenimport-Formate
+
+#### CSV-Format:
+```csv
+Wortenergie,Potenz,Typ,Alphabet
+ARNICA,30,D,latin
+NUX VOMICA,6,C,latin
+```
+
+#### TXT-Format (eine Zeile = ein Datensatz):
+```txt
+ARNICA
+Chronische Kopfschmerzen
+NUX VOMICA D30
+```
+
+### 3.4 Import-Parser
 
 ```typescript
-import { convertPotencyNumbersToWords } from '@/utils/potencyText';
-
 const parseImportData = (data: string): string[] => {
   const lines = data.trim().split('\n');
   const entries: string[] = [];
+
+  // Erkennt automatisch CSV oder TXT Format
+  const looksLikeCsvRecord = (line: string) => {
+    const parts = line.split(',').map(p => p.trim());
+    if (parts.length < 3) return false;
+    const potencyNum = parseInt(parts[1], 10);
+    const type = (parts[2] || '').toUpperCase();
+    const validType = ['D', 'C', 'LM', 'M'].includes(type);
+    return !isNaN(potencyNum) && validType;
+  };
+
+  const anyCsv = lines.some(l => looksLikeCsvRecord(l));
 
   for (const raw of lines) {
     const line = raw.trim();
     if (line.length === 0) continue;
 
     if (anyCsv) {
-      // CSV-Modus: Konvertiere nur erste Spalte (Wortenergie)
+      // CSV-Modus: Konvertiere Potenz-Zahlen
       const parts = line.split(',').map(p => p.trim());
       const convertedWord = convertPotencyNumbersToWords(parts[0]);
       parts[0] = convertedWord;
       entries.push(parts.join(','));
     } else {
-      // TXT-Modus: Konvertiere ganze Zeile
+      // TXT-Modus: Konvertiere Potenz-Zahlen
       const convertedLine = convertPotencyNumbersToWords(line);
       entries.push(convertedLine);
     }
@@ -543,246 +425,340 @@ const parseImportData = (data: string): string[] => {
 };
 ```
 
-#### Harmonisierung mit "Harmonisierung mit Rate" Syntax
-
-**NUR bei DB-Analyse**, nicht beim Single-Generator!
+### 3.5 Potenz-Wort-Konvertierung
 
 ```typescript
-const handleSendSelectedToHarmonization = async () => {
-  const selectedResults = sortedResults.filter(r => 
-    selectedForHarmonization.has(`${r.word}-${r.rate}`)
-  );
-  
-  for (const result of selectedResults) {
-    await supabase
-      .from('harmonization_sessions_v2')
-      .insert({
-        user_id: user.id,
-        patient_id: selectedPatient.id,
-        word: `Harmonisierung mit ${result.rate.toLocaleString('de-DE')}`, // Neue Syntax
-        copen_rate: result.rate.toString(),
-        tested_potency: `${result.potencyType}${result.potency}`,
-        duration_seconds: getDurationInSeconds(batchDuration, batchUnit),
-        status: 'pending',
-        pulse_seconds: pulsePauseActive ? (pulseUnit === 'minutes' ? pulseSeconds * 60 : pulseSeconds) : null,
-        pause_seconds: pulsePauseActive ? (pauseUnit === 'minutes' ? pauseSeconds * 60 : pauseSeconds) : null,
-        pulse_pause_active: pulsePauseActive,
-      });
-  }
-  
-  toast({
-    title: "Erfolg",
-    description: `${selectedResults.length} Harmonisierungen gestartet`
-  });
-};
-```
-
-#### Export-Funktionen mit Fokus-Wort
-
-```typescript
-const handleExportPDF = () => {
-  const doc = new jsPDF();
-  
-  // Header
-  doc.setFontSize(16);
-  doc.text('Datenbank-Analyse Export', 14, 20);
-  
-  // Fokus-Wort hervorheben
-  if (focusWord.trim()) {
-    doc.setFontSize(12);
-    doc.setTextColor(255, 0, 0);
-    doc.text(`Fokus: ${focusWord}`, 14, 30);
-    doc.setTextColor(0, 0, 0);
-  }
-  
-  // Tabelle
-  autoTable(doc, {
-    startY: focusWord.trim() ? 35 : 30,
-    head: [['Wortenergie', 'Potenz', 'Copen-Rate', 'Resonanz', 'Höchste Ebene']],
-    body: sortedResults.map(r => [
-      r.word,
-      `${r.potencyType}${r.potency}`,
-      formatRate12(r.rate),
-      `${r.resonanceScore}%`,
-      `Ebene ${r.highestLevel} (${r.highestLevelValue?.toFixed(1)}%)`
-    ])
-  });
-  
-  doc.save(`db-analyse-${Date.now()}.pdf`);
-};
-```
-
----
-
-### 3. HarmonizationArchiveCloud.tsx
-
-**Cloud-basiertes Archiv** für alle abgeschlossenen Harmonisierungen.
-
-#### Reaktivierungs-Dialog
-
-```typescript
-const handleReactivate = async () => {
-  if (!selectedSession || !user) return;
-
-  const durationSeconds = reactivateContinuous ? 0 : getDurationInSeconds(reactivateDuration, reactivateUnit);
-  const pulseInSeconds = reactivatePulsePauseActive ? (reactivatePulseUnit === 'minutes' ? reactivatePulseSeconds * 60 : reactivatePulseSeconds) : null;
-  const pauseInSeconds = reactivatePulsePauseActive ? (reactivatePauseUnit === 'minutes' ? reactivatePauseSeconds * 60 : reactivatePauseSeconds) : null;
-
-  const { error } = await supabase
-    .from('harmonization_sessions_v2')
-    .insert({
-      user_id: user.id,
-      patient_id: selectedSession.patient_id,
-      word: selectedSession.word,
-      copen_rate: selectedSession.copen_rate,
-      tested_potency: selectedSession.tested_potency,
-      duration_seconds: durationSeconds,
-      status: 'pending',
-      pulse_seconds: pulseInSeconds,
-      pause_seconds: pauseInSeconds,
-      pulse_pause_active: reactivatePulsePauseActive,
-    });
-
-  if (!error) {
-    await supabase.functions.invoke('harmonization-worker', {
-      body: { action: 'tick' }
-    });
-    
-    toast({
-      title: "Erfolg",
-      description: "Harmonisierung reaktiviert"
-    });
-  }
-};
-```
-
----
-
-### 4. PatientManagerCloudV2.tsx
-
-**Erweiterte Patientenverwaltung** mit neuen Features.
-
-#### Neue Features
-
-1. **Personalisierte Raten** (8-12 Stellen)
-2. **Bildsignatur-Integration** (Ollama llava)
-3. **Hardware-Algorithmen Konfiguration** pro Patient
-
-#### Personalisierte Rate
-
-```typescript
-const [formData, setFormData] = useState({
-  first_name: '',
-  last_name: '',
-  birth_date: '',
-  birth_place: '',
-  image_signature: '',
-  personal_rate: '' // NEU: 8-12 Stellen
-});
-
-// Bei Patient-Erstellung/-Update
-const handleAdd = async () => {
-  const { data, error } = await supabase
-    .from('patients_v2')
-    .insert([{
-      user_id: user.id,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      birth_date: formData.birth_date,
-      birth_place: formData.birth_place,
-      image_signature: formData.image_signature || null,
-      image_signature_active: imageSignatureActive,
-      hardware_config: hardwareConfig,
-      personal_rate: formData.personal_rate || null, // NEU
-    }])
-    .select()
-    .single();
-};
-```
-
-#### Bildsignatur mit Ollama
-
-```typescript
-const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-
-  setAnalyzingImage(true);
-  
-  try {
-    const result = await analyzeImageWithOllama(file);
-    
-    if (result.error) throw new Error(result.error);
-
-    setFormData(prev => ({ ...prev, image_signature: result.signature }));
-    
-    toast({
-      title: "Bild analysiert",
-      description: "Bildsignatur erstellt"
-    });
-  } catch (error) {
-    toast({
-      variant: "destructive",
-      title: "Bildanalyse fehlgeschlagen",
-      description: error.message
-    });
-  } finally {
-    setAnalyzingImage(false);
-  }
-};
-```
-
----
-
-## 📦 Datenstrukturen
-
-### CloudPatient (V2)
-
-```typescript
-interface CloudPatient {
-  id: string;
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  birth_date: string;
-  birth_place: string;
-  personal_rate?: string | null; // NEU: 8-12 Stellen
-  image_signature?: string | null;
-  image_signature_active?: boolean;
-  hardware_config?: {
-    rateGenerator: HardwareConfig;
-    analysis: HardwareConfig;
-  } | null;
-  created_at: string;
-  updated_at: string;
+// src/utils/potencyText.ts
+export function convertPotencyNumbersToWords(text: string): string {
+  // D6 → Dsechs, C100 → CEinhundert
+  const numberWords: Record<number, string> = {
+    1: 'eins', 2: 'zwei', 3: 'drei', 4: 'vier', 5: 'fünf',
+    6: 'sechs', 7: 'sieben', 8: 'acht', 9: 'neun', 10: 'zehn',
+    // ... weitere Zahlen
+    100: 'Einhundert', 200: 'Zweihundert'
+  };
+  // Implementierung...
 }
 ```
 
-### CloudHarmonizationSession (V2)
+### 3.6 Datenbank-Speicherung
+
+**Supabase Tabelle: `word_databases`**
+
+```sql
+CREATE TABLE public.word_databases (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID NOT NULL,
+  name TEXT NOT NULL,
+  entries TEXT[] NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- RLS Policies
+ALTER TABLE public.word_databases ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own databases" ON public.word_databases
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own databases" ON public.word_databases
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own databases" ON public.word_databases
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own databases" ON public.word_databases
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### 3.7 Direkte Raten-Harmonisierung
+
+Ermöglicht das Harmonisieren von Raten ohne vorherige Analyse:
 
 ```typescript
-interface CloudHarmonizationSession {
-  id: string;
-  user_id: string;
-  patient_id: string;
-  word: string; // WICHTIG: Originale Wortenergie oder "Harmonisierung mit Rate"
-  copen_rate: string | null;
-  tested_potency: string | null;
-  status: string; // 'pending' | 'running' | 'paused' | 'completed' | 'cancelled'
-  duration_seconds: number;
-  remaining_seconds: number | null;
-  progress: number;
-  started_at: string | null;
-  completed_at: string | null;
-  pulse_seconds: number | null;
-  pause_seconds: number | null;
-  pulse_pause_active: boolean | null;
-  created_at: string;
-  updated_at: string;
+const handleDirectRateHarmonization = async () => {
+  // Parse Raten (eine pro Zeile)
+  const rates = directRatesInput
+    .split('\n')
+    .map(line => line.trim().replace(/\./g, '').replace(/,/g, ''))
+    .filter(line => line.length > 0 && !isNaN(Number(line)))
+    .map(line => Number(line));
+
+  const inserts = rates.map(rate => ({
+    user_id: user.id,
+    patient_id: selectedPatient.id,
+    word: `Kohärente Harmonisierung mit ${rate.toLocaleString('de-DE')}`,
+    copen_rate: rate.toString(),
+    duration_seconds: durationSeconds,
+    status: 'pending',
+    pulse_seconds: pulseInSeconds,
+    pause_seconds: pauseInSeconds,
+    pulse_pause_active: pulsePauseActive,
+  }));
+
+  await supabase.from('harmonization_sessions_v2').insert(inserts);
+};
+```
+
+---
+
+## 4. Datenbank-Analyse
+
+### 4.1 Java-Algorithmus Portierung
+
+Die Analyse basiert auf dem originalen Java-Algorithmus mit folgenden Komponenten:
+
+#### Datei-Lokation:
+```
+src/utils/resonanceAnalysis.ts (321 Zeilen)
+```
+
+### 4.2 Analyse-Konfiguration
+
+```typescript
+export interface AnalysisConfig {
+  selectionFraction: number;  // Standard: 1 (100% für DB-Analyse)
+  minSelection: number;       // Minimum: 1
+  maxSelection: number;       // Maximum: 10000
+  chargingThreshold: number;  // Standard: 100
+  maxEntries?: number;        // Standard: 200 für DB-Analyse
+}
+
+export const DEFAULT_ANALYSIS_CONFIG: AnalysisConfig = {
+  selectionFraction: 0.1,
+  minSelection: 1,
+  maxSelection: 100,
+  chargingThreshold: 100,
+  maxEntries: 35,
+};
+```
+
+### 4.3 Ebenen-Gewichte
+
+```typescript
+const LEVEL_WEIGHTS = [
+  { level: 1, weight: 15 },   // Physical Particles
+  { level: 2, weight: 14 },   // Physical Structure
+  { level: 3, weight: 13 },   // Etheric Prana
+  { level: 4, weight: 12 },   // Etheric Meridians
+  { level: 5, weight: 11 },   // Astral Emotions
+  { level: 6, weight: 10 },   // Astral Thoughts
+  { level: 7, weight: 9 },    // Mental Time
+  { level: 8, weight: 8 },    // Mental Constructs
+  { level: 9, weight: 7 },    // Causal Blueprints
+  { level: 10, weight: 6 },   // Causal Alchemy
+  { level: 11, weight: 3 },   // Atmic Identity
+  { level: 12, weight: 2 },   // Atmic Love
+];
+```
+
+### 4.4 Analyse-Pipeline
+
+```typescript
+export function analyzeRates(
+  rates: Array<{ name: string; copenRate: number }>,
+  config: AnalysisConfig
+): AnalysisResult {
+  // 1. Selektion (Fisher-Yates Shuffle)
+  const selected = selectRates(rates, config);
+  
+  // 2. Energetisches Laden
+  const { energies, trials } = chargeRates(selected, config.chargingThreshold);
+  
+  // 3. Potenz- und Level-Zuweisung
+  const rateObjects = selected.map(rate => {
+    const { potency, potencyType, levelDistribution, dominantLevel } = assignPotencyAndLevels(rate.name);
+    return {
+      rateName: rate.name,
+      copenRate: rate.copenRate,
+      energeticValue: energies[rate.name],
+      potency,
+      potencyType,
+      levelDistribution,
+      dominantLevel,
+    };
+  });
+  
+  // 4. Sortieren nach energeticValue
+  rateObjects.sort((a, b) => b.energeticValue - a.energeticValue);
+  
+  // 5. Auf maxEntries begrenzen
+  return {
+    rateObjects: config.maxEntries ? rateObjects.slice(0, config.maxEntries) : rateObjects,
+    numberOfTrials: trials,
+  };
 }
 ```
 
-### ActiveHarmonization (Frontend)
+### 4.5 Energetisches Laden
+
+```typescript
+function chargeRates(
+  selectedRates: Array<{ name: string; copenRate: number }>,
+  threshold: number
+): { energies: Record<string, number>; trials: number } {
+  const energies: Record<string, number> = {};
+  selectedRates.forEach(rate => {
+    energies[rate.name] = 0;
+  });
+  
+  let trials = 0;
+  let maxEnergy = 0;
+  
+  while (maxEnergy < threshold) {
+    selectedRates.forEach(rate => {
+      const boost = Math.floor(Math.random() * 10); // 0-9
+      energies[rate.name] += boost;
+      maxEnergy = Math.max(maxEnergy, energies[rate.name]);
+    });
+    trials++;
+    if (trials > 10000) break;
+  }
+  
+  return { energies, trials };
+}
+```
+
+### 4.6 Potenz- und Level-Zuweisung
+
+```typescript
+function assignPotencyAndLevels(rateName: string): {
+  potency: number;
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
+  levelDistribution: Record<number, number>;
+  dominantLevel: number;
+} {
+  // 1. Gewichtete Ebene ermitteln
+  const levelValue = weightedPickLevel();
+  
+  // 2. Potenzreihe gewichtet auswählen
+  const potencyTypes = ['D', 'C', 'LM', 'M', 'F1', 'F2', 'F3'];
+  const potencyTypeWeights = [30, 25, 20, 15, 5, 3, 2]; // D häufigster
+  
+  const r = Math.random() * 100;
+  let cumulative = 0;
+  let selectedPotencyType = 'D';
+  
+  for (let i = 0; i < potencyTypes.length; i++) {
+    cumulative += potencyTypeWeights[i];
+    if (r < cumulative) {
+      selectedPotencyType = potencyTypes[i];
+      break;
+    }
+  }
+  
+  // 3. Realistische Potenzwerte generieren
+  let actualPotency: number;
+  switch (selectedPotencyType) {
+    case 'D':  actualPotency = Math.floor(Math.random() * 100) + 1;  break;
+    case 'C':  actualPotency = Math.floor(Math.random() * 200) + 1;  break;
+    case 'LM': actualPotency = Math.floor(Math.random() * 30) + 1;   break;
+    case 'M':  actualPotency = Math.floor(Math.pow(10, Math.random() * 8)); break;
+    case 'F1': actualPotency = Math.floor(Math.pow(10, 6 + Math.random() * 7)); break;
+    case 'F2': actualPotency = Math.floor(Math.pow(10, 8 + Math.random() * 7)); break;
+    case 'F3': actualPotency = Math.floor(Math.pow(10, 10 + Math.random() * 6)); break;
+    default:   actualPotency = 1;
+  }
+  
+  // 4. Level-Verteilung: 100 Ziehungen
+  const levelDistribution: Record<number, number> = {};
+  for (let i = 1; i <= 12; i++) levelDistribution[i] = 0;
+  
+  for (let i = 0; i < 100; i++) {
+    const level = weightedPickLevel();
+    levelDistribution[level]++;
+  }
+  
+  // 5. Dominante Ebene = Maximum
+  let dominantLevel = 1;
+  let maxCount = 0;
+  for (let level = 1; level <= 12; level++) {
+    if (levelDistribution[level] > maxCount) {
+      maxCount = levelDistribution[level];
+      dominantLevel = level;
+    }
+  }
+  
+  return { potency: actualPotency, potencyType: selectedPotencyType, levelDistribution, dominantLevel };
+}
+```
+
+### 4.7 Fokus-Wortenergie
+
+Optionale Referenz zur priorisierten Analyse:
+
+```typescript
+if (focusWord.trim()) {
+  const trimmedFocus = focusWord.trim();
+  words = [trimmedFocus, ...words.filter(w => w.toLowerCase() !== trimmedFocus.toLowerCase())];
+}
+```
+
+### 4.8 Harmonisierungs-Output-Syntax
+
+Nach der Analyse werden selektierte Einträge mit folgender Syntax harmonisiert:
+```
+Harmonisierung mit {RATE}
+```
+
+Beispiel: `Harmonisierung mit 1.549.788.000`
+
+---
+
+## 5. Parallele Harmonisierungen V2
+
+### 5.1 Supabase Tabelle: `harmonization_sessions_v2`
+
+```sql
+CREATE TABLE public.harmonization_sessions_v2 (
+  id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID,
+  patient_id UUID NOT NULL,
+  word TEXT NOT NULL,
+  copen_rate TEXT,
+  tested_potency TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  duration_seconds INTEGER NOT NULL,
+  remaining_seconds INTEGER,
+  progress INTEGER DEFAULT 0,
+  started_at TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  job_started_at TIMESTAMP WITH TIME ZONE,
+  job_last_heartbeat TIMESTAMP WITH TIME ZONE,
+  pulse_seconds INTEGER,
+  pause_seconds INTEGER,
+  pulse_pause_active BOOLEAN DEFAULT false,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+-- RLS Policies
+ALTER TABLE public.harmonization_sessions_v2 ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own harmonization sessions v2" ON public.harmonization_sessions_v2
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own harmonization sessions v2" ON public.harmonization_sessions_v2
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own harmonization sessions v2" ON public.harmonization_sessions_v2
+  FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own harmonization sessions v2" ON public.harmonization_sessions_v2
+  FOR DELETE USING (auth.uid() = user_id);
+```
+
+### 5.2 Session-Status
+
+| Status | Beschreibung |
+|--------|--------------|
+| `pending` | Warten auf Start |
+| `running` | Aktiv laufend |
+| `paused` | Pausiert |
+| `completed` | Abgeschlossen |
+| `cancelled` | Abgebrochen |
+
+### 5.3 Impuls/Pausen-Modus
 
 ```typescript
 interface ActiveHarmonization {
@@ -795,912 +771,618 @@ interface ActiveHarmonization {
   clientRate: number;
   duration: number;
   durationUnit: 'seconds' | 'minutes' | 'hours' | 'days';
-  status: 'running' | 'paused' | 'pending';
+  status: 'running' | 'paused' | 'completed';
   elapsedTime: number;
   progress: number;
-  remainingSeconds?: number;
+  continuous?: boolean;
   pulseSeconds?: number;
   pauseSeconds?: number;
-  pulsePauseActive: boolean;
+  pulsePauseActive?: boolean;
 }
 ```
 
-### ResonanceResult (Analyse)
+### 5.4 Edge Function: harmonization-worker
 
 ```typescript
-interface ResonanceResult {
-  word: string;
-  potency: number;
-  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
-  rate: number;
-  resonanceScore: number;
-  clientResonance: number;
-  levelResonance?: Record<string, number>; // Ebene 1-13
-  highestLevel?: number;
-  highestLevelValue?: number;
-}
-```
-
----
-
-## 🔬 Algorithmen
-
-### 1. Wortenergie-Normalisierung
-
-```typescript
-const normalizeWordEnergy = (word: string): string => {
-  return word
-    .toUpperCase()
-    .replace(/Ä/g, 'AE')
-    .replace(/Ö/g, 'OE')
-    .replace(/Ü/g, 'UE')
-    .replace(/ß/g, 'SS')
-    .replace(/\s*[DCLM]+\d+/g, '')  // Potenz-Angaben entfernen
-    .replace(/\d+/g, '')             // Zahlen entfernen
-    .replace(/[^A-Z\s]/g, '')        // Nur Buchstaben + Leerzeichen
-    .replace(/\s+/g, ' ')
-    .trim();
-};
-```
-
-### 2. Buchstabenwert-Berechnung
-
-```typescript
-const getLetterValue = (letter: string): number => {
-  return letter.toUpperCase().charCodeAt(0) - 64;
-};
-```
-
-### 3. Fibonacci-Modulation
-
-```typescript
-const fibonacciRate = Math.floor((baseRate / 21) * 34);
-```
-
-**Erklärung:**
-- Fibonacci-Verhältnis: 21 und 34 sind aufeinanderfolgende Fibonacci-Zahlen
-- Division durch 21, Multiplikation mit 34 → natürliche harmonische Resonanz
-- Basiert auf Bruce Copens ursprünglichem Algorithmus
-
-### 4. Rate-Formatierung
-
-```typescript
-const formatRate12 = (value: number): string => {
-  if (!Number.isFinite(value)) return '';
-  const rounded = Math.trunc(Math.abs(value));
-  return rounded.toLocaleString('de-DE'); // Deutsche Gruppierung: 1.234.567
-};
-```
-
-### 5. Potenz-Zahlen zu Worten (NEU)
-
-```typescript
-// src/utils/potencyText.ts
-
-export const numberToGermanWords = (num: number): string => {
-  const ones = ['', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun'];
-  const teens = ['zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn', 'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn'];
-  const tens = ['', 'zehn', 'zwanzig', 'dreißig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig'];
-  const hundreds = ['', 'einhundert', 'zweihundert', 'dreihundert', 'vierhundert', 'fünfhundert', 'sechshundert', 'siebenhundert', 'achthundert', 'neunhundert'];
-
-  if (num === 0) return 'null';
-  if (num < 10) return ones[num];
-  if (num >= 10 && num < 20) return teens[num - 10];
-  if (num >= 20 && num < 100) {
-    const ten = Math.floor(num / 10);
-    const one = num % 10;
-    if (one === 0) return tens[ten];
-    return `${ones[one]}und${tens[ten]}`;
-  }
-  if (num >= 100 && num < 1000) {
-    const hundred = Math.floor(num / 100);
-    const rest = num % 100;
-    if (rest === 0) return hundreds[hundred];
-    return `${hundreds[hundred]}${numberToGermanWords(rest)}`;
-  }
-  if (num >= 1000 && num < 10000) {
-    const thousand = Math.floor(num / 1000);
-    const rest = num % 1000;
-    const thousandWord = thousand === 1 ? 'eintausend' : `${ones[thousand]}tausend`;
-    if (rest === 0) return thousandWord;
-    return `${thousandWord}${numberToGermanWords(rest)}`;
-  }
-  
-  return num.toString();
-};
-
-export const convertPotencyNumbersToWords = (text: string): string => {
-  const potencyPattern = /\b([DCLM]+)(\d+)\b/gi;
-  
-  return text.replace(potencyPattern, (match, potencyType, numStr) => {
-    const num = parseInt(numStr, 10);
-    let wordNum = numberToGermanWords(num);
-    
-    // Für Zahlen >= 100: Ersten Buchstaben groß
-    if (num >= 100 && wordNum.length > 0) {
-      wordNum = wordNum.charAt(0).toUpperCase() + wordNum.slice(1);
-    }
-    
-    return `${potencyType.toUpperCase()}${wordNum}`;
-  });
-};
-```
-
-**Beispiele:**
-- D6 → Dsechs
-- C30 → Cdreißig
-- D100 → DEinhundert
-- LM12 → LMzwölf
-- C200 → CZweihundert
-
----
-
-## ☁️ Cloud-Integration
-
-### Supabase Schema
-
-#### Tabelle: `patients_v2`
-
-```sql
-CREATE TABLE patients_v2 (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users NOT NULL,
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  birth_date TEXT NOT NULL,
-  birth_place TEXT NOT NULL,
-  personal_rate TEXT NULL, -- NEU: 8-12 Stellen
-  image_signature TEXT NULL,
-  image_signature_active BOOLEAN DEFAULT true,
-  hardware_config JSONB NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- RLS Policies
-ALTER TABLE patients_v2 ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own patients"
-  ON patients_v2 FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own patients"
-  ON patients_v2 FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own patients"
-  ON patients_v2 FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own patients"
-  ON patients_v2 FOR DELETE
-  USING (auth.uid() = user_id);
-
--- Indexes
-CREATE INDEX idx_patients_v2_user_id ON patients_v2(user_id);
-```
-
-#### Tabelle: `harmonization_sessions_v2`
-
-```sql
-CREATE TABLE harmonization_sessions_v2 (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users NOT NULL,
-  patient_id UUID REFERENCES patients_v2 NOT NULL,
-  word TEXT NOT NULL,
-  copen_rate TEXT NULL,
-  tested_potency TEXT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  duration_seconds INTEGER NOT NULL,
-  remaining_seconds INTEGER NULL,
-  progress NUMERIC DEFAULT 0,
-  started_at TIMESTAMP WITH TIME ZONE NULL,
-  completed_at TIMESTAMP WITH TIME ZONE NULL,
-  pulse_seconds INTEGER NULL,
-  pause_seconds INTEGER NULL,
-  pulse_pause_active BOOLEAN DEFAULT false,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
-);
-
--- RLS Policies
-ALTER TABLE harmonization_sessions_v2 ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own sessions"
-  ON harmonization_sessions_v2 FOR SELECT
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own sessions"
-  ON harmonization_sessions_v2 FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own sessions"
-  ON harmonization_sessions_v2 FOR UPDATE
-  USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own sessions"
-  ON harmonization_sessions_v2 FOR DELETE
-  USING (auth.uid() = user_id);
-
--- Indexes
-CREATE INDEX idx_harmonization_sessions_v2_user_id ON harmonization_sessions_v2(user_id);
-CREATE INDEX idx_harmonization_sessions_v2_patient_id ON harmonization_sessions_v2(patient_id);
-CREATE INDEX idx_harmonization_sessions_v2_status ON harmonization_sessions_v2(status);
-```
-
-### Edge Function: `harmonization-worker`
-
-**Pfad:** `supabase/functions/harmonization-worker/index.ts`
-
-```typescript
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
-  }
-
-  try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    // 1. Lade alle aktiven Sessions
-    const { data: sessions, error } = await supabaseClient
-      .from('harmonization_sessions_v2')
-      .select('*')
-      .in('status', ['running', 'pending']);
-
-    if (error) throw error;
-
-    console.log(`[Worker] Processing ${sessions?.length || 0} sessions`);
-
-    for (const session of sessions || []) {
-      // 2. Status auf 'running' setzen wenn 'pending'
-      if (session.status === 'pending') {
-        await supabaseClient
-          .from('harmonization_sessions_v2')
-          .update({
-            status: 'running',
-            started_at: new Date().toISOString(),
-            remaining_seconds: session.duration_seconds
-          })
-          .eq('id', session.id);
-        
-        console.log(`[Worker] Started session ${session.id}`);
-        continue;
-      }
-
-      // 3. Berechne Fortschritt
-      const now = new Date();
-      const startedAt = new Date(session.started_at);
-      const elapsedSeconds = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
-      const remainingSeconds = Math.max(0, session.duration_seconds - elapsedSeconds);
-      const progress = session.duration_seconds > 0 
-        ? Math.min(100, (elapsedSeconds / session.duration_seconds) * 100)
-        : 0;
-
-      // 4. Update Session
-      if (remainingSeconds === 0 || session.duration_seconds === 0) {
-        // Abgeschlossen
-        await supabaseClient
-          .from('harmonization_sessions_v2')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            progress: 100,
-            remaining_seconds: 0,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', session.id);
-        
-        console.log(`[Worker] Completed session ${session.id}`);
-      } else {
-        // Läuft noch
-        await supabaseClient
-          .from('harmonization_sessions_v2')
-          .update({
-            progress,
-            remaining_seconds: remainingSeconds,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', session.id);
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        processed: sessions?.length || 0,
-        timestamp: new Date().toISOString()
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-  } catch (error) {
-    console.error('[Worker] Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  }
+// supabase/functions/harmonization-worker/index.ts
+Deno.serve(async (req) => {
+  // 1. Holt 'pending' Sessions
+  // 2. Startet Sessions (status → 'running')
+  // 3. Dekrementiert remaining_seconds
+  // 4. Handhabt Impuls/Pausen-Logik
+  // 5. Markiert abgeschlossene Sessions
 });
 ```
 
-**Automatisches Deployment:**
-- Edge Function wird automatisch bei Code-Änderungen deployed
-- Kein manueller Deploy notwendig
-
----
-
-## ✨ Features & Funktionalitäten
-
-### 1. Ratengenerator
-- Manuelle Eingabe von Wortenergie, Potenz und Typ
-- Auto-Potenz-Projektion mit Kozyrev-Modulation
-- Support für Standard-Potenzen (D, C, LM, M)
-- Support für F-Spektren (F1, F2, F3)
-- Wortenergie-Historie mit Dropdown
-
-### 2. Auto-Potenz-Projektion
-- Intelligent berechnet aus Klienten- und Wortdaten
-- Berücksichtigt alle verfügbaren Potenz-Bereiche
-- Kozyrev-erweitert (Alters- und Ortsenergien)
-- Live-Vorschau der kalkulierten Werte
-
-### 3. Parallele Harmonisierungs-Sessions
-- Unbegrenzte gleichzeitige Sessions pro Patient
-- Cloud-synchronisiert via Supabase
-- Realtime-Updates alle 2 Sekunden
-- Impuls/Pausen-Modus
-- Dauersendungs-Modus (duration_seconds = 0)
-- Start/Pause/Fortsetzen/Stopp/Löschen
-
-### 4. Datenbank-Analyse
-- **Fokus-Wort Feature (NEU)**
-- Import von CSV/TXT/Bild
-- **Automatische Potenz-Zahlen zu Worten Konvertierung (NEU)**
-- Resonanz-Analyse mit 13 Ebenen
-- Sortierung nach Resonanz/Ebene/Potenz
-- Auswahl einzelner Ergebnisse
-- Batch-Übergabe an Harmonisierungen
-- Export zu Archiv
-
-### 5. Harmonisierungs-Archiv
-- Alle abgeschlossenen Sessions
-- Reaktivierungs-Dialog mit anpassbaren Parametern
-- Löschen (DSGVO-konform)
-- Realtime-Updates
-
-### 6. Worker-Status-Monitoring
-- Echtzeit-Überwachung der Edge Function
-- Heartbeat-Mechanismus
-- Status-Anzeige mit Zeitstempel
-- Automatische Fehlerbehandlung
-
-### 7. Patient-Management V2
-- **Personalisierte Raten (8-12 Stellen) (NEU)**
-- **Bildsignatur-Integration (Ollama) (NEU)**
-- Hardware-Algorithmen Konfiguration
-- CRUD-Operationen
-- DSGVO-konforme Validierung
-- Realtime-Sync
-
-### 8. Kozyrev-Indikatoren
-- Zeit-Energie
-- Morphogenetisches Feld
-- Solar-Einfluss
-- Bewusstseins-Resonanz
-
-### 9. Export-Funktionen
-- **PDF mit Fokus-Wort Hervorhebung (NEU)**
-- CSV für Datenanalyse
-- TXT für einfache Weitergabe
-
----
-
-## ⚙️ Standard-Werte
-
-### Harmonisierung
+### 5.5 Backend-Synchronisation
 
 ```typescript
-// Dauer
-const DEFAULT_DURATION = 42;
-const DEFAULT_UNIT = 'minutes';
-
-// Impuls/Pause
-const DEFAULT_PULSE = 21;
-const DEFAULT_PAUSE = 42;
-const DEFAULT_PULSE_UNIT = 'seconds';
-const DEFAULT_PAUSE_UNIT = 'seconds';
-
-// Kontinuierlich
-const DEFAULT_CONTINUOUS = false;
-```
-
-**Code-Implementierung:**
-
-```typescript
-const [harmonizationDuration, setHarmonizationDuration] = useState(42);
-const [harmonizationUnit, setHarmonizationUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
-const [pulsePauseActive, setPulsePauseActive] = useState(false);
-const [pulseSeconds, setPulseSeconds] = useState(21);
-const [pauseSeconds, setPauseSeconds] = useState(42);
-```
-
-### Datenbank-Analyse
-
-```typescript
-// Dauer für Batch-Harmonisierungen
-const DEFAULT_BATCH_DURATION = 42;
-const DEFAULT_BATCH_UNIT = 'minutes';
-
-// Impuls/Pause
-const DEFAULT_BATCH_PULSE = 21;
-const DEFAULT_BATCH_PAUSE = 42;
-```
-
-**Code-Implementierung:**
-
-```typescript
-const [batchDuration, setBatchDuration] = useState<number>(42);
-const [batchUnit, setBatchUnit] = useState<'seconds' | 'minutes' | 'hours' | 'days'>('minutes');
-const [pulsePauseActive, setPulsePauseActive] = useState(false);
-const [pulseSeconds, setPulseSeconds] = useState<number>(21);
-const [pauseSeconds, setPauseSeconds] = useState<number>(42);
-```
-
----
-
-## 📤 Export-Funktionen
-
-### PDF-Export mit Fokus-Wort
-
-```typescript
-const handleExportPDF = () => {
-  const doc = new jsPDF();
-  
-  // Header
-  doc.setFontSize(16);
-  doc.text('Datenbank-Analyse Export', 14, 20);
-  
-  // Fokus-Wort hervorheben (ROT)
-  if (focusWord.trim()) {
-    doc.setFontSize(12);
-    doc.setTextColor(255, 0, 0);
-    doc.text(`⭐ FOKUS: ${focusWord}`, 14, 30);
-    doc.setTextColor(0, 0, 0);
-  }
-  
-  // Patient-Info
-  if (selectedPatient) {
-    doc.setFontSize(10);
-    doc.text(`Patient: ${selectedPatient.first_name} ${selectedPatient.last_name}`, 14, focusWord.trim() ? 40 : 30);
-    doc.text(`Geburtsdatum: ${selectedPatient.birth_date}`, 14, focusWord.trim() ? 45 : 35);
-  }
-  
-  // Tabelle
-  autoTable(doc, {
-    startY: focusWord.trim() ? 50 : 40,
-    head: [['Wortenergie', 'Potenz', 'Copen-Rate', 'Resonanz', 'Höchste Ebene']],
-    body: sortedResults.map((r, idx) => {
-      const isFocus = focusWord.trim() && r.word.toLowerCase() === focusWord.trim().toLowerCase();
-      return [
-        isFocus ? `⭐ ${r.word}` : r.word,
-        `${r.potencyType}${r.potency}`,
-        formatRate12(r.rate),
-        `${r.resonanceScore}%`,
-        `Ebene ${r.highestLevel} (${r.highestLevelValue?.toFixed(1)}%)`
-      ];
-    }),
-    didParseCell: (data) => {
-      // Fokus-Zeile hervorheben
-      if (data.row.index === 0 && focusWord.trim()) {
-        data.cell.styles.fillColor = [255, 255, 200]; // Gelb
-        data.cell.styles.fontStyle = 'bold';
-      }
-    }
-  });
-  
-  doc.save(`db-analyse-${Date.now()}.pdf`);
-};
-```
-
-### CSV-Export
-
-```typescript
-const handleExportCSV = () => {
-  let csv = 'Wortenergie,Potenz,Copen-Rate,Resonanz,Höchste Ebene,Ebenen-Wert\n';
-  
-  // Fokus-Wort als erste Zeile
-  if (focusWord.trim()) {
-    const focusResult = sortedResults.find(r => r.word.toLowerCase() === focusWord.trim().toLowerCase());
-    if (focusResult) {
-      csv += `"⭐ ${focusResult.word}",${focusResult.potencyType}${focusResult.potency},${focusResult.rate},${focusResult.resonanceScore}%,Ebene ${focusResult.highestLevel},${focusResult.highestLevelValue?.toFixed(1)}%\n`;
-    }
-  }
-  
-  // Restliche Ergebnisse
-  sortedResults.forEach(r => {
-    if (!focusWord.trim() || r.word.toLowerCase() !== focusWord.trim().toLowerCase()) {
-      csv += `"${r.word}",${r.potencyType}${r.potency},${r.rate},${r.resonanceScore}%,Ebene ${r.highestLevel},${r.highestLevelValue?.toFixed(1)}%\n`;
-    }
-  });
-  
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `db-analyse-${Date.now()}.csv`;
-  a.click();
-};
-```
-
-### TXT-Export
-
-```typescript
-const handleExportTXT = () => {
-  let txt = 'DATENBANK-ANALYSE EXPORT\n';
-  txt += '========================\n\n';
-  
-  // Fokus-Wort
-  if (focusWord.trim()) {
-    txt += `⭐ FOKUS: ${focusWord}\n\n`;
-  }
-  
-  // Patient
-  if (selectedPatient) {
-    txt += `Patient: ${selectedPatient.first_name} ${selectedPatient.last_name}\n`;
-    txt += `Geburtsdatum: ${selectedPatient.birth_date}\n\n`;
-  }
-  
-  txt += 'ERGEBNISSE:\n';
-  txt += '-----------\n\n';
-  
-  sortedResults.forEach((r, idx) => {
-    const isFocus = focusWord.trim() && r.word.toLowerCase() === focusWord.trim().toLowerCase();
-    txt += `${isFocus ? '⭐ ' : ''}${idx + 1}. ${r.word}\n`;
-    txt += `   Potenz: ${r.potencyType}${r.potency}\n`;
-    txt += `   Copen-Rate: ${formatRate12(r.rate)}\n`;
-    txt += `   Resonanz: ${r.resonanceScore}%\n`;
-    txt += `   Höchste Ebene: ${r.highestLevel} (${r.highestLevelValue?.toFixed(1)}%)\n\n`;
-  });
-  
-  const blob = new Blob([txt], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `db-analyse-${Date.now()}.txt`;
-  a.click();
-};
-```
-
----
-
-## ⚙️ Worker-System
-
-### Workflow
-
-1. **Session Start** → Frontend erstellt neue Session mit `status: 'pending'`
-2. **Worker Invoke** → Frontend ruft `harmonization-worker` auf
-3. **Worker Processing:**
-   - Lädt alle `pending` und `running` Sessions
-   - Setzt `pending` → `running` und initialisiert `remaining_seconds`
-   - Berechnet für `running`: `elapsedTime`, `remainingSeconds`, `progress`
-   - Setzt auf `completed` wenn `remainingSeconds === 0`
-4. **Realtime Updates** → Frontend empfängt Updates via Supabase Realtime
-5. **Backend Sync** → Frontend synchronisiert alle 2 Sekunden mit Backend für korrekte Zeit
-6. **UI Timer** → Lokaler Timer für flüssige Progress-Anzeige zwischen Syncs
-
-### Heartbeat-Mechanismus
-
-```typescript
-// WorkerStatusMonitor.tsx
+// Alle 2 Sekunden Backend-Sync
 useEffect(() => {
-  const checkWorker = async () => {
-    const { data, error } = await supabase.functions.invoke('harmonization-worker', {
-      body: { action: 'heartbeat' }
-    });
+  const syncTimer = setInterval(async () => {
+    const { data: sessions } = await supabase
+      .from('harmonization_sessions_v2')
+      .select('*')
+      .eq('patient_id', selectedPatient.id)
+      .in('status', ['running', 'pending']);
     
-    if (!error && data) {
-      setLastHeartbeat(new Date());
-      setWorkerStatus('active');
-    } else {
-      setWorkerStatus('inactive');
-    }
-  };
+    // Update lokale State mit Backend-Daten
+    setHarmonizations(prev => 
+      prev.map(harm => {
+        const backendSession = sessions.find(s => s.id === harm.id);
+        if (backendSession) {
+          const remainingTime = backendSession.remaining_seconds || 0;
+          const elapsedTime = backendSession.duration_seconds - remainingTime;
+          const progress = (elapsedTime / backendSession.duration_seconds) * 100;
+          return { ...harm, elapsedTime, progress, remainingSeconds: remainingTime };
+        }
+        return harm;
+      })
+    );
+  }, 2000);
   
-  checkWorker();
-  const interval = setInterval(checkWorker, 60000); // Alle 60 Sekunden
+  return () => clearInterval(syncTimer);
+}, [selectedPatient]);
+```
+
+### 5.6 Export Aktive Harmonisierungen als DB
+
+```typescript
+const exportActiveHarmonizationsToDatabase = async () => {
+  if (!selectedPatient) return;
+
+  const { data: sessions } = await supabase
+    .from('harmonization_sessions_v2')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('patient_id', selectedPatient.id)
+    .in('status', ['running', 'pending']);
+
+  // Extrahiere Wortenergien/Raten
+  const entries = sessions.map(session => {
+    const match = session.word.match(/mit\s+([\d.]+)/i);
+    return match ? match[1] : session.word;
+  });
+
+  // Erstelle Datenbank-Eintrag
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const databaseName = `${selectedPatient.first_name}_${selectedPatient.last_name}_Aktive_${timestamp}`;
   
-  return () => clearInterval(interval);
-}, []);
+  await supabase.from('word_databases').insert({
+    user_id: user.id,
+    name: databaseName,
+    entries: entries,
+  });
+};
 ```
 
 ---
 
-## 🎨 UI/UX-Spezifikationen
+## 6. 13-Ebenen Resonanzmodell
 
-### Farbschema
+### 6.1 Datei-Lokation
+```
+src/utils/levelResonance.ts (216 Zeilen)
+```
 
-```css
-/* index.css */
-:root {
-  /* Primärfarben */
-  --primary: 217 91% 60%; /* Blau */
-  --primary-foreground: 0 0% 100%;
-  
-  /* Hintergrund */
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
-  
-  /* Karten */
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
-  
-  /* Akzent */
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
-  
-  /* Destruktiv */
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  
-  /* Ränder */
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
-  --ring: 217 91% 60%;
+### 6.2 Ebenen-Definition
+
+```typescript
+export const LEVELS: Level[] = [
+  {
+    id: 1,
+    name: "Physical Realm - Particles",
+    germanName: "Physische Ebene - Partikel",
+    keywords: ["atom", "partikel", "molekül", "element", "materie", "dna", "struktur"],
+    frequencyRange: { min: 1, max: 100000 }
+  },
+  {
+    id: 2,
+    name: "Physical Realm - Structure",
+    germanName: "Physische Ebene - Struktur",
+    keywords: ["körper", "organ", "gewebe", "struktur", "fascia"],
+    frequencyRange: { min: 100000, max: 500000 }
+  },
+  {
+    id: 3,
+    name: "Etheric Realm - Prana",
+    germanName: "Ätherische Ebene - Prana",
+    keywords: ["prana", "qi", "lebenskraft", "atmung", "energie"],
+    frequencyRange: { min: 500000, max: 1000000 }
+  },
+  {
+    id: 4,
+    name: "Etheric Realm - Meridians",
+    germanName: "Ätherische Ebene - Meridiane",
+    keywords: ["meridian", "chakra", "energiekanal", "nadis", "akupunktur"],
+    frequencyRange: { min: 1000000, max: 2000000 }
+  },
+  {
+    id: 5,
+    name: "Astral Realm - Emotions",
+    germanName: "Astrale Ebene - Emotionen",
+    keywords: ["emotion", "gefühl", "empfindung"],
+    frequencyRange: { min: 2000000, max: 3500000 }
+  },
+  {
+    id: 6,
+    name: "Astral Realm - Thought-Forms",
+    germanName: "Astrale Ebene - Gedankenformen",
+    keywords: ["gedanke", "thought", "magnetisch", "schwingung"],
+    frequencyRange: { min: 3500000, max: 5000000 }
+  },
+  {
+    id: 7,
+    name: "Mental Realm - Time",
+    germanName: "Mentale Ebene - Zeit",
+    keywords: ["zeit", "time", "raum", "space", "form", "farbe"],
+    frequencyRange: { min: 5000000, max: 7000000 }
+  },
+  {
+    id: 8,
+    name: "Mental Realm - Mental Constructs",
+    germanName: "Mentale Ebene - Mentale Konstrukte",
+    keywords: ["konzept", "idee", "mental", "konstrukt"],
+    frequencyRange: { min: 7000000, max: 9000000 }
+  },
+  {
+    id: 9,
+    name: "Causal Plane - Blueprints",
+    germanName: "Kausale Ebene - Blaupausen",
+    keywords: ["akasha", "blueprint", "blaupause", "destiny"],
+    frequencyRange: { min: 9000000, max: 11000000 }
+  },
+  {
+    id: 10,
+    name: "Causal Plane - Alchemy",
+    germanName: "Kausale Ebene - Alchemie",
+    keywords: ["intention", "alchemie", "transformation"],
+    frequencyRange: { min: 11000000, max: 13000000 }
+  },
+  {
+    id: 11,
+    name: "Atmic Plane - Identity",
+    germanName: "Atmische Ebene - Identität",
+    keywords: ["identität", "essenz", "incarnation"],
+    frequencyRange: { min: 13000000, max: 16000000 }
+  },
+  {
+    id: 12,
+    name: "Atmic Plane - Love & Unity",
+    germanName: "Atmische Ebene - Liebe & Einheit",
+    keywords: ["liebe", "einheit", "love", "unity"],
+    frequencyRange: { min: 16000000, max: 20000000 }
+  },
+  {
+    id: 13,
+    name: "Creator - Divinity",
+    germanName: "Schöpfer - Göttlichkeit",
+    keywords: ["creator", "schöpfer", "göttlich", "eternity"],
+    frequencyRange: { min: 20000000, max: Infinity }
+  }
+];
+```
+
+### 6.3 Resonanzberechnung
+
+```typescript
+export function calculateLevelResonance(
+  copenRate: number,
+  word: string
+): Record<string, number> {
+  const resonance: Record<string, number> = {};
+  const normalizedWord = word.toLowerCase();
+
+  LEVELS.forEach(level => {
+    let baseResonance = 0;
+    const { min, max } = level.frequencyRange;
+
+    // 1. Frequenzbasierte Resonanz
+    if (max === Infinity) {
+      baseResonance = copenRate >= min ? 100 : Math.max(0, (copenRate / min) * 50);
+    } else if (copenRate >= min && copenRate <= max) {
+      const midpoint = (min + max) / 2;
+      const distance = Math.abs(copenRate - midpoint);
+      const range = (max - min) / 2;
+      baseResonance = Math.max(0, 100 - (distance / range) * 50);
+    } else if (copenRate < min) {
+      baseResonance = Math.max(0, (copenRate / min) * 40);
+    } else {
+      const overshoot = (copenRate - max) / max;
+      baseResonance = Math.max(0, 30 - overshoot * 30);
+    }
+
+    // 2. Keyword-basierte Resonanz (+25 pro Treffer)
+    let keywordBonus = 0;
+    level.keywords.forEach(keyword => {
+      if (normalizedWord.includes(keyword.toLowerCase())) {
+        keywordBonus += 25;
+      }
+    });
+
+    resonance[`level_${level.id}`] = Math.min(100, baseResonance + keywordBonus);
+  });
+
+  return resonance;
 }
 ```
 
-### Gradients
+---
 
-```css
-/* Seiten-Hintergrund */
-.min-h-screen {
-  background: linear-gradient(135deg, 
-    rgb(15, 23, 42) 0%,     /* slate-900 */
-    rgb(30, 58, 138) 50%,   /* blue-900 */
-    rgb(49, 46, 129) 100%   /* indigo-900 */
+## 7. Hardware-Algorithmen (Kozyrev)
+
+### 7.1 Datei-Lokation
+```
+src/utils/hardwareAlgorithms.ts (412 Zeilen)
+```
+
+### 7.2 Hardware-Metriken
+
+```typescript
+export interface HardwareMetrics {
+  cpuQuantumJitter: number;      // 0.0 - 1.0 (+2-3% Akkuranz)
+  ramEntropy: number;            // 0.0 - 1.0 (+1-2% Akkuranz)
+  timeSourceCoherence: number;   // 0.0 - 1.0 (+3-4% Akkuranz)
+  gpuRenderingEntropy: number;   // 0.0 - 1.0 (+2-3% Akkuranz)
+  networkLatency: number;        // 0.0 - 1.0 (+1-2% Akkuranz)
+  combinedScore: number;         // 0.0 - 1.0 (+3-5% Akkuranz)
+}
+```
+
+### 7.3 Algorithmus-Implementierungen
+
+#### CPU Quantum Jitter (+2-3%)
+```typescript
+function getCPUQuantumJitter(): number {
+  const samples = 100;
+  const timestamps: number[] = [];
+  
+  for (let i = 0; i < samples; i++) {
+    timestamps.push(performance.now());
+  }
+  
+  const diffs = timestamps.slice(1).map((t, i) => t - timestamps[i]);
+  const mean = diffs.reduce((a, b) => a + b) / diffs.length;
+  const variance = diffs.reduce((sum, d) => sum + (d - mean) ** 2, 0) / diffs.length;
+  const stdDev = Math.sqrt(variance);
+  
+  return Math.min(1.0, stdDev / 0.1);
+}
+```
+
+#### RAM Entropy (+1-2%)
+```typescript
+function getRAMEntropy(): number {
+  const arrays: Float64Array[] = [];
+  const sampleSize = 1000;
+  
+  for (let i = 0; i < 10; i++) {
+    const arr = new Float64Array(sampleSize);
+    for (let j = 0; j < sampleSize; j++) arr[j] = Math.random();
+    arrays.push(arr);
+  }
+  
+  const startTime = performance.now();
+  arrays.forEach(arr => {
+    for (let i = 0; i < sampleSize; i += 10) void arr[i];
+  });
+  const accessTime = performance.now() - startTime;
+  
+  return Math.min(1.0, accessTime / 10);
+}
+```
+
+#### Time Source Coherence (+3-4%, Kozyrev-Bezug)
+```typescript
+function getTimeSourceCoherence(): number {
+  const perfTime = performance.now();
+  const perfTimeAgain = performance.now();
+  const perfDelta = perfTimeAgain - perfTime;
+  const drift = Math.abs(perfDelta - perfDelta);
+  
+  return 1.0 - Math.min(1.0, drift / 1.0);
+}
+```
+
+#### GPU Rendering Entropy (+2-3%)
+```typescript
+async function getGPURenderingEntropy(): Promise<number> {
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl');
+  if (!gl) return 0.5;
+  
+  const vertices = new Float32Array(1000);
+  for (let i = 0; i < vertices.length; i++) vertices[i] = Math.random() * 2 - 1;
+  
+  const times: number[] = [];
+  for (let i = 0; i < 10; i++) {
+    const start = performance.now();
+    gl.drawArrays(gl.TRIANGLES, 0, vertices.length / 2);
+    gl.finish();
+    times.push(performance.now() - start);
+  }
+  
+  const mean = times.reduce((a, b) => a + b) / times.length;
+  const variance = times.reduce((sum, t) => sum + (t - mean) ** 2, 0) / times.length;
+  
+  canvas.remove();
+  return Math.min(1.0, Math.sqrt(variance) / 1.0);
+}
+```
+
+### 7.4 Combined Score (Gewichtung nach Kozyrev-Relevanz)
+
+```typescript
+function calculateCombinedScore(metrics: HardwareMetrics): number {
+  const weights = {
+    timeSourceCoherence: 0.30,    // Höchste: Zeit = Energie (Kozyrev)
+    cpuQuantumJitter: 0.25,       // Quantum-Effekte
+    gpuRenderingEntropy: 0.20,    // Morphogenetisches Feld
+    ramEntropy: 0.15,             // System-Zustand
+    networkLatency: 0.10          // Torsionsfeld
+  };
+  
+  return (
+    metrics.timeSourceCoherence * weights.timeSourceCoherence +
+    metrics.cpuQuantumJitter * weights.cpuQuantumJitter +
+    metrics.gpuRenderingEntropy * weights.gpuRenderingEntropy +
+    metrics.ramEntropy * weights.ramEntropy +
+    metrics.networkLatency * weights.networkLatency
   );
 }
 ```
 
-### Layout
+### 7.5 Rate-Modulation
 
 ```typescript
-// Container Breiten
-const containerMaxWidth = '1400px';
-const cardMaxWidth = '1200px';
-
-// Responsive Breakpoints
-const breakpoints = {
-  mobile: '640px',
-  tablet: '768px',
-  desktop: '1024px',
-  wide: '1280px'
-};
+export function modulateRateWithHardware(
+  baseRate: number,
+  config: HardwareConfig,
+  metrics: HardwareMetrics
+): number {
+  let modulationFactor = 0;
+  
+  if (config.combinedAlgorithm === 'on' || config.combinedAlgorithm === 'auto') {
+    modulationFactor = metrics.combinedScore * 0.05; // +3-5%
+  } else {
+    if (config.cpuQuantumJitter === 'on') modulationFactor += metrics.cpuQuantumJitter * 0.03;
+    if (config.ramEntropy === 'on') modulationFactor += metrics.ramEntropy * 0.02;
+    if (config.timeSourceCoherence === 'on') modulationFactor += metrics.timeSourceCoherence * 0.04;
+    if (config.gpuRenderingEntropy === 'on') modulationFactor += metrics.gpuRenderingEntropy * 0.03;
+    if (config.networkLatency === 'on') modulationFactor += metrics.networkLatency * 0.02;
+  }
+  
+  return baseRate * (1 + modulationFactor);
+}
 ```
 
-### Animationen
+---
+
+## 8. LLM-Interpretation
+
+### 8.1 Datei-Lokation
+```
+src/utils/analysisInterpreter.ts
+```
+
+### 8.2 Hybrid-Ansatz
+
+```typescript
+export interface AnalysisInterpretation {
+  summary: string;
+  insights: string[];
+  recommendations: string[];
+}
+
+export async function interpretAnalysisResults(
+  results: Array<{
+    word: string;
+    resonanceScore: number;
+    highestLevel: number;
+    testedPotency: string;
+  }>,
+  patientName?: string
+): Promise<AnalysisInterpretation> {
+  // 1. Versuche Ollama LLM
+  try {
+    const response = await fetch('http://localhost:11434/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ model: 'llama2', prompt: buildPrompt(results, patientName) })
+    });
+    // Parse und return
+  } catch {
+    // 2. Fallback: Regelbasierter Algorithmus
+    return generateRuleBasedInterpretation(results, patientName);
+  }
+}
+```
+
+---
+
+## 9. Supabase Cloud-Integration
+
+### 9.1 Tabellen-Übersicht
+
+| Tabelle | Zweck |
+|---------|-------|
+| `patients_v2` | Patientendaten |
+| `harmonization_sessions_v2` | Aktive und archivierte Sessions |
+| `word_databases` | Gespeicherte Wortenergie-Datenbanken |
+| `analysis_archives_v2` | Archivierte Analyse-Ergebnisse |
+| `harmonization_templates_v2` | Wiederverwendbare Templates |
+| `user_roles` | Benutzerrollen (admin/user) |
+
+### 9.2 Realtime-Subscriptions
+
+```typescript
+const channel = supabase
+  .channel('harmonization_changes_v2')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'harmonization_sessions_v2',
+      filter: `patient_id=eq.${selectedPatient.id}`,
+    },
+    (payload) => {
+      loadActiveHarmonizations();
+    }
+  )
+  .subscribe();
+```
+
+---
+
+## 10. UI/UX Layout-Struktur
+
+### 10.1 Seiten-Hierarchie
+
+```
+/copen-visualisierung-v2
+├── PatientManagerCloudV2
+│   └── Patientenliste mit Edit/Delete/Select
+├── HardwareAlgorithmSettings
+│   ├── Ratengenerator Toggle
+│   └── Analyse Toggle
+├── KozyrevIndicators (wenn aktiviert)
+├── Bruce Copen Algorithmus V2 Card
+│   ├── Wortenergie Input (mit Historie-Dropdown)
+│   ├── Potenz Slider (0-200)
+│   ├── Potenztyp Selector (D/C/LM/M/F1/F2/F3)
+│   ├── Adaptive Fibonacci Toggle
+│   ├── Live-Preview (Rate + höchste Ebene)
+│   └── Klienten-Rate Anzeige
+├── Parallele Harmonisierungen V2 Card
+│   ├── Dauer/Einheit Konfiguration
+│   ├── Dauerbesendung Toggle
+│   ├── Impuls/Pausen-Modus
+│   ├── "Als DB speichern" Button
+│   └── Aktive Sessions Grid (3 Spalten)
+├── DatabaseManager Card
+│   ├── Tab: DB-Analyse
+│   │   ├── Import Textarea
+│   │   ├── Fokus-Wortenergie Input
+│   │   ├── Gespeicherte DBs Liste
+│   │   ├── Analyse-Button
+│   │   ├── Export-Buttons (CSV/TXT/PDF)
+│   │   └── Ergebnis-Tabelle (resizable)
+│   └── Tab: Direkte Raten
+│       ├── Raten Textarea
+│       └── Harmonisierung starten
+├── AnalysisArchiveCloud
+├── SessionStatusList
+└── WorkerStatusMonitor
+```
+
+### 10.2 Responsive Breakpoints
 
 ```css
-/* Progress Bar */
-@keyframes progress {
-  0% { width: 0; }
-  100% { width: var(--progress-width); }
-}
+/* Mobile: 1 Spalte */
+@media (max-width: 640px) { grid-template-columns: 1fr; }
 
-/* Fade In */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+/* Tablet: 2 Spalten */
+@media (min-width: 641px) and (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
 
-/* Pulse */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
+/* Desktop: 3 Spalten */
+@media (min-width: 1025px) { grid-template-columns: repeat(3, 1fr); }
+```
+
+### 10.3 Farbschema
+
+```css
+/* Seiten-Hintergrund */
+.bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900
+
+/* Harmonisierung Status */
+.bg-green-50.border-green-400   /* Abgeschlossen */
+.bg-yellow-50.border-yellow-400 /* Pausiert */
+.bg-blue-50.border-blue-400     /* Laufend */
+
+/* Resonanz-Ergebnisse */
+.bg-green-50   /* ≥80% Resonanz */
+.bg-yellow-50  /* ≥60% Resonanz */
 ```
 
 ---
 
-## 📁 Code-Referenzen
+## 11. Wiederherstellungsanleitung
 
-### Seiten
+### 11.1 Voraussetzungen
 
-```
-src/pages/CopenVisualizationV2Page.tsx
-src/pages/Index.tsx
-src/pages/CopenGeneratorPage.tsx
-```
+- Node.js ≥ 18
+- npm oder bun
+- Supabase-Projekt (Cloud oder Self-hosted)
+- Optional: Ollama für LLM-Funktionen (`ollama serve`)
 
-### Komponenten
+### 11.2 Installation
 
-```
-src/components/CopenAlgorithmVisualizationV2.tsx
-src/components/PatientManagerCloudV2.tsx
-src/components/DatabaseManager.tsx
-src/components/HarmonizationArchiveCloud.tsx
-src/components/AnalysisArchiveCloud.tsx
-src/components/HarmonizationTemplates.tsx
-src/components/WorkerStatusMonitor.tsx
-src/components/SessionStatusList.tsx
-src/components/KozyrevIndicators.tsx
-src/components/HardwareAlgorithmSettings.tsx
-src/components/PatientHardwareConfig.tsx
-```
+```bash
+# 1. Repository klonen
+git clone <repository-url>
+cd bruce-copen-visualization
 
-### Utilities
+# 2. Abhängigkeiten installieren
+npm install
 
-```
-src/utils/copenRateGenerator.ts
-src/utils/levelResonance.ts
-src/utils/resonanceAnalysis.ts
-src/utils/analysisInterpreter.ts
-src/utils/hardwareAlgorithms.ts
-src/utils/potencyText.ts (NEU)
-src/utils/ollamaClient.ts
+# 3. Umgebungsvariablen konfigurieren
+cp .env.example .env
+# Bearbeiten:
+# VITE_SUPABASE_URL=https://your-project.supabase.co
+# VITE_SUPABASE_PUBLISHABLE_KEY=eyJ...
+
+# 4. Entwicklungsserver starten
+npm run dev
 ```
 
-### Types
+### 11.3 Supabase-Migration
 
+Führen Sie alle SQL-Statements aus Abschnitt 2.3, 3.6, 5.1 und 9.1 aus:
+
+1. `patients_v2` Tabelle + RLS
+2. `harmonization_sessions_v2` Tabelle + RLS
+3. `word_databases` Tabelle + RLS
+4. `analysis_archives_v2` Tabelle + RLS
+5. `harmonization_templates_v2` Tabelle + RLS
+6. `user_roles` Tabelle + RLS
+7. `has_role()` Funktion
+
+### 11.4 Edge Function Deployment
+
+```bash
+# harmonization-worker deployen
+supabase functions deploy harmonization-worker
+
+# Konfiguration in supabase/config.toml
+[functions.harmonization-worker]
+verify_jwt = false
 ```
-src/types/patient.ts
-```
 
-### Supabase
+### 11.5 Verifizierungs-Checkliste
 
-```
-supabase/functions/harmonization-worker/index.ts
-src/integrations/supabase/client.ts
-```
+Nach der Installation sollten folgende Funktionen verfügbar sein:
 
----
-
-## ✅ Wiederherstellungs-Checkliste
-
-### 1. Komponenten
-
-- [ ] `CopenVisualizationV2Page.tsx` vorhanden
-- [ ] `CopenAlgorithmVisualizationV2.tsx` vorhanden und funktional
-- [ ] `PatientManagerCloudV2.tsx` mit personalisierten Raten
-- [ ] `DatabaseManager.tsx` mit Fokus-Wort und Potenz-Konvertierung
-- [ ] `HarmonizationArchiveCloud.tsx` mit Reaktivierung
-- [ ] `AnalysisArchiveCloud.tsx` vorhanden
-- [ ] Alle UI-Komponenten korrekt importiert
-
-### 2. Datenbank
-
-- [ ] `patients_v2` Tabelle existiert
-- [ ] `harmonization_sessions_v2` Tabelle existiert
-- [ ] RLS Policies aktiviert
-- [ ] Indexes erstellt
-- [ ] Realtime aktiviert für beide Tabellen
-
-### 3. Edge Functions
-
-- [ ] `harmonization-worker` deployed
-- [ ] Korrekte CORS Headers
-- [ ] Service Role Key konfiguriert
-- [ ] Heartbeat-Mechanismus funktioniert
-
-### 4. Features
-
-- [ ] Auto-Potenz-Projektion funktioniert
+- [ ] Login/Registrierung funktioniert
+- [ ] Patientenverwaltung (Anlegen, Bearbeiten, Löschen)
+- [ ] Wortenergie-Eingabe mit Live-Preview
+- [ ] Potenz-Auswahl (D/C/LM/M/F1/F2/F3)
+- [ ] Adaptive Fibonacci Toggle
+- [ ] Auto-Potenz Berechnung
+- [ ] Klienten-Rate Anzeige
 - [ ] Parallele Harmonisierungen starten/pausieren/stoppen
-- [ ] Datenbank-Analyse mit Fokus-Wort
-- [ ] Potenz-Zahlen zu Worten Konvertierung
-- [ ] Export-Funktionen (PDF/CSV/TXT)
-- [ ] Harmonisierungs-Archiv Reaktivierung
-- [ ] Worker-Status-Monitoring
-- [ ] Kozyrev-Indikatoren
-- [ ] Bildsignatur-Integration (Ollama)
-
-### 5. Standard-Werte
-
-- [ ] Harmonisierung: 42 Minuten
-- [ ] Impuls: 21 Sekunden
-- [ ] Pause: 42 Sekunden
-- [ ] Batch-Analyse: 42 Minuten
-
-### 6. UI/UX
-
-- [ ] Gradient-Hintergrund korrekt
-- [ ] Responsive Design funktioniert
-- [ ] Animationen flüssig
-- [ ] Farbschema konsistent
-- [ ] Deutsche Lokalisierung
-
-### 7. Cloud-Synchronisation
-
+- [ ] Impuls/Pausen-Modus
+- [ ] Dauerbesendung
+- [ ] Datenbank-Import (CSV/TXT)
+- [ ] Resonanzanalyse mit 13 Ebenen
+- [ ] LLM-Interpretation (oder Fallback)
+- [ ] Export (CSV, TXT, PDF)
+- [ ] Hardware-Algorithmen Toggle
 - [ ] Realtime-Updates funktionieren
-- [ ] Backend-Sync alle 2 Sekunden
-- [ ] Optimistic UI Updates
-- [ ] Fehlerbehandlung implementiert
+- [ ] Export aktive Harmonisierungen als DB
 
 ---
 
-## 📝 Changelog
-
-### Version 2.1 (Aktuell - 2025-10-28)
-
-**Neue Features:**
-- ✨ **Fokus-Wort Analyse**: Optionales Fokus-Wort für priorisierte Analyse
-- ✨ **Potenz-Zahlen zu Worten Konvertierung**: D6 → Dsechs, C100 → CEinhundert
-- ✨ **Personalisierte Raten**: 8-12 Stellen pro Patient
-- ✨ **"Harmonisierung mit Rate" Syntax**: Nur bei DB-Analyse, nicht im Single-Generator
-
-**Verbesserungen:**
-- 📈 Export-Funktionen mit Fokus-Wort Hervorhebung
-- 🔧 Verbesserte Datenbank-Import-Logik
-- 🎨 UI-Optimierungen für Fokus-Feature
-- 📚 Vollständige Dokumentation aktualisiert
-
-**Fixes:**
-- 🐛 Korrekte Übergabe der originalen Wortenergie an Harmonisierungen aus Single-Generator
-- 🐛 Unterscheidung zwischen Single-Generator und DB-Analyse bei Harmonisierungs-Syntax
-
-### Version 2.0 (2025-10-27)
-
-**Initial V2 Release:**
-- 🎉 Vollständig refactored auf V2-Architektur
-- ☁️ Cloud-Synchronisation mit Supabase
-- 🔄 Realtime-Updates für Harmonisierungen
-- 💪 Worker-System mit Edge Functions
-- 📊 13 Ebenen Resonanz-Analyse
-- 🎯 Auto-Potenz-Projektion mit Kozyrev
-- 🌟 F-Spektren Support (F1, F2, F3)
-
----
-
-## 🎓 Support & Dokumentation
-
-### Verwandte Dokumentationen
-
-- `Bruce_Copen_Algorithmus_V2_Komplett.md` - Algorithmus-Details
-- `Bruce_Copen_Modul_Status_Komplett.md` - Modul-Status
-- `Kozyrev_Zeitenergie_Integration_Empfehlungen.md` - Kozyrev-Integration
-- `Kompendium_Alle_Frequenztheorien_2025.md` - Frequenztheorien
-
-### Support-Kontakt
-
-Bei Fragen oder Problemen:
-1. Prüfe diese Dokumentation
-2. Prüfe die Wiederherstellungs-Checkliste
-3. Prüfe Console-Logs und Network-Tab
-4. Kontaktiere Support mit detaillierter Fehlerbeschreibung
-
----
-
-## 🎯 Zusammenfassung
-
-Das **Bruce Copen Algorithmus Visualisierung V2 System** ist eine vollständig cloud-synchronisierte, production-ready Anwendung mit:
-
-✅ **Vollständiger Cloud-Synchronisation** via Supabase  
-✅ **Realtime-Updates** für alle Komponenten  
-✅ **Parallelen Harmonisierungen** mit unbegrenzten Sessions  
-✅ **Intelligenter Auto-Potenz-Projektion** mit Kozyrev  
-✅ **13-Ebenen Resonanz-Analyse** mit Fokus-Feature  
-✅ **Potenz-Zahlen zu Worten Konvertierung** (NEU)  
-✅ **Personalisierten Raten** pro Patient  
-✅ **Bildsignatur-Integration** mit Ollama  
-✅ **Umfangreichen Export-Funktionen** mit Fokus-Hervorhebung  
-✅ **DSGVO-konformer Datenverwaltung**  
-✅ **Production-ready Edge Functions**  
-
-**Status:** ✅ Vollständig funktionsfähig und dokumentiert
-
----
-
-*Dokumentation erstellt: 2025-10-28*  
-*Version: 2.1*  
-*Autor: AI-Assistent*
+**Dokumentations-Version:** 2.4.0  
+**Erstellt:** 2025-01-16  
+**Autor:** Bruce Copen Visualization System  
+**Komponenten:** CopenAlgorithmVisualizationV2, DatabaseManager, PatientManagerCloudV2, resonanceAnalysis, levelResonance, hardwareAlgorithms
