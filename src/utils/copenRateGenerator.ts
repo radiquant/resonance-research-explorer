@@ -261,3 +261,217 @@ export const exportCopenRatesToCSV = (results: CopenRateResult[]): string => {
   });
   return header + rows.join('\n');
 };
+
+// ============================================
+// RATEN-KOMBINATIONS-ALGORITHMEN
+// ============================================
+
+export type CombinationMethod = 
+  | 'arithmetic'          // Arithmetisches Mittel
+  | 'geometric'           // Geometrisches Mittel
+  | 'harmonic'            // Harmonisches Mittel
+  | 'fibonacci'           // Fibonacci-moduliert (Copen-typisch)
+  | 'weighted_potency'    // Potenz-gewichtet
+  | 'copen_digital'       // Digital Copen (10-stellig)
+  | 'malcolm_rae';        // Geometrisch × Phi
+
+export interface CombinedRateInput {
+  rate: number;
+  word: string;
+  potency: number;
+  potencyType: 'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3';
+}
+
+export interface CombinedRateResult {
+  inputRates: CombinedRateInput[];
+  combinedRate: number;
+  method: CombinationMethod;
+  details: {
+    arithmeticMean: number;
+    geometricMean: number;
+    harmonicMean: number;
+    fibonacciModulated: number;
+    weightedByPotency: number;
+    copenDigital: number;
+    malcolmRae: number;
+  };
+  allMethods: Array<{
+    method: CombinationMethod;
+    rate: number;
+    description: string;
+  }>;
+}
+
+/**
+ * Berechnet den Potenz-Gewichtungsfaktor
+ */
+const getPotencyWeight = (potency: number, potencyType: string): number => {
+  const p = Math.max(1, potency);
+  switch (potencyType) {
+    case 'D': return p / 10;
+    case 'C': return p / 5;
+    case 'LM': return p / 2;
+    case 'M': return p;
+    case 'F1': return p / 6;
+    case 'F2': return p / 4;
+    case 'F3': return p / 3;
+    default: return 1;
+  }
+};
+
+/**
+ * Kombiniert zwei oder mehr Copen-Raten zu einer einzelnen Rate
+ * 
+ * Unterstützte Methoden:
+ * - arithmetic: Einfaches arithmetisches Mittel
+ * - geometric: Geometrisches Mittel (Resonanz-optimal)
+ * - harmonic: Harmonisches Mittel
+ * - fibonacci: Fibonacci-moduliertes Mittel (Original Copen)
+ * - weighted_potency: Nach Potenzstärke gewichtet
+ * - copen_digital: 10-stellige digitale Rate
+ * - malcolm_rae: Geometrisch × Goldener Schnitt
+ */
+export const combineCopenRates = (
+  inputs: CombinedRateInput[],
+  preferredMethod: CombinationMethod = 'fibonacci'
+): CombinedRateResult => {
+  if (inputs.length === 0) {
+    throw new Error('Mindestens eine Rate erforderlich');
+  }
+  
+  const rates = inputs.map(i => i.rate);
+  const n = rates.length;
+  
+  // 1. Arithmetisches Mittel
+  const sum = rates.reduce((a, b) => a + b, 0);
+  const arithmeticMean = Math.floor(sum / n);
+  
+  // 2. Geometrisches Mittel
+  const product = rates.reduce((a, b) => a * b, 1);
+  const geometricMean = Math.floor(Math.pow(product, 1 / n));
+  
+  // 3. Harmonisches Mittel
+  const harmonicSum = rates.reduce((a, b) => a + (1 / b), 0);
+  const harmonicMean = Math.floor(n / harmonicSum);
+  
+  // 4. Fibonacci-Moduliert (Copen-typisch)
+  // Kombination aus arithmetischem und geometrischem Mittel mit Fibonacci-Verhältnis
+  const fibonacciModulated = Math.floor(
+    ((arithmeticMean * 34 / 21) + (geometricMean * 21 / 34)) / 2
+  );
+  
+  // 5. Potenz-gewichtetes Mittel
+  let weightedSum = 0;
+  let totalWeight = 0;
+  for (const input of inputs) {
+    const weight = getPotencyWeight(input.potency, input.potencyType);
+    weightedSum += input.rate * weight;
+    totalWeight += weight;
+  }
+  const weightedByPotency = Math.floor((weightedSum / totalWeight) * 34 / 21);
+  
+  // 6. Copen Digital (10-stellig via Modulo)
+  const bigProduct = rates.reduce((a, b) => BigInt(a) * BigInt(b), BigInt(1));
+  const copenDigital = Number(bigProduct % BigInt(10000000000));
+  
+  // 7. Malcolm Rae (Geometrisch × Phi)
+  const PHI = 1.618034;
+  const malcolmRae = Math.floor(geometricMean * PHI);
+  
+  // Alle Methoden mit Beschreibungen
+  const allMethods: CombinedRateResult['allMethods'] = [
+    { method: 'arithmetic', rate: arithmeticMean, description: 'Arithmetisches Mittel: Einfache Durchschnittsberechnung' },
+    { method: 'geometric', rate: geometricMean, description: 'Geometrisches Mittel: Resonanz-optimiert, multiplikative Beziehung' },
+    { method: 'harmonic', rate: harmonicMean, description: 'Harmonisches Mittel: Traditionell in Radionik für Wellenkombination' },
+    { method: 'fibonacci', rate: fibonacciModulated, description: 'Fibonacci-Moduliert: Bruce Copen Original mit 21/34 Verhältnis' },
+    { method: 'weighted_potency', rate: weightedByPotency, description: 'Potenz-gewichtet: Berücksichtigt D/C/LM Stärke' },
+    { method: 'copen_digital', rate: copenDigital, description: 'Copen Digital: 10-stellig für digitale Radionik-Geräte' },
+    { method: 'malcolm_rae', rate: malcolmRae, description: 'Malcolm Rae: Geometrisch × Phi (Goldener Schnitt)' }
+  ];
+  
+  // Gewählte Methode für combinedRate
+  const methodMap: Record<CombinationMethod, number> = {
+    arithmetic: arithmeticMean,
+    geometric: geometricMean,
+    harmonic: harmonicMean,
+    fibonacci: fibonacciModulated,
+    weighted_potency: weightedByPotency,
+    copen_digital: copenDigital,
+    malcolm_rae: malcolmRae
+  };
+  
+  return {
+    inputRates: inputs,
+    combinedRate: methodMap[preferredMethod],
+    method: preferredMethod,
+    details: {
+      arithmeticMean,
+      geometricMean,
+      harmonicMean,
+      fibonacciModulated,
+      weightedByPotency,
+      copenDigital,
+      malcolmRae
+    },
+    allMethods
+  };
+};
+
+/**
+ * Analysiert eine gegebene Rate um mögliche Berechnungsmethoden zu identifizieren
+ */
+export const analyzeRateOrigin = (
+  targetRate: number,
+  knownRates: number[]
+): { possibleMethods: Array<{ method: string; confidence: number; explanation: string }> } => {
+  const results: Array<{ method: string; confidence: number; explanation: string }> = [];
+  
+  if (knownRates.length < 2) {
+    return { possibleMethods: [] };
+  }
+  
+  // Teste verschiedene Kombinationen
+  const sum = knownRates.reduce((a, b) => a + b, 0);
+  const product = knownRates.reduce((a, b) => a * b, 1);
+  const n = knownRates.length;
+  
+  // Einfache Addition
+  if (Math.abs(sum - targetRate) < targetRate * 0.01) {
+    results.push({ method: 'Addition', confidence: 95, explanation: 'Summe der Einzelraten' });
+  }
+  
+  // Arithmetisches Mittel
+  const arithMean = sum / n;
+  if (Math.abs(arithMean - targetRate) < targetRate * 0.01) {
+    results.push({ method: 'Arithmetisches Mittel', confidence: 90, explanation: 'Durchschnitt der Raten' });
+  }
+  
+  // Fibonacci-moduliert
+  const fibMod = (arithMean * 34 / 21);
+  if (Math.abs(fibMod - targetRate) < targetRate * 0.02) {
+    results.push({ method: 'Fibonacci-Moduliert', confidence: 85, explanation: 'Mittel × 34/21 (Bruce Copen)' });
+  }
+  
+  // Geometrisches Mittel
+  const geoMean = Math.pow(product, 1 / n);
+  if (Math.abs(geoMean - targetRate) < targetRate * 0.02) {
+    results.push({ method: 'Geometrisches Mittel', confidence: 85, explanation: 'Wurzel aus Produkt' });
+  }
+  
+  // Phi-skaliert
+  const phiScaled = geoMean * 1.618034;
+  if (Math.abs(phiScaled - targetRate) < targetRate * 0.02) {
+    results.push({ method: 'Malcolm Rae (Phi)', confidence: 80, explanation: 'Geometrisches Mittel × 1.618' });
+  }
+  
+  // Modulo 10^10
+  const modResult = Number(BigInt(product) % BigInt(10000000000));
+  if (Math.abs(modResult - targetRate) < targetRate * 0.01) {
+    results.push({ method: 'Digital Copen', confidence: 75, explanation: 'Produkt mod 10^10' });
+  }
+  
+  // Sortiere nach Konfidenz
+  results.sort((a, b) => b.confidence - a.confidence);
+  
+  return { possibleMethods: results };
+};
