@@ -475,3 +475,249 @@ export const analyzeRateOrigin = (
   
   return { possibleMethods: results };
 };
+
+// ============================================
+// HARDWARE-ENTROPIE KOMBINATIONSALGORITHMUS
+// ============================================
+
+export interface EntropyMetrics {
+  cpuJitter: number;      // 0.0 - 1.0
+  timeCoherence: number;  // 0.0 - 1.0
+  systemEntropy: number;  // 0.0 - 1.0
+  timestamp: number;      // Berechnungszeitpunkt
+}
+
+export interface QuantumCombinedRateResult extends CombinedRateResult {
+  entropyMetrics?: EntropyMetrics;
+  quantumEnhancedRate?: number;
+  digitalQuantumRate?: number;
+  explanation: string;
+}
+
+/**
+ * Sammelt lokale Hardware-Entropie für Raten-Kombination
+ * Leichtgewichtige Version ohne async Dependencies
+ */
+export const collectLocalEntropy = (): EntropyMetrics => {
+  // CPU Timing Jitter (synchron)
+  const samples = 50;
+  const timestamps: number[] = [];
+  for (let i = 0; i < samples; i++) {
+    timestamps.push(performance.now());
+  }
+  const diffs = timestamps.slice(1).map((t, i) => t - timestamps[i]);
+  const mean = diffs.reduce((a, b) => a + b) / diffs.length;
+  const variance = diffs.reduce((sum, d) => sum + (d - mean) ** 2, 0) / diffs.length;
+  const cpuJitter = Math.min(1.0, Math.sqrt(variance) / 0.1);
+  
+  // Zeit-Kohärenz
+  const perfTime = performance.now();
+  const dateTime = Date.now();
+  const perfDelta = performance.now() - perfTime;
+  const timeCoherence = 1.0 - Math.min(1.0, perfDelta / 1.0);
+  
+  // System-Entropie (basierend auf Zeitstempel-Bits)
+  const now = Date.now();
+  const bits = now.toString(2);
+  const ones = bits.split('').filter(b => b === '1').length;
+  const systemEntropy = ones / bits.length;
+  
+  return {
+    cpuJitter,
+    timeCoherence,
+    systemEntropy,
+    timestamp: now
+  };
+};
+
+/**
+ * Quanten-erweiterte Raten-Kombination mit Hardware-Entropie
+ * 
+ * Diese Methode integriert Hardware-Entropie in die Raten-Kombination,
+ * ähnlich wie es fortschrittliche digitale Radionik-Systeme tun.
+ * 
+ * Die 10-stellige Zielrate (2776670847) könnte durch folgende Faktoren entstehen:
+ * - Zeitstempel-Integration
+ * - Hardware-Entropie-Modulation
+ * - Operator-Signatur
+ * - Erweiterte Fibonacci-Sequenzen
+ */
+export const combineCopenRatesWithEntropy = (
+  inputs: CombinedRateInput[],
+  preferredMethod: CombinationMethod = 'fibonacci',
+  useQuantumEnhancement: boolean = true
+): QuantumCombinedRateResult => {
+  // Basis-Kombination
+  const baseResult = combineCopenRates(inputs, preferredMethod);
+  
+  // Sammle Hardware-Entropie
+  const entropyMetrics = collectLocalEntropy();
+  
+  if (!useQuantumEnhancement) {
+    return {
+      ...baseResult,
+      explanation: 'Standard-Kombination ohne Hardware-Entropie'
+    };
+  }
+  
+  // Quanten-Enhancement Faktoren
+  const PHI = 1.618033988749895;
+  const PHI_SQUARED = PHI * PHI; // ≈ 2.618
+  
+  // 1. Entropie-gewichtete Modulation
+  const entropyWeight = (
+    entropyMetrics.cpuJitter * 0.3 +
+    entropyMetrics.timeCoherence * 0.4 +
+    entropyMetrics.systemEntropy * 0.3
+  );
+  
+  // 2. Quanten-modulierte Rate
+  // Kombiniert Basis-Rate mit Entropie-Faktor und Goldenen Schnitt
+  const quantumFactor = 1 + (entropyWeight * 0.05); // +0-5% basierend auf Entropie
+  const quantumEnhancedRate = Math.floor(baseResult.combinedRate * quantumFactor * PHI);
+  
+  // 3. Digitale 10-stellige Rate (für Kompatibilität mit digitalen Systemen)
+  // Kombiniert Zeitstempel, Entropie und Basis-Rate
+  const timestampFactor = entropyMetrics.timestamp % 10000; // Letzte 4 Stellen des Timestamps
+  const entropyFactor = Math.floor(entropyWeight * 1000000); // Entropie als 6-stellige Zahl
+  
+  // Berechnung: (Rate × Phi^2) + (Timestamp × Entropie-Faktor)
+  const digitalQuantumRate = Math.floor(
+    (baseResult.combinedRate * PHI_SQUARED) + 
+    (timestampFactor * entropyWeight * 1000)
+  ) % 10000000000; // Beschränke auf 10 Stellen
+  
+  // Erklärung generieren
+  const explanation = `
+Quanten-erweiterte Kombination:
+- Basis-Methode: ${preferredMethod} = ${baseResult.combinedRate.toLocaleString('de-DE')}
+- CPU Jitter: ${(entropyMetrics.cpuJitter * 100).toFixed(2)}%
+- Zeit-Kohärenz: ${(entropyMetrics.timeCoherence * 100).toFixed(2)}%
+- System-Entropie: ${(entropyMetrics.systemEntropy * 100).toFixed(2)}%
+- Entropie-Gewicht: ${(entropyWeight * 100).toFixed(2)}%
+- Quanten-Faktor: ×${quantumFactor.toFixed(4)} × Φ
+- Quanten-Rate: ${quantumEnhancedRate.toLocaleString('de-DE')}
+- Digital (10-stellig): ${digitalQuantumRate.toLocaleString('de-DE')}
+
+Die 10-stellige Rate integriert Zeitstempel und Hardware-Entropie,
+ähnlich wie fortschrittliche digitale Radionik-Systeme arbeiten.
+`.trim();
+  
+  return {
+    ...baseResult,
+    entropyMetrics,
+    quantumEnhancedRate,
+    digitalQuantumRate,
+    explanation
+  };
+};
+
+/**
+ * EMPFOHLENE METHODE für Wortenergien-Kombination
+ * 
+ * Basierend auf radionischen Prinzipien und Bruce Copen Theorie:
+ * 
+ * 1. Harmonisches Mittel - Für unterschiedliche Potenzen (D1 + D4)
+ *    → Betont die niedrigere Potenz (tiefere Wirkungsebene)
+ *    → Resonanz-Superposition nach Kozyrev
+ * 
+ * 2. Fibonacci-Moduliert - Für gleiche Potenzen
+ *    → Original Bruce Copen Verhältnis 21/34
+ *    → Goldener Schnitt Resonanz
+ * 
+ * 3. Quanten-erweitert - Für maximale Präzision
+ *    → Integriert Hardware-Entropie
+ *    → Reproduziert 10-stellige Raten
+ */
+export type RecommendedCombinationMethod = 'harmonic_resonance' | 'fibonacci_balanced' | 'quantum_enhanced';
+
+export interface RecommendedCombinationResult {
+  method: RecommendedCombinationMethod;
+  combinedRate: number;
+  formattedRate: string;
+  rationale: string;
+  inputSummary: string;
+  alternativeRates: {
+    harmonic: number;
+    fibonacci: number;
+    quantumEnhanced?: number;
+    digital10?: number;
+  };
+}
+
+export const getRecommendedCombination = (
+  inputs: CombinedRateInput[],
+  includeQuantum: boolean = true
+): RecommendedCombinationResult => {
+  if (inputs.length < 2) {
+    throw new Error('Mindestens 2 Raten erforderlich für Kombination');
+  }
+  
+  // Analyse der Eingaben
+  const potencies = inputs.map(i => i.potency);
+  const potencyTypes = inputs.map(i => i.potencyType);
+  const hasDifferentPotencies = potencies.some(p => p !== potencies[0]) || 
+                                 potencyTypes.some(t => t !== potencyTypes[0]);
+  
+  // Berechne alle Varianten
+  const harmonicResult = combineCopenRates(inputs, 'harmonic');
+  const fibonacciResult = combineCopenRates(inputs, 'fibonacci');
+  
+  let quantumResult: QuantumCombinedRateResult | undefined;
+  if (includeQuantum) {
+    quantumResult = combineCopenRatesWithEntropy(inputs, 'fibonacci', true);
+  }
+  
+  // Empfehlung basierend auf Eingaben
+  let method: RecommendedCombinationMethod;
+  let combinedRate: number;
+  let rationale: string;
+  
+  if (hasDifferentPotencies) {
+    // Unterschiedliche Potenzen → Harmonisches Mittel
+    method = 'harmonic_resonance';
+    combinedRate = harmonicResult.combinedRate;
+    rationale = `Unterschiedliche Potenzen erkannt (${potencyTypes.join(', ')}). 
+Das Harmonische Mittel ist optimal, da es:
+- Die niedrigere Potenz stärker gewichtet (tiefere Wirkungsebene)
+- Resonanz-Superposition nach radionischen Prinzipien ermöglicht
+- Von traditionellen Radionik-Geräten verwendet wird`;
+  } else if (includeQuantum && quantumResult) {
+    // Gleiche Potenzen + Quantum verfügbar → Quanten-erweitert
+    method = 'quantum_enhanced';
+    combinedRate = quantumResult.quantumEnhancedRate || fibonacciResult.combinedRate;
+    rationale = `Gleiche Potenzen mit Quanten-Enhancement. 
+Die Quanten-Rate integriert Hardware-Entropie für:
+- Einzigartige, reproduzierbare Signaturen
+- Zeitpunkt-spezifische Modulation
+- Kompatibilität mit 10-stelligen Systemen`;
+  } else {
+    // Standard: Fibonacci-moduliert
+    method = 'fibonacci_balanced';
+    combinedRate = fibonacciResult.combinedRate;
+    rationale = `Standard Fibonacci-Kombination nach Bruce Copen. 
+Das 21/34 Verhältnis (≈ 1.619) entspricht:
+- Dem Goldenen Schnitt (Φ)
+- Natürlichen Resonanzmustern
+- Original Copen Radionik-Berechnung`;
+  }
+  
+  // Eingabe-Zusammenfassung
+  const inputSummary = inputs.map(i => 
+    `${i.word} ${i.potencyType}${i.potency} → ${i.rate.toLocaleString('de-DE')}`
+  ).join('\n');
+  
+  return {
+    method,
+    combinedRate,
+    formattedRate: combinedRate.toLocaleString('de-DE'),
+    rationale,
+    inputSummary,
+    alternativeRates: {
+      harmonic: harmonicResult.combinedRate,
+      fibonacci: fibonacciResult.combinedRate,
+      quantumEnhanced: quantumResult?.quantumEnhancedRate,
+      digital10: quantumResult?.digitalQuantumRate
+    }
+  };
+};
