@@ -44,6 +44,7 @@ import PatientManagerCloudV2 from './PatientManagerCloudV2';
 import HarmonizationArchiveCloud from './HarmonizationArchiveCloud';
 import HarmonizationTemplates from './HarmonizationTemplates';
 import DatabaseManager from './DatabaseManager';
+import RateCombinator from './RateCombinator';
 import KozyrevIndicators from './KozyrevIndicators';
 import { HardwareAlgorithmSettings } from './HardwareAlgorithmSettings';
 import { useToast } from '@/hooks/use-toast';
@@ -1386,6 +1387,9 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
 
       {/* Datenbank-Manager */}
       <DatabaseManager selectedPatient={selectedPatient} />
+
+      {/* Raten-Kombinator */}
+      <RateCombinator />
 
       {/* Harmonisierungs-Templates */}
       {selectedPatient && (
