@@ -984,6 +984,7 @@ const ClientFieldCalculator = () => {
             <WordEnergyTester 
               clientResult={result} 
               clientName={`${vornamen} ${nachname}`.trim()}
+              patientId={selectedPatientId || undefined}
             />
           )}
         </CardContent>

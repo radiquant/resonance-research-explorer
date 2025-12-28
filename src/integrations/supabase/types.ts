@@ -517,6 +517,48 @@ export type Database = {
         }
         Relationships: []
       }
+      word_energy_archives: {
+        Row: {
+          average_resonance: number | null
+          client_name: string
+          client_wellenfunktion: number | null
+          created_at: string
+          id: string
+          patient_id: string
+          results: Json
+          top_items: Json | null
+          total_words: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          average_resonance?: number | null
+          client_name: string
+          client_wellenfunktion?: number | null
+          created_at?: string
+          id?: string
+          patient_id: string
+          results: Json
+          top_items?: Json | null
+          total_words?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          average_resonance?: number | null
+          client_name?: string
+          client_wellenfunktion?: number | null
+          created_at?: string
+          id?: string
+          patient_id?: string
+          results?: Json
+          top_items?: Json | null
+          total_words?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
