@@ -365,18 +365,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const hasActiveFilters = polaritätFilter !== 'alle' || minResonanz > 0 || ebeneFilter !== null;
 
   const parseWords = (input: string): string[] => {
-    const words = input
+    return input
       .split('\n')
       .map(w => w.trim())
       .filter(w => w.length > 0);
-    // Duplikate entfernen (case-insensitive), aber Original-Case behalten
-    const seen = new Set<string>();
-    return words.filter(w => {
-      const lower = w.toLowerCase();
-      if (seen.has(lower)) return false;
-      seen.add(lower);
-      return true;
-    });
   };
 
   const calculateResonanz = (copenRate: number, clientWellenfunktion: number): number => {
