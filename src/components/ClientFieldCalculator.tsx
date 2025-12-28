@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, User, Calendar, MapPin, Sparkles, Heart, Leaf, Table, Info } from 'lucide-react';
+import { Loader2, User, Calendar, MapPin, Sparkles, Heart, Leaf, Table, Info, Upload, X, ImageIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { 
   berechneKlientenFeld, 
   type KlientenDaten, 
@@ -117,15 +119,127 @@ const PARAMETER_KOMBINATIONEN: ParameterKombination[] = [
 ];
 
 const ClientFieldCalculator = () => {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [nachname, setNachname] = useState('');
   const [vornamen, setVornamen] = useState('');
   const [geburtsdatum, setGeburtsdatum] = useState('');
   const [geburtsort, setGeburtsort] = useState('');
   const [tcmTyp, setTcmTyp] = useState<TCMElement | ''>('');
   const [bildSignatur, setBildSignatur] = useState<string>('');
+  const [bildPreview, setBildPreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
   const [showMatrix, setShowMatrix] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<KlientenFeldErgebnis | null>(null);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Ungültiger Dateityp",
+        description: "Bitte wählen Sie eine Bilddatei (JPG, PNG, etc.)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Datei zu groß",
+        description: "Maximale Dateigröße: 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Nicht angemeldet",
+          description: "Bitte melden Sie sich an, um Bilder hochzuladen",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('client-signatures')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      // Get signed URL for private bucket
+      const { data: urlData } = await supabase.storage
+        .from('client-signatures')
+        .createSignedUrl(data.path, 3600); // 1 hour validity
+
+      if (urlData?.signedUrl) {
+        setBildSignatur(data.path);
+        setBildPreview(urlData.signedUrl);
+        
+        toast({
+          title: "Bild hochgeladen",
+          description: "Klienten-Signatur erfolgreich hinzugefügt",
+        });
+      }
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload fehlgeschlagen",
+        description: error.message || "Bild konnte nicht hochgeladen werden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = async () => {
+    if (!bildSignatur) return;
+
+    try {
+      const { error } = await supabase.storage
+        .from('client-signatures')
+        .remove([bildSignatur]);
+
+      if (error) {
+        console.error('Delete error:', error);
+      }
+
+      setBildSignatur('');
+      setBildPreview('');
+      
+      toast({
+        title: "Bild entfernt",
+        description: "Klienten-Signatur wurde entfernt",
+      });
+    } catch (error) {
+      console.error('Error removing image:', error);
+    }
+  };
 
   // Aktuelle Konfiguration ermitteln
   const getCurrentConfig = (): ParameterKombination => {
@@ -405,17 +519,66 @@ const ClientFieldCalculator = () => {
               </Select>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="bildSignatur" className="flex items-center gap-1">
-                Bild-Signatur (Base64)
+            <div className="space-y-2 md:col-span-2">
+              <Label className="flex items-center gap-1">
+                <ImageIcon className="w-4 h-4" />
+                Klienten-Bild (Signatur)
                 <Badge variant="outline" className="text-[10px] ml-1">optional</Badge>
               </Label>
-              <Input 
-                id="bildSignatur" 
-                placeholder="data:image/..." 
-                value={bildSignatur} 
-                onChange={(e) => setBildSignatur(e.target.value)} 
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
               />
+              
+              {bildPreview ? (
+                <div className="relative w-32 h-32 rounded-lg border border-primary/20 overflow-hidden group">
+                  <img 
+                    src={bildPreview} 
+                    alt="Klienten-Signatur" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={handleRemoveImage}
+                      className="w-8 h-8"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <Badge className="absolute bottom-1 right-1 text-[9px] bg-green-500">
+                    Aktiv
+                  </Badge>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="w-full h-24 border-dashed border-2 hover:border-primary/50 flex flex-col gap-2"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <span className="text-xs">Hochladen...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6" />
+                      <span className="text-xs">Bild hochladen (max. 5MB)</span>
+                      <span className="text-[10px] text-muted-foreground">JPG, PNG, WebP</span>
+                    </>
+                  )}
+                </Button>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Erhöht Akkuranz um ~13% durch morphisches Feld-Anker
+              </p>
             </div>
           </div>
 
