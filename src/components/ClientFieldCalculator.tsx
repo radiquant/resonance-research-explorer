@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, User, Calendar, MapPin, Sparkles, Heart, Leaf, Table, Info, Upload, X, ImageIcon } from 'lucide-react';
+import { Loader2, User, Calendar, MapPin, Sparkles, Heart, Leaf, Table, Info, Upload, X, ImageIcon, Save, Users, Link2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -16,6 +16,16 @@ import {
   type TCMElement,
   type KlientenFeldErgebnis 
 } from '@/utils/clientFieldAlgorithms';
+
+interface PatientV2 {
+  id: string;
+  first_name: string;
+  last_name: string;
+  birth_date: string;
+  birth_place: string;
+  image_signature: string | null;
+  image_signature_active: boolean | null;
+}
 
 const ELEMENT_COLORS: Record<TCMElement, string> = {
   holz: 'bg-green-500',
@@ -133,6 +143,122 @@ const ClientFieldCalculator = () => {
   const [showMatrix, setShowMatrix] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<KlientenFeldErgebnis | null>(null);
+  
+  // Patient linking state
+  const [patients, setPatients] = useState<PatientV2[]>([]);
+  const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+  const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+  const [isSavingToPatient, setIsSavingToPatient] = useState(false);
+
+  // Load patients on mount
+  useEffect(() => {
+    loadPatients();
+  }, []);
+
+  const loadPatients = async () => {
+    setIsLoadingPatients(true);
+    try {
+      const { data, error } = await supabase
+        .from('patients_v2')
+        .select('id, first_name, last_name, birth_date, birth_place, image_signature, image_signature_active')
+        .order('last_name', { ascending: true });
+
+      if (error) throw error;
+      setPatients(data || []);
+    } catch (error) {
+      console.error('Error loading patients:', error);
+    } finally {
+      setIsLoadingPatients(false);
+    }
+  };
+
+  // Load patient data when selected
+  const handlePatientSelect = async (patientId: string) => {
+    setSelectedPatientId(patientId);
+    
+    if (!patientId) {
+      // Clear form
+      setNachname('');
+      setVornamen('');
+      setGeburtsdatum('');
+      setGeburtsort('');
+      setBildSignatur('');
+      setBildPreview('');
+      return;
+    }
+
+    const patient = patients.find(p => p.id === patientId);
+    if (!patient) return;
+
+    // Fill form with patient data
+    setNachname(patient.last_name);
+    setVornamen(patient.first_name);
+    setGeburtsdatum(patient.birth_date);
+    setGeburtsort(patient.birth_place);
+
+    // Load existing image signature if present
+    if (patient.image_signature) {
+      setBildSignatur(patient.image_signature);
+      
+      // Get signed URL for preview
+      const { data: urlData } = await supabase.storage
+        .from('client-signatures')
+        .createSignedUrl(patient.image_signature, 3600);
+
+      if (urlData?.signedUrl) {
+        setBildPreview(urlData.signedUrl);
+      }
+    } else {
+      setBildSignatur('');
+      setBildPreview('');
+    }
+  };
+
+  // Save image to patient profile
+  const saveImageToPatient = async () => {
+    if (!selectedPatientId || !bildSignatur) {
+      toast({
+        title: "Fehler",
+        description: "Bitte wählen Sie einen Patienten und laden Sie ein Bild hoch",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSavingToPatient(true);
+    try {
+      const { error } = await supabase
+        .from('patients_v2')
+        .update({ 
+          image_signature: bildSignatur,
+          image_signature_active: true 
+        })
+        .eq('id', selectedPatientId);
+
+      if (error) throw error;
+
+      // Update local patient list
+      setPatients(prev => prev.map(p => 
+        p.id === selectedPatientId 
+          ? { ...p, image_signature: bildSignatur, image_signature_active: true }
+          : p
+      ));
+
+      toast({
+        title: "Bild verknüpft",
+        description: "Klienten-Signatur wurde dauerhaft mit dem Patienten-Profil verknüpft",
+      });
+    } catch (error: any) {
+      console.error('Error saving image to patient:', error);
+      toast({
+        title: "Speichern fehlgeschlagen",
+        description: error.message || "Bild konnte nicht verknüpft werden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingToPatient(false);
+    }
+  };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -313,6 +439,43 @@ const ClientFieldCalculator = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Patienten-Auswahl */}
+          <Card className="border-primary/10 bg-gradient-to-r from-blue-500/5 to-purple-500/5">
+            <CardContent className="pt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="w-4 h-4 text-primary" />
+                <span className="text-sm font-medium">Patient aus Datenbank laden</span>
+                <Badge variant="outline" className="text-[10px]">Optional</Badge>
+              </div>
+              <Select value={selectedPatientId} onValueChange={handlePatientSelect}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={isLoadingPatients ? "Lade Patienten..." : "Patient auswählen (optional)"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">-- Manuell eingeben --</SelectItem>
+                  {patients.map(patient => (
+                    <SelectItem key={patient.id} value={patient.id}>
+                      <div className="flex items-center gap-2">
+                        {patient.last_name}, {patient.first_name}
+                        {patient.image_signature && (
+                          <Badge variant="secondary" className="text-[9px] px-1">
+                            <ImageIcon className="w-3 h-3 mr-1" />
+                            Bild
+                          </Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedPatientId && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Daten werden automatisch aus dem Patientenprofil geladen
+                </p>
+              )}
+            </CardContent>
+          </Card>
+          
           {/* Aktuelle Qualitätsanzeige */}
           <Card className={`${getQualityBg(currentConfig.akkuranz)} border-primary/10`}>
             <CardContent className="pt-4">
@@ -576,8 +739,37 @@ const ClientFieldCalculator = () => {
                   )}
                 </Button>
               )}
+              
+              {/* Save to Patient Button */}
+              {bildSignatur && selectedPatientId && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={saveImageToPatient}
+                  disabled={isSavingToPatient}
+                  className="w-full mt-2"
+                >
+                  {isSavingToPatient ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Speichern...
+                    </>
+                  ) : (
+                    <>
+                      <Link2 className="w-4 h-4 mr-2" />
+                      Mit Patient verknüpfen
+                    </>
+                  )}
+                </Button>
+              )}
+              
               <p className="text-xs text-muted-foreground">
                 Erhöht Akkuranz um ~13% durch morphisches Feld-Anker
+                {selectedPatientId && bildSignatur && (
+                  <span className="block mt-1 text-primary">
+                    Klicken Sie "Mit Patient verknüpfen" um das Bild dauerhaft zu speichern
+                  </span>
+                )}
               </p>
             </div>
           </div>
