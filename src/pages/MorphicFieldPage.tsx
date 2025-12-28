@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, BookOpen, ArrowLeft } from 'lucide-react';
+import { Home, BookOpen, User } from 'lucide-react';
 import MorphicFieldCalculator from '@/components/MorphicFieldCalculator';
+import ClientFieldCalculator from '@/components/ClientFieldCalculator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const MorphicFieldPage = () => {
   const [showTheory, setShowTheory] = useState(false);
