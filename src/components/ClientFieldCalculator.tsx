@@ -18,6 +18,7 @@ import {
   type FünfElementeProfile,
   type KlientenFeldErgebnis 
 } from '@/utils/clientFieldAlgorithms';
+import WordEnergyTester from './WordEnergyTester';
 
 const PLANET_LABELS: Record<Planet, string> = {
   sonne: '☀️ Sonne',
@@ -976,6 +977,14 @@ const ClientFieldCalculator = () => {
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {/* Wortenergie-Abtestung - Schritt 2 */}
+          {result && (
+            <WordEnergyTester 
+              clientResult={result} 
+              clientName={`${vornamen} ${nachname}`.trim()}
+            />
           )}
         </CardContent>
       </Card>
