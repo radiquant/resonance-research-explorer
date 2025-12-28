@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { 
   Loader2, 
   ListChecks, 
@@ -13,7 +15,11 @@ import {
   ArrowUpDown, 
   Layers, 
   Sparkles,
-  Download
+  Download,
+  Filter,
+  ArrowUp,
+  ArrowDown,
+  X
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
@@ -31,6 +37,10 @@ interface WordEnergyTestResult {
   ebenVerteilung: Record<string, number>;
 }
 
+type SortField = 'word' | 'resonanz' | 'intensität' | 'polaritätWert' | 'dominanteEbene' | 'copenRate';
+type SortDirection = 'asc' | 'desc';
+type PolaritätFilter = 'alle' | 'positiv' | 'negativ' | 'neutral';
+
 interface WordEnergyTesterProps {
   clientResult: KlientenFeldErgebnis | null;
   clientName: string;
@@ -42,6 +52,70 @@ const WordEnergyTester = ({ clientResult, clientName }: WordEnergyTesterProps) =
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [totalWords, setTotalWords] = useState(0);
   const [results, setResults] = useState<WordEnergyTestResult[]>([]);
+  
+  // Sortier- und Filter-State
+  const [sortField, setSortField] = useState<SortField>('resonanz');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [polaritätFilter, setPolaritätFilter] = useState<PolaritätFilter>('alle');
+  const [minResonanz, setMinResonanz] = useState<number>(0);
+  const [ebeneFilter, setEbeneFilter] = useState<number | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Gefilterte und sortierte Ergebnisse
+  const filteredAndSortedResults = useMemo(() => {
+    let filtered = [...results];
+    
+    // Polarität-Filter
+    if (polaritätFilter !== 'alle') {
+      filtered = filtered.filter(r => r.polarität === polaritätFilter);
+    }
+    
+    // Minimum Resonanz Filter
+    if (minResonanz > 0) {
+      filtered = filtered.filter(r => r.resonanz >= minResonanz);
+    }
+    
+    // Ebene-Filter
+    if (ebeneFilter !== null) {
+      filtered = filtered.filter(r => r.dominanteEbene === ebeneFilter);
+    }
+    
+    // Sortierung
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortField) {
+        case 'word':
+          comparison = a.word.localeCompare(b.word);
+          break;
+        case 'resonanz':
+          comparison = a.resonanz - b.resonanz;
+          break;
+        case 'intensität':
+          comparison = a.intensität - b.intensität;
+          break;
+        case 'polaritätWert':
+          comparison = a.polaritätWert - b.polaritätWert;
+          break;
+        case 'dominanteEbene':
+          comparison = a.dominanteEbene - b.dominanteEbene;
+          break;
+        case 'copenRate':
+          comparison = a.copenRate - b.copenRate;
+          break;
+      }
+      return sortDirection === 'desc' ? -comparison : comparison;
+    });
+    
+    return filtered;
+  }, [results, sortField, sortDirection, polaritätFilter, minResonanz, ebeneFilter]);
+
+  const resetFilters = () => {
+    setPolaritätFilter('alle');
+    setMinResonanz(0);
+    setEbeneFilter(null);
+  };
+
+  const hasActiveFilters = polaritätFilter !== 'alle' || minResonanz > 0 || ebeneFilter !== null;
 
   const parseWords = (input: string): string[] => {
     return input
@@ -248,20 +322,147 @@ const WordEnergyTester = ({ clientResult, clientName }: WordEnergyTesterProps) =
             {/* Results */}
             {results.length > 0 && (
               <div className="space-y-4 pt-4 border-t">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h4 className="font-semibold flex items-center gap-2">
                     <Layers className="w-5 h-5 text-primary" />
-                    Testergebnisse ({results.length})
+                    Testergebnisse ({filteredAndSortedResults.length}
+                    {filteredAndSortedResults.length !== results.length && ` von ${results.length}`})
                   </h4>
-                  <Button variant="outline" size="sm" onClick={exportToCSV}>
-                    <Download className="w-4 h-4 mr-2" />
-                    CSV Export
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant={showFilters ? "secondary" : "outline"} 
+                      size="sm" 
+                      onClick={() => setShowFilters(!showFilters)}
+                    >
+                      <Filter className="w-4 h-4 mr-2" />
+                      Filter
+                      {hasActiveFilters && (
+                        <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 justify-center text-[10px]">
+                          !
+                        </Badge>
+                      )}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={exportToCSV}>
+                      <Download className="w-4 h-4 mr-2" />
+                      CSV
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Filter & Sort Controls */}
+                {showFilters && (
+                  <Card className="bg-muted/30 border-primary/10">
+                    <CardContent className="pt-4 space-y-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {/* Sortierung */}
+                        <div className="space-y-1">
+                          <Label className="text-xs">Sortieren nach</Label>
+                          <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="resonanz">Resonanz</SelectItem>
+                              <SelectItem value="intensität">Intensität</SelectItem>
+                              <SelectItem value="polaritätWert">Polarität</SelectItem>
+                              <SelectItem value="dominanteEbene">Ebene</SelectItem>
+                              <SelectItem value="copenRate">Copen-Rate</SelectItem>
+                              <SelectItem value="word">Wort (A-Z)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Sortierrichtung */}
+                        <div className="space-y-1">
+                          <Label className="text-xs">Richtung</Label>
+                          <Button 
+                            variant="outline" 
+                            className="w-full h-9 justify-start"
+                            onClick={() => setSortDirection(d => d === 'asc' ? 'desc' : 'asc')}
+                          >
+                            {sortDirection === 'desc' ? (
+                              <><ArrowDown className="w-4 h-4 mr-2" />Absteigend</>
+                            ) : (
+                              <><ArrowUp className="w-4 h-4 mr-2" />Aufsteigend</>
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Polarität Filter */}
+                        <div className="space-y-1">
+                          <Label className="text-xs">Polarität</Label>
+                          <Select value={polaritätFilter} onValueChange={(v) => setPolaritätFilter(v as PolaritätFilter)}>
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="alle">Alle</SelectItem>
+                              <SelectItem value="positiv">+ Positiv</SelectItem>
+                              <SelectItem value="neutral">○ Neutral</SelectItem>
+                              <SelectItem value="negativ">− Negativ</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Min Resonanz */}
+                        <div className="space-y-1">
+                          <Label className="text-xs">Min. Resonanz %</Label>
+                          <Input 
+                            type="number" 
+                            min={0} 
+                            max={100} 
+                            value={minResonanz}
+                            onChange={(e) => setMinResonanz(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Ebene Filter */}
+                      <div className="space-y-1">
+                        <Label className="text-xs">Dominante Ebene filtern</Label>
+                        <div className="flex flex-wrap gap-1">
+                          <Button
+                            variant={ebeneFilter === null ? "default" : "outline"}
+                            size="sm"
+                            className="h-7 text-xs"
+                            onClick={() => setEbeneFilter(null)}
+                          >
+                            Alle
+                          </Button>
+                          {LEVELS.map(level => (
+                            <Button
+                              key={level.id}
+                              variant={ebeneFilter === level.id ? "default" : "outline"}
+                              size="sm"
+                              className="h-7 text-xs px-2"
+                              onClick={() => setEbeneFilter(ebeneFilter === level.id ? null : level.id)}
+                            >
+                              {level.id}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {hasActiveFilters && (
+                        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-muted-foreground">
+                          <X className="w-4 h-4 mr-1" />
+                          Filter zurücksetzen
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
 
                 <ScrollArea className="h-[400px] rounded-md border">
                   <div className="p-4 space-y-3">
-                    {results.map((result, idx) => (
+                    {filteredAndSortedResults.length === 0 ? (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Filter className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>Keine Ergebnisse mit aktuellen Filtern</p>
+                      </div>
+                    ) : (
+                      filteredAndSortedResults.map((result, idx) => (
                       <Card key={idx} className="bg-muted/20 hover:bg-muted/30 transition-colors">
                         <CardContent className="pt-4">
                           <div className="flex items-start justify-between mb-3">
@@ -339,7 +540,8 @@ const WordEnergyTester = ({ clientResult, clientName }: WordEnergyTesterProps) =
                           </details>
                         </CardContent>
                       </Card>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </ScrollArea>
               </div>
