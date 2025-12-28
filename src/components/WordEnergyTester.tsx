@@ -1328,22 +1328,64 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                               className="h-2"
                             />
                             
+                            {/* Aktuelle Harmonisierung */}
                             {harmonization.selectedItems[harmonization.currentItemIndex] && (
-                              <Card className="bg-muted/30">
+                              <Card className="bg-primary/10 border-primary/30">
                                 <CardContent className="py-3">
                                   <div className="flex items-center justify-between">
                                     <div>
                                       <p className="text-xs text-muted-foreground">Aktuelles Item ({harmonization.currentItemIndex + 1}/{harmonization.selectedItems.length})</p>
-                                      <p className="font-semibold">{harmonization.selectedItems[harmonization.currentItemIndex].word}</p>
+                                      <p className="font-semibold text-primary">
+                                        Kohärente Harmonisierung {harmonization.selectedItems[harmonization.currentItemIndex].word}
+                                      </p>
                                     </div>
                                     <div className="text-right">
-                                      <p className="text-xs text-muted-foreground">Copen-Rate</p>
-                                      <p className="font-mono">{harmonization.selectedItems[harmonization.currentItemIndex].copenRate.toLocaleString()}</p>
+                                      <p className="text-xs text-muted-foreground">Harmonisierungs-Rate</p>
+                                      <p className="font-mono text-primary font-bold">
+                                        {harmonization.selectedItems[harmonization.currentItemIndex].harmonisierungsRate?.toLocaleString() || 
+                                         harmonization.selectedItems[harmonization.currentItemIndex].copenRate.toLocaleString()}
+                                      </p>
                                     </div>
                                   </div>
                                 </CardContent>
                               </Card>
                             )}
+                            
+                            {/* Vollständige Liste aller zu harmonisierenden Items */}
+                            <details className="mt-2">
+                              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground flex items-center gap-1">
+                                <Layers className="w-3 h-3" />
+                                Alle {harmonization.selectedItems.length} Harmonisierungs-Items anzeigen
+                              </summary>
+                              <ScrollArea className="h-[200px] mt-2 rounded border bg-muted/20">
+                                <div className="p-2 space-y-1">
+                                  {harmonization.selectedItems.map((item, idx) => (
+                                    <div 
+                                      key={idx} 
+                                      className={`flex items-center justify-between p-2 rounded text-xs ${
+                                        idx === harmonization.currentItemIndex 
+                                          ? 'bg-primary/20 border border-primary/40' 
+                                          : idx < harmonization.currentItemIndex 
+                                            ? 'bg-green-500/10 text-muted-foreground' 
+                                            : 'bg-muted/30'
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <span className="w-5 text-center font-mono text-muted-foreground">
+                                          {idx < harmonization.currentItemIndex ? '✓' : idx === harmonization.currentItemIndex ? '▶' : (idx + 1)}
+                                        </span>
+                                        <span className={idx === harmonization.currentItemIndex ? 'font-medium text-primary' : ''}>
+                                          Kohärente Harmonisierung {item.word}
+                                        </span>
+                                      </div>
+                                      <span className="font-mono">
+                                        {item.harmonisierungsRate?.toLocaleString() || item.copenRate.toLocaleString()}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </ScrollArea>
+                            </details>
                             
                             <div className="flex gap-2">
                               <Button 
