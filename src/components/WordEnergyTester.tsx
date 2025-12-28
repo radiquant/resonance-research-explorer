@@ -1483,11 +1483,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 <Input
                                   type="number"
                                   min={1}
-                                  max={120}
+                                  max={360}
                                   value={harmonization.maxDuration}
                                   onChange={(e) => setHarmonization(prev => ({
                                     ...prev,
-                                    maxDuration: Math.max(1, Math.min(120, parseInt(e.target.value) || 30))
+                                    maxDuration: Math.max(1, Math.min(360, parseInt(e.target.value) || 30))
                                   }))}
                                   className="h-9"
                                 />
