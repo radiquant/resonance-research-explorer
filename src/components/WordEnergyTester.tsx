@@ -1120,9 +1120,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 <p className="text-xs text-muted-foreground">
                                   Copen-Rate: {result.copenRate.toLocaleString()}
                                 </p>
-                                <p className="text-xs text-primary font-medium mt-1">
-                                  Harmonisierung: {result.harmonisierungsRate.toLocaleString()}
-                                </p>
+                                {result.harmonisierungsRate !== undefined && (
+                                  <p className="text-xs text-primary font-medium mt-1">
+                                    Harmonisierung: {result.harmonisierungsRate.toLocaleString()}
+                                  </p>
+                                )}
                               </div>
                               <Badge className={`${getPolaritätColor(result.polarität)} text-white`}>
                                 {result.polarität === 'positiv' ? '+' : result.polarität === 'negativ' ? '−' : '○'} {result.polarität}
