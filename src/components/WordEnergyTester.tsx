@@ -63,6 +63,9 @@ interface WordEnergyTestResult {
   dominanteEbene: number;
   dominanteEbeneWert: number;
   ebenVerteilung: Record<string, number>;
+  // Kohärente Harmonisierung Felder
+  harmonisierungsWort: string;
+  harmonisierungsRate: number;
 }
 
 interface ArchivedTest {
@@ -417,6 +420,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     const intensität = calculateIntensität(copenRate, fokusResult.kombinierteResonanz);
     const { typ: polarität, wert: polaritätWert } = calculatePolarität(word, copenRate);
     
+    // Kohärente Harmonisierung: Präfix + Wort für Harmonisierungsrate
+    const harmonisierungsWort = `Kohärente Harmonisierung ${word}`;
+    const harmonisierungsRateResult = calculateCopenRate(harmonisierungsWort, 0, 'D', 'latin');
+    const harmonisierungsRate = harmonisierungsRateResult.rate;
+    
     return {
       word,
       copenRate,
@@ -429,7 +437,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       polaritätWert: Math.round(polaritätWert * 100) / 100,
       dominanteEbene,
       dominanteEbeneWert: Math.round(dominanteEbeneWert * 10) / 10,
-      ebenVerteilung
+      ebenVerteilung,
+      harmonisierungsWort,
+      harmonisierungsRate
     };
   }, [effectiveFokus, fokusGewichtung]);
 
@@ -1109,6 +1119,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 <h5 className="font-semibold text-base">{result.word}</h5>
                                 <p className="text-xs text-muted-foreground">
                                   Copen-Rate: {result.copenRate.toLocaleString()}
+                                </p>
+                                <p className="text-xs text-primary font-medium mt-1">
+                                  Harmonisierung: {result.harmonisierungsRate.toLocaleString()}
                                 </p>
                               </div>
                               <Badge className={`${getPolaritätColor(result.polarität)} text-white`}>
