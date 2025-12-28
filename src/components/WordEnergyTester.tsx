@@ -32,10 +32,17 @@ import {
   History,
   Target,
   Atom,
-  Info
+  Info,
+  Play,
+  Square,
+  Trash2,
+  Timer,
+  Activity,
+  Heart,
+  Gauge
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
-import { calculateLevelResonance, LEVELS, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
+import { calculateLevelResonance, LEVELS, LEVELS_DISPLAY, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
 import { calculateFokusResonanz, FOKUS_OPTIONS } from '@/utils/quantumFocusAlgorithm';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -72,6 +79,33 @@ interface TrendItem {
   trend: 'up' | 'down' | 'stable';
   trendValue: number;
   occurrences: number;
+  // Erweiterte Trend-Daten
+  currentIntensity?: number;
+  currentPolarity?: number;
+  currentLevel?: number;
+  previousIntensity?: number;
+  previousPolarity?: number;
+  previousLevel?: number;
+  fokusKorrelation?: number;
+}
+
+interface CategoryTrends {
+  resonanzFokus: TrendItem[];
+  intensität: TrendItem[];
+  polarität: TrendItem[];
+  ebenen: TrendItem[];
+}
+
+interface HarmonizationState {
+  isActive: boolean;
+  isPaused: boolean;
+  selectedItems: WordEnergyTestResult[];
+  pulseDuration: number; // Sekunden
+  pauseDuration: number; // Sekunden
+  maxDuration: number; // Minuten
+  elapsedSeconds: number;
+  currentItemIndex: number;
+  inPulsePhase: boolean;
 }
 
 type SortField = 'word' | 'resonanz' | 'intensität' | 'polaritätWert' | 'dominanteEbene' | 'copenRate';
@@ -102,9 +136,32 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   // Archiv & Trend State
   const [archivedTests, setArchivedTests] = useState<ArchivedTest[]>([]);
   const [trendItems, setTrendItems] = useState<TrendItem[]>([]);
+  const [categoryTrends, setCategoryTrends] = useState<CategoryTrends>({
+    resonanzFokus: [],
+    intensität: [],
+    polarität: [],
+    ebenen: []
+  });
+  const [activeTrendCategory, setActiveTrendCategory] = useState<'resonanzFokus' | 'intensität' | 'polarität' | 'ebenen'>('resonanzFokus');
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('test');
+
+  // Harmonization State
+  const [harmonization, setHarmonization] = useState<HarmonizationState>({
+    isActive: false,
+    isPaused: false,
+    selectedItems: [],
+    pulseDuration: 5,
+    pauseDuration: 3,
+    maxDuration: 30,
+    elapsedSeconds: 0,
+    currentItemIndex: 0,
+    inPulsePhase: true
+  });
+  const [showHarmonization, setShowHarmonization] = useState(false);
+  const [harmonizationItemCount, setHarmonizationItemCount] = useState<21 | 42 | 63>(21);
+  const harmonizationIntervalRef = useState<NodeJS.Timeout | null>(null);
   
   // Sortier- und Filter-State
   const [sortField, setSortField] = useState<SortField>('resonanz');
@@ -166,47 +223,93 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const calculateTrends = (archives: ArchivedTest[]) => {
     if (archives.length < 2) {
       setTrendItems([]);
+      setCategoryTrends({ resonanzFokus: [], intensität: [], polarität: [], ebenen: [] });
       return;
     }
 
-    const wordMap = new Map<string, { values: number[], occurrences: number }>();
+    const wordMap = new Map<string, { 
+      resonances: number[], 
+      intensities: number[], 
+      polarities: number[], 
+      levels: number[],
+      fokusKorrelations: number[],
+      occurrences: number 
+    }>();
 
     // Collect all word occurrences across tests
     archives.forEach(archive => {
       archive.results.forEach(result => {
-        const existing = wordMap.get(result.word) || { values: [], occurrences: 0 };
-        existing.values.push(result.resonanz);
+        const existing = wordMap.get(result.word) || { 
+          resonances: [], 
+          intensities: [], 
+          polarities: [], 
+          levels: [],
+          fokusKorrelations: [],
+          occurrences: 0 
+        };
+        existing.resonances.push(result.resonanz);
+        existing.intensities.push(result.intensität);
+        existing.polarities.push(result.polaritätWert);
+        existing.levels.push(result.dominanteEbene);
+        existing.fokusKorrelations.push(result.fokusKorrelation || 0);
         existing.occurrences++;
         wordMap.set(result.word, existing);
       });
     });
 
     // Calculate trends for items appearing more than once
-    const trends: TrendItem[] = [];
+    const allTrends: TrendItem[] = [];
     wordMap.forEach((data, word) => {
       if (data.occurrences >= 2) {
-        const currentResonance = data.values[0];
-        const previousResonance = data.values[1];
+        const currentResonance = data.resonances[0];
+        const previousResonance = data.resonances[1];
         const trendValue = currentResonance - previousResonance;
         
         let trend: 'up' | 'down' | 'stable' = 'stable';
         if (trendValue > 5) trend = 'up';
         else if (trendValue < -5) trend = 'down';
 
-        trends.push({
+        allTrends.push({
           word,
           currentResonance,
           previousResonance,
           trend,
           trendValue,
-          occurrences: data.occurrences
+          occurrences: data.occurrences,
+          currentIntensity: data.intensities[0],
+          previousIntensity: data.intensities[1],
+          currentPolarity: data.polarities[0],
+          previousPolarity: data.polarities[1],
+          currentLevel: data.levels[0],
+          previousLevel: data.levels[1],
+          fokusKorrelation: data.fokusKorrelations[0]
         });
       }
     });
 
-    // Sort by absolute trend value
-    trends.sort((a, b) => Math.abs(b.trendValue) - Math.abs(a.trendValue));
-    setTrendItems(trends.slice(0, 15)); // Top 15 trending items
+    // Kategorisierte Trends
+    const resonanzFokus = [...allTrends]
+      .sort((a, b) => Math.abs(b.trendValue) - Math.abs(a.trendValue))
+      .slice(0, 15);
+
+    const intensität = [...allTrends]
+      .sort((a, b) => Math.abs((b.currentIntensity || 0) - (b.previousIntensity || 0)) - 
+                       Math.abs((a.currentIntensity || 0) - (a.previousIntensity || 0)))
+      .slice(0, 15);
+
+    const polarität = [...allTrends]
+      .sort((a, b) => Math.abs((b.currentPolarity || 0) - (b.previousPolarity || 0)) - 
+                       Math.abs((a.currentPolarity || 0) - (a.previousPolarity || 0)))
+      .slice(0, 15);
+
+    const ebenen = [...allTrends]
+      .filter(t => t.currentLevel !== t.previousLevel)
+      .sort((a, b) => Math.abs((b.currentLevel || 0) - (b.previousLevel || 0)) - 
+                       Math.abs((a.currentLevel || 0) - (a.previousLevel || 0)))
+      .slice(0, 15);
+
+    setCategoryTrends({ resonanzFokus, intensität, polarität, ebenen });
+    setTrendItems(resonanzFokus);
   };
 
   // Gefilterte und sortierte Ergebnisse
@@ -493,6 +596,110 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       case 'down': return <TrendingDown className="w-4 h-4 text-red-500" />;
       case 'stable': return <Minus className="w-4 h-4 text-gray-500" />;
     }
+  };
+
+  // Harmonisierung starten
+  const startHarmonization = () => {
+    const topItems = [...filteredAndSortedResults].slice(0, harmonizationItemCount);
+    if (topItems.length === 0) {
+      toast({
+        title: "Keine Items",
+        description: "Keine Ergebnisse zum Harmonisieren vorhanden",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setHarmonization(prev => ({
+      ...prev,
+      isActive: true,
+      isPaused: false,
+      selectedItems: topItems,
+      elapsedSeconds: 0,
+      currentItemIndex: 0,
+      inPulsePhase: true
+    }));
+    
+    toast({
+      title: "Harmonisierung gestartet",
+      description: `${topItems.length} Items werden harmonisiert`,
+    });
+  };
+
+  // Harmonisierung stoppen
+  const stopHarmonization = () => {
+    setHarmonization(prev => ({
+      ...prev,
+      isPaused: !prev.isPaused
+    }));
+  };
+
+  // Harmonisierung löschen/abbrechen
+  const cancelHarmonization = () => {
+    setHarmonization({
+      isActive: false,
+      isPaused: false,
+      selectedItems: [],
+      pulseDuration: harmonization.pulseDuration,
+      pauseDuration: harmonization.pauseDuration,
+      maxDuration: harmonization.maxDuration,
+      elapsedSeconds: 0,
+      currentItemIndex: 0,
+      inPulsePhase: true
+    });
+    toast({
+      title: "Harmonisierung beendet",
+      description: "Der Prozess wurde abgebrochen",
+    });
+  };
+
+  // Harmonisierungs-Timer
+  useEffect(() => {
+    if (!harmonization.isActive || harmonization.isPaused) return;
+    
+    const interval = setInterval(() => {
+      setHarmonization(prev => {
+        const newElapsed = prev.elapsedSeconds + 1;
+        const maxSeconds = prev.maxDuration * 60;
+        
+        // Max Zeit erreicht?
+        if (newElapsed >= maxSeconds) {
+          toast({
+            title: "Harmonisierung abgeschlossen",
+            description: `${prev.selectedItems.length} Items in ${prev.maxDuration} Minuten harmonisiert`,
+          });
+          return {
+            ...prev,
+            isActive: false,
+            elapsedSeconds: maxSeconds
+          };
+        }
+        
+        // Impuls/Pause Phasen berechnen
+        const cycleLength = prev.pulseDuration + prev.pauseDuration;
+        const cyclePosition = newElapsed % cycleLength;
+        const inPulse = cyclePosition < prev.pulseDuration;
+        
+        // Aktuelles Item Index basierend auf Zeit
+        const itemCycleTime = cycleLength * 3; // Jedes Item 3 Zyklen
+        const newItemIndex = Math.floor(newElapsed / itemCycleTime) % prev.selectedItems.length;
+        
+        return {
+          ...prev,
+          elapsedSeconds: newElapsed,
+          inPulsePhase: inPulse,
+          currentItemIndex: newItemIndex
+        };
+      });
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [harmonization.isActive, harmonization.isPaused, toast]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -841,7 +1048,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                             >
                               Alle
                             </Button>
-                            {LEVELS.map(level => (
+                            {LEVELS_DISPLAY.map(level => (
                               <Button
                                 key={level.id}
                                 variant={ebeneFilter === level.id ? "default" : "outline"}
@@ -938,10 +1145,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
                             <details className="mt-3">
                               <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
-                                12+1 Ebenen-Verteilung anzeigen
+                                12 Ebenen-Verteilung anzeigen
                               </summary>
                               <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-1 text-xs">
-                                {LEVELS.map(level => (
+                                {LEVELS_DISPLAY.map(level => (
                                   <div key={level.id} className="flex items-center gap-1">
                                     <span className="text-muted-foreground w-4">{level.id}.</span>
                                     <Progress 
@@ -961,6 +1168,171 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                       )}
                     </div>
                   </ScrollArea>
+
+                  {/* Harmonisierung Section */}
+                  {filteredAndSortedResults.length > 0 && (
+                    <Card className="mt-4 border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Activity className="w-5 h-5 text-primary" />
+                            <Label className="font-medium">Harmonisierung (optional)</Label>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setShowHarmonization(!showHarmonization)}
+                          >
+                            {showHarmonization ? 'Ausblenden' : 'Einblenden'}
+                          </Button>
+                        </div>
+
+                        {showHarmonization && !harmonization.isActive && (
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="space-y-1">
+                                <Label className="text-xs">Top Items</Label>
+                                <Select 
+                                  value={harmonizationItemCount.toString()} 
+                                  onValueChange={(v) => setHarmonizationItemCount(parseInt(v) as 21 | 42 | 63)}
+                                >
+                                  <SelectTrigger className="h-9">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="21">Top 21</SelectItem>
+                                    <SelectItem value="42">Top 42</SelectItem>
+                                    <SelectItem value="63">Top 63</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-xs">Impuls (Sek.)</Label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={60}
+                                  value={harmonization.pulseDuration}
+                                  onChange={(e) => setHarmonization(prev => ({
+                                    ...prev,
+                                    pulseDuration: Math.max(1, Math.min(60, parseInt(e.target.value) || 5))
+                                  }))}
+                                  className="h-9"
+                                />
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-xs">Pause (Sek.)</Label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={60}
+                                  value={harmonization.pauseDuration}
+                                  onChange={(e) => setHarmonization(prev => ({
+                                    ...prev,
+                                    pauseDuration: Math.max(1, Math.min(60, parseInt(e.target.value) || 3))
+                                  }))}
+                                  className="h-9"
+                                />
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <Label className="text-xs">Max. Laufzeit (Min.)</Label>
+                                <Input
+                                  type="number"
+                                  min={1}
+                                  max={120}
+                                  value={harmonization.maxDuration}
+                                  onChange={(e) => setHarmonization(prev => ({
+                                    ...prev,
+                                    maxDuration: Math.max(1, Math.min(120, parseInt(e.target.value) || 30))
+                                  }))}
+                                  className="h-9"
+                                />
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              <span>
+                                Verfügbar: {Math.min(harmonizationItemCount, filteredAndSortedResults.length)} von {filteredAndSortedResults.length} Items
+                              </span>
+                              <span>
+                                Impuls/Pause: {harmonization.pulseDuration}s / {harmonization.pauseDuration}s
+                              </span>
+                            </div>
+                            
+                            <Button 
+                              onClick={startHarmonization} 
+                              className="w-full"
+                              disabled={filteredAndSortedResults.length === 0}
+                            >
+                              <Play className="w-4 h-4 mr-2" />
+                              Harmonisierung starten
+                            </Button>
+                          </div>
+                        )}
+
+                        {harmonization.isActive && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-3 h-3 rounded-full ${harmonization.inPulsePhase ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+                                <span className="text-sm font-medium">
+                                  {harmonization.inPulsePhase ? 'Impuls' : 'Pause'}
+                                </span>
+                              </div>
+                              <Badge variant="outline">
+                                {formatTime(harmonization.elapsedSeconds)} / {formatTime(harmonization.maxDuration * 60)}
+                              </Badge>
+                            </div>
+                            
+                            <Progress 
+                              value={(harmonization.elapsedSeconds / (harmonization.maxDuration * 60)) * 100} 
+                              className="h-2"
+                            />
+                            
+                            {harmonization.selectedItems[harmonization.currentItemIndex] && (
+                              <Card className="bg-muted/30">
+                                <CardContent className="py-3">
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <p className="text-xs text-muted-foreground">Aktuelles Item ({harmonization.currentItemIndex + 1}/{harmonization.selectedItems.length})</p>
+                                      <p className="font-semibold">{harmonization.selectedItems[harmonization.currentItemIndex].word}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-xs text-muted-foreground">Copen-Rate</p>
+                                      <p className="font-mono">{harmonization.selectedItems[harmonization.currentItemIndex].copenRate.toLocaleString()}</p>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            )}
+                            
+                            <div className="flex gap-2">
+                              <Button 
+                                variant={harmonization.isPaused ? "default" : "secondary"}
+                                onClick={stopHarmonization}
+                                className="flex-1"
+                              >
+                                {harmonization.isPaused ? (
+                                  <><Play className="w-4 h-4 mr-2" />Fortsetzen</>
+                                ) : (
+                                  <><Square className="w-4 h-4 mr-2" />Stoppen</>
+                                )}
+                              </Button>
+                              <Button 
+                                variant="destructive"
+                                onClick={cancelHarmonization}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -1033,19 +1405,56 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                   <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>Bitte einen Klienten verknüpfen für Trendanalyse</p>
                 </div>
-              ) : trendItems.length === 0 ? (
+              ) : categoryTrends.resonanzFokus.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
                   <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>Mindestens 2 archivierte Tests mit gemeinsamen Wörtern erforderlich</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Vergleich der Resonanzwerte über mehrere Tests hinweg
-                  </p>
-                  <ScrollArea className="h-[400px]">
+                  {/* Kategorie-Tabs */}
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={activeTrendCategory === 'resonanzFokus' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTrendCategory('resonanzFokus')}
+                      className="flex items-center gap-1"
+                    >
+                      <Target className="w-3 h-3" />
+                      Resonanz & Fokus ({categoryTrends.resonanzFokus.length})
+                    </Button>
+                    <Button
+                      variant={activeTrendCategory === 'intensität' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTrendCategory('intensität')}
+                      className="flex items-center gap-1"
+                    >
+                      <Gauge className="w-3 h-3" />
+                      Intensität ({categoryTrends.intensität.length})
+                    </Button>
+                    <Button
+                      variant={activeTrendCategory === 'polarität' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTrendCategory('polarität')}
+                      className="flex items-center gap-1"
+                    >
+                      <Heart className="w-3 h-3" />
+                      Polarität ({categoryTrends.polarität.length})
+                    </Button>
+                    <Button
+                      variant={activeTrendCategory === 'ebenen' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setActiveTrendCategory('ebenen')}
+                      className="flex items-center gap-1"
+                    >
+                      <Layers className="w-3 h-3" />
+                      Ebenen ({categoryTrends.ebenen.length})
+                    </Button>
+                  </div>
+
+                  <ScrollArea className="h-[350px]">
                     <div className="space-y-2 pr-4">
-                      {trendItems.map((item, idx) => (
+                      {categoryTrends[activeTrendCategory].map((item, idx) => (
                         <Card key={idx} className="bg-muted/20">
                           <CardContent className="py-3">
                             <div className="flex items-center justify-between">
@@ -1055,23 +1464,77 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                   <span className="font-medium">{item.word}</span>
                                   <p className="text-xs text-muted-foreground">
                                     {item.occurrences}x getestet
+                                    {item.fokusKorrelation && item.fokusKorrelation > 0 && (
+                                      <span className="ml-2 text-primary">• Fokus: {item.fokusKorrelation.toFixed(0)}%</span>
+                                    )}
                                   </p>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-muted-foreground text-sm">{item.previousResonance.toFixed(1)}%</span>
-                                  <span className="text-muted-foreground">→</span>
-                                  <span className={`font-medium ${getResonanzColor(item.currentResonance)}`}>
-                                    {item.currentResonance.toFixed(1)}%
-                                  </span>
-                                </div>
-                                <Badge 
-                                  variant={item.trend === 'up' ? 'default' : item.trend === 'down' ? 'destructive' : 'secondary'}
-                                  className="text-xs mt-1"
-                                >
-                                  {item.trendValue > 0 ? '+' : ''}{item.trendValue.toFixed(1)}%
-                                </Badge>
+                                {activeTrendCategory === 'resonanzFokus' && (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-muted-foreground text-sm">{item.previousResonance.toFixed(1)}%</span>
+                                      <span className="text-muted-foreground">→</span>
+                                      <span className={`font-medium ${getResonanzColor(item.currentResonance)}`}>
+                                        {item.currentResonance.toFixed(1)}%
+                                      </span>
+                                    </div>
+                                    <Badge 
+                                      variant={item.trend === 'up' ? 'default' : item.trend === 'down' ? 'destructive' : 'secondary'}
+                                      className="text-xs mt-1"
+                                    >
+                                      {item.trendValue > 0 ? '+' : ''}{item.trendValue.toFixed(1)}%
+                                    </Badge>
+                                  </>
+                                )}
+                                {activeTrendCategory === 'intensität' && (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-muted-foreground text-sm">{(item.previousIntensity || 0).toFixed(1)}%</span>
+                                      <span className="text-muted-foreground">→</span>
+                                      <span className="font-medium">{(item.currentIntensity || 0).toFixed(1)}%</span>
+                                    </div>
+                                    <Badge 
+                                      variant={((item.currentIntensity || 0) - (item.previousIntensity || 0)) > 0 ? 'default' : 'secondary'}
+                                      className="text-xs mt-1"
+                                    >
+                                      {((item.currentIntensity || 0) - (item.previousIntensity || 0)) > 0 ? '+' : ''}
+                                      {((item.currentIntensity || 0) - (item.previousIntensity || 0)).toFixed(1)}%
+                                    </Badge>
+                                  </>
+                                )}
+                                {activeTrendCategory === 'polarität' && (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-muted-foreground text-sm">{(item.previousPolarity || 0).toFixed(2)}</span>
+                                      <span className="text-muted-foreground">→</span>
+                                      <span className={`font-medium ${(item.currentPolarity || 0) > 0 ? 'text-green-500' : (item.currentPolarity || 0) < 0 ? 'text-red-500' : ''}`}>
+                                        {(item.currentPolarity || 0).toFixed(2)}
+                                      </span>
+                                    </div>
+                                    <Badge 
+                                      variant={((item.currentPolarity || 0) - (item.previousPolarity || 0)) > 0 ? 'default' : 'destructive'}
+                                      className="text-xs mt-1"
+                                    >
+                                      {((item.currentPolarity || 0) - (item.previousPolarity || 0)) > 0 ? '+' : ''}
+                                      {((item.currentPolarity || 0) - (item.previousPolarity || 0)).toFixed(2)}
+                                    </Badge>
+                                  </>
+                                )}
+                                {activeTrendCategory === 'ebenen' && (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <Badge variant="outline" className="text-xs">{item.previousLevel}. Ebene</Badge>
+                                      <span className="text-muted-foreground">→</span>
+                                      <Badge variant="default" className="text-xs">{item.currentLevel}. Ebene</Badge>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Shift: {((item.currentLevel || 0) - (item.previousLevel || 0)) > 0 ? '↑' : '↓'} 
+                                      {Math.abs((item.currentLevel || 0) - (item.previousLevel || 0))} Ebenen
+                                    </p>
+                                  </>
+                                )}
                               </div>
                             </div>
                           </CardContent>

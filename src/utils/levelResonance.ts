@@ -178,18 +178,24 @@ export function calculateLevelResonance(
 
 /**
  * Findet die Ebene mit der höchsten Resonanz
+ * @param excludeLevel13 - Wenn true, wird die 13. Ebene (Creator) nicht berücksichtigt (Standard: true)
  */
 export function findHighestResonanceLevel(
-  resonanceValues: Record<string, number>
+  resonanceValues: Record<string, number>,
+  excludeLevel13: boolean = true
 ): { level: number; value: number } {
   let highestLevel = 1;
   let highestValue = 0;
 
   Object.entries(resonanceValues).forEach(([key, value]) => {
-    if (value > highestValue) {
-      const levelMatch = key.match(/level_(\d+)/);
-      if (levelMatch) {
-        highestLevel = parseInt(levelMatch[1]);
+    const levelMatch = key.match(/level_(\d+)/);
+    if (levelMatch) {
+      const levelId = parseInt(levelMatch[1]);
+      // Wenn excludeLevel13 aktiv ist, überspringe die 13. Ebene
+      if (excludeLevel13 && levelId === 13) return;
+      
+      if (value > highestValue) {
+        highestLevel = levelId;
         highestValue = value;
       }
     }
@@ -197,6 +203,11 @@ export function findHighestResonanceLevel(
 
   return { level: highestLevel, value: highestValue };
 }
+
+/**
+ * Gibt nur die ersten 12 Ebenen zurück (ohne Creator)
+ */
+export const LEVELS_DISPLAY = LEVELS.filter(l => l.id <= 12);
 
 /**
  * Formatiert Ebenen-Namen für die Anzeige
