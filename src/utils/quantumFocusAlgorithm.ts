@@ -49,7 +49,6 @@ interface FokusResonanzResult {
  */
 function calculateQuantumAmplitude(word: string, fokusKeywords: string[]): QuantumAmplitude {
   const wordLower = word.toLowerCase();
-  const wordLen = wordLower.length;
   
   // Basisphasenwinkel aus Wort-Signatur
   const basePhase = wordLower.split('').reduce((sum, ch, idx) => {
@@ -153,7 +152,7 @@ export function calculateFokusResonanz(
   gewichtung: number = 0.15
 ): FokusResonanzResult {
   // Kein Fokus = reine Basisresonanz
-  if (!fokus || !FOKUS_KATEGORIEN[fokus]) {
+  if (!fokus) {
     return {
       baseResonanz,
       fokusKorrelation: 0,
@@ -163,8 +162,19 @@ export function calculateFokusResonanz(
       quantenKohaerenz: 1
     };
   }
-  
-  const fokusKeywords = FOKUS_KATEGORIEN[fokus];
+
+  // Kategorie oder Custom Keywords
+  const fokusKeywords = FOKUS_KATEGORIEN[fokus] ?? parseCustomFokus(fokus);
+  if (!fokusKeywords || fokusKeywords.length === 0) {
+    return {
+      baseResonanz,
+      fokusKorrelation: 0,
+      kombinierteResonanz: baseResonanz,
+      amplitudenFaktor: 1,
+      interferenzMuster: 'neutral',
+      quantenKohaerenz: 1
+    };
+  }
   
   // 1. Quantenamplitude berechnen
   const rawAmplitude = calculateQuantumAmplitude(word, fokusKeywords);

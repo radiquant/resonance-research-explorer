@@ -36,7 +36,7 @@ import {
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
-import { calculateFokusResonanz, FOKUS_OPTIONS, parseCustomFokus } from '@/utils/quantumFocusAlgorithm';
+import { calculateFokusResonanz, FOKUS_OPTIONS } from '@/utils/quantumFocusAlgorithm';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
@@ -588,17 +588,22 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">Kategorie</Label>
                       <Select 
-                        value={selectedFokus || ''} 
+                        value={selectedFokus ?? undefined}
                         onValueChange={(v) => {
-                          setSelectedFokus(v || null);
-                          if (v) setCustomFokus('');
+                          if (v === '__none__') {
+                            setSelectedFokus(null);
+                            setCustomFokus('');
+                            return;
+                          }
+                          setSelectedFokus(v);
+                          setCustomFokus('');
                         }}
                       >
                         <SelectTrigger className="h-9">
                           <SelectValue placeholder="Fokus wählen..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Kein Fokus</SelectItem>
+                          <SelectItem value="__none__">Kein Fokus</SelectItem>
                           {FOKUS_OPTIONS.map(f => (
                             <SelectItem key={f} value={f}>{f}</SelectItem>
                           ))}
