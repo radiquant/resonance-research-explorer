@@ -39,7 +39,8 @@ import {
   Timer,
   Activity,
   Heart,
-  Gauge
+  Gauge,
+  MapPin
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, LEVELS_DISPLAY, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
@@ -47,6 +48,7 @@ import { calculateFokusResonanz, FOKUS_OPTIONS } from '@/utils/quantumFocusAlgor
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
+import { MERIDIANS, getAllMeridianPointsFlat, getTotalPointCount, getMeridianStats } from '@/utils/meridianPointsDatabase';
 
 interface WordEnergyTestResult {
   word: string;
@@ -861,10 +863,29 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
               {/* Input Area */}
               <div className="space-y-2">
-                <Label htmlFor="wordList" className="flex items-center gap-2">
-                  <ListChecks className="w-4 h-4" />
-                  Wortenergien (eine pro Zeile)
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="wordList" className="flex items-center gap-2">
+                    <ListChecks className="w-4 h-4" />
+                    Wortenergien (eine pro Zeile)
+                  </Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const points = getAllMeridianPointsFlat();
+                      setWordInput(points.join('\n'));
+                      toast({
+                        title: "Meridianpunkte geladen",
+                        description: `${points.length} Akupunkturpunkte aus ${MERIDIANS.length} Meridianen bereit zur Analyse`,
+                      });
+                    }}
+                    disabled={isTesting}
+                    className="flex items-center gap-2"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    Alle Meridianpunkte laden ({getTotalPointCount()})
+                  </Button>
+                </div>
                 <Textarea
                   id="wordList"
                   placeholder={"Arnica\nBelladonna\nCalcarea carbonica\nLycopodium\n..."}
