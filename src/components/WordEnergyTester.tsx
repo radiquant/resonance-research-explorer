@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   Loader2, 
   ListChecks, 
@@ -28,10 +29,14 @@ import {
   Minus,
   Clock,
   Save,
-  History
+  History,
+  Target,
+  Atom,
+  Info
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
+import { calculateFokusResonanz, FOKUS_OPTIONS, parseCustomFokus } from '@/utils/quantumFocusAlgorithm';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
@@ -40,6 +45,9 @@ interface WordEnergyTestResult {
   word: string;
   copenRate: number;
   resonanz: number;
+  resonanzBasis: number;
+  fokusKorrelation: number;
+  interferenzMuster: 'konstruktiv' | 'destruktiv' | 'neutral';
   intensität: number;
   polarität: 'positiv' | 'negativ' | 'neutral';
   polaritätWert: number;
@@ -86,6 +94,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [results, setResults] = useState<WordEnergyTestResult[]>([]);
   const [testMode, setTestMode] = useState<TestMode>('parallel');
   
+  // Fokus-State (Quanteninspirierter Algorithmus)
+  const [selectedFokus, setSelectedFokus] = useState<string | null>(null);
+  const [customFokus, setCustomFokus] = useState('');
+  const [fokusGewichtung, setFokusGewichtung] = useState(15); // 15% Standard
+  
   // Archiv & Trend State
   const [archivedTests, setArchivedTests] = useState<ArchivedTest[]>([]);
   const [trendItems, setTrendItems] = useState<TrendItem[]>([]);
@@ -100,6 +113,12 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [minResonanz, setMinResonanz] = useState<number>(0);
   const [ebeneFilter, setEbeneFilter] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Effektiver Fokus (Kategorie oder Custom Keywords)
+  const effectiveFokus = useMemo(() => {
+    if (customFokus.trim()) return customFokus.trim();
+    return selectedFokus;
+  }, [selectedFokus, customFokus]);
 
   // Load archived tests when patient changes
   useEffect(() => {
@@ -279,14 +298,27 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     const copenRate = rateResult.rate;
     const ebenVerteilung = calculateLevelResonance(copenRate, word);
     const { level: dominanteEbene, value: dominanteEbeneWert } = findHighestResonanceLevel(ebenVerteilung);
-    const resonanz = calculateResonanz(copenRate, clientWellenfunktion);
-    const intensität = calculateIntensität(copenRate, resonanz);
+    const resonanzBasis = calculateResonanz(copenRate, clientWellenfunktion);
+    
+    // Quanteninspirierte Fokus-Resonanz berechnen
+    const fokusResult = calculateFokusResonanz(
+      word,
+      resonanzBasis,
+      effectiveFokus,
+      clientWellenfunktion,
+      fokusGewichtung / 100 // Umrechnung von Prozent
+    );
+    
+    const intensität = calculateIntensität(copenRate, fokusResult.kombinierteResonanz);
     const { typ: polarität, wert: polaritätWert } = calculatePolarität(word, copenRate);
     
     return {
       word,
       copenRate,
-      resonanz: Math.round(resonanz * 10) / 10,
+      resonanz: fokusResult.kombinierteResonanz,
+      resonanzBasis: fokusResult.baseResonanz,
+      fokusKorrelation: fokusResult.fokusKorrelation,
+      interferenzMuster: fokusResult.interferenzMuster,
       intensität: Math.round(intensität * 10) / 10,
       polarität,
       polaritätWert: Math.round(polaritätWert * 100) / 100,
@@ -294,7 +326,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       dominanteEbeneWert: Math.round(dominanteEbeneWert * 10) / 10,
       ebenVerteilung
     };
-  }, []);
+  }, [effectiveFokus, fokusGewichtung]);
 
   // PARALLEL TESTING - alle Wörter gleichzeitig
   const handleParallelTest = useCallback(async () => {
@@ -524,6 +556,96 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                   {testMode === 'parallel' ? '< 1s' : '~' + (parseWords(wordInput).length * 0.05).toFixed(1) + 's'}
                 </Badge>
               </div>
+
+              {/* Fokus-Auswahl (Quanteninspiriert) */}
+              <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+                <CardContent className="pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="w-5 h-5 text-primary" />
+                    <Label className="font-medium">Symptom-Fokus</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <Info className="w-4 h-4 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-xs">
+                            <strong>Quanteninspirierter Algorithmus:</strong> Nutzt Grover-ähnliche Amplitude-Amplifikation 
+                            für sanfte Priorisierung symptomrelevanter Wortenergien ohne die Klientenfeld-Präzision zu stören.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    {effectiveFokus && (
+                      <Badge variant="secondary" className="ml-auto flex items-center gap-1">
+                        <Atom className="w-3 h-3" />
+                        Aktiv: {fokusGewichtung}%
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Kategorie</Label>
+                      <Select 
+                        value={selectedFokus || ''} 
+                        onValueChange={(v) => {
+                          setSelectedFokus(v || null);
+                          if (v) setCustomFokus('');
+                        }}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Fokus wählen..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Kein Fokus</SelectItem>
+                          {FOKUS_OPTIONS.map(f => (
+                            <SelectItem key={f} value={f}>{f}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Oder: Custom Keywords</Label>
+                      <Input
+                        placeholder="herz, rhythmus, blut..."
+                        value={customFokus}
+                        onChange={(e) => {
+                          setCustomFokus(e.target.value);
+                          if (e.target.value) setSelectedFokus(null);
+                        }}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Gewichtung: {fokusGewichtung}%</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="range"
+                          min={5}
+                          max={30}
+                          value={fokusGewichtung}
+                          onChange={(e) => setFokusGewichtung(Number(e.target.value))}
+                          className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                        />
+                        <span className="text-xs text-muted-foreground w-8">{fokusGewichtung}%</span>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Empfohlen: 10-20%</p>
+                    </div>
+                  </div>
+                  
+                  {effectiveFokus && (
+                    <div className="mt-3 pt-3 border-t border-border/50">
+                      <p className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Atom className="w-3 h-3" />
+                        Fokus-Korrelation verstärkt symptomrelevante Ergebnisse durch Interferenzmuster-Analyse
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Input Area */}
               <div className="space-y-2">
@@ -763,13 +885,24 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                               <div>
-                                <p className="text-xs text-muted-foreground mb-1">Resonanz</p>
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  Resonanz {effectiveFokus && <span className="text-primary">(+Fokus)</span>}
+                                </p>
                                 <div className="flex items-center gap-2">
                                   <Progress value={result.resonanz} className="h-2 flex-1" />
                                   <span className={`font-medium ${getResonanzColor(result.resonanz)}`}>
                                     {result.resonanz}%
                                   </span>
                                 </div>
+                                {effectiveFokus && result.fokusKorrelation > 0 && (
+                                  <div className="mt-1 flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <span>Basis: {result.resonanzBasis}%</span>
+                                    <span className={result.interferenzMuster === 'konstruktiv' ? 'text-green-500' : result.interferenzMuster === 'destruktiv' ? 'text-red-400' : ''}>
+                                      • {result.interferenzMuster === 'konstruktiv' ? '↑' : result.interferenzMuster === 'destruktiv' ? '↓' : '○'} 
+                                      Fokus: {result.fokusKorrelation}%
+                                    </span>
+                                  </div>
+                                )}
                               </div>
 
                               <div>
