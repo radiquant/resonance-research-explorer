@@ -40,8 +40,14 @@ import {
   Activity,
   Heart,
   Gauge,
-  MapPin
+  MapPin,
+  Database,
+  FolderOpen,
+  Plus,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, LEVELS_DISPLAY, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
 import { calculateFokusResonanz, FOKUS_OPTIONS } from '@/utils/quantumFocusAlgorithm';
@@ -176,18 +182,128 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [ebeneFilter, setEbeneFilter] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   
+  // Wortlisten-Datenbank State
+  const [savedWordLists, setSavedWordLists] = useState<{ id: string; name: string; entries: string[] }[]>([]);
+  const [newListName, setNewListName] = useState('');
+  const [showListManager, setShowListManager] = useState(false);
+  const [isLoadingLists, setIsLoadingLists] = useState(false);
+  const [isSavingList, setIsSavingList] = useState(false);
+  
   // Effektiver Fokus (Kategorie oder Custom Keywords)
   const effectiveFokus = useMemo(() => {
     if (customFokus.trim()) return customFokus.trim();
     return selectedFokus;
   }, [selectedFokus, customFokus]);
 
-  // Load archived tests when patient changes
+  // Load archived tests and word lists when patient changes
   useEffect(() => {
     if (patientId) {
       loadArchivedTests();
     }
+    loadSavedWordLists();
   }, [patientId]);
+
+  // Wortlisten laden
+  const loadSavedWordLists = async () => {
+    setIsLoadingLists(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('word_databases')
+        .select('id, name, entries')
+        .eq('user_id', user.id)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setSavedWordLists(data || []);
+    } catch (error) {
+      console.error('Error loading word lists:', error);
+    } finally {
+      setIsLoadingLists(false);
+    }
+  };
+
+  // Wortliste speichern
+  const handleSaveWordList = async () => {
+    const words = parseWords(wordInput);
+    if (words.length === 0 || !newListName.trim()) {
+      toast({
+        title: "Speichern nicht möglich",
+        description: "Geben Sie einen Namen ein und fügen Sie Wörter hinzu",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSavingList(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Nicht authentifiziert');
+
+      const { error } = await supabase
+        .from('word_databases')
+        .insert([{
+          user_id: user.id,
+          name: newListName.trim(),
+          entries: words
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Liste gespeichert",
+        description: `"${newListName}" mit ${words.length} Einträgen gespeichert`,
+      });
+
+      setNewListName('');
+      await loadSavedWordLists();
+    } catch (error) {
+      console.error('Error saving word list:', error);
+      toast({
+        title: "Fehler beim Speichern",
+        description: "Wortliste konnte nicht gespeichert werden",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSavingList(false);
+    }
+  };
+
+  // Wortliste laden
+  const loadWordList = (list: { name: string; entries: string[] }) => {
+    setWordInput(list.entries.join('\n'));
+    toast({
+      title: "Liste geladen",
+      description: `"${list.name}" mit ${list.entries.length} Einträgen`,
+    });
+  };
+
+  // Wortliste löschen
+  const deleteWordList = async (id: string, name: string) => {
+    try {
+      const { error } = await supabase
+        .from('word_databases')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Liste gelöscht",
+        description: `"${name}" wurde entfernt`,
+      });
+
+      await loadSavedWordLists();
+    } catch (error) {
+      console.error('Error deleting word list:', error);
+      toast({
+        title: "Fehler beim Löschen",
+        variant: "destructive"
+      });
+    }
+  };
 
   const loadArchivedTests = async () => {
     if (!patientId) return;
@@ -871,31 +987,120 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                 </CardContent>
               </Card>
 
+              {/* Wortlisten-Datenbank */}
+              <Collapsible open={showListManager} onOpenChange={setShowListManager}>
+                <Card className="border-primary/20">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors py-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm flex items-center gap-2">
+                          <Database className="w-4 h-4 text-primary" />
+                          Wortlisten-Datenbank
+                          {savedWordLists.length > 0 && (
+                            <Badge variant="secondary" className="ml-2">{savedWordLists.length}</Badge>
+                          )}
+                        </CardTitle>
+                        {showListManager ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0 space-y-3">
+                      {/* Speichern */}
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Name der Liste..."
+                          value={newListName}
+                          onChange={(e) => setNewListName(e.target.value)}
+                          className="flex-1"
+                          disabled={isSavingList}
+                        />
+                        <Button
+                          onClick={handleSaveWordList}
+                          disabled={isSavingList || parseWords(wordInput).length === 0 || !newListName.trim()}
+                          size="sm"
+                        >
+                          {isSavingList ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <Plus className="w-4 h-4 mr-1" />
+                              Speichern ({parseWords(wordInput).length})
+                            </>
+                          )}
+                        </Button>
+                      </div>
+
+                      {/* Schnellzugriff-Buttons */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Schnellzugriff</Label>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const points = getAllMeridianPointsFlat();
+                              setWordInput(points.join('\n'));
+                              toast({
+                                title: "Meridianpunkte geladen",
+                                description: `${points.length} Akupunkturpunkte bereit zur Analyse`,
+                              });
+                            }}
+                            disabled={isTesting}
+                          >
+                            <MapPin className="w-4 h-4 mr-1" />
+                            Alle Meridianpunkte ({getTotalPointCount()})
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Gespeicherte Listen */}
+                      {savedWordLists.length > 0 && (
+                        <div className="space-y-2">
+                          <Label className="text-xs text-muted-foreground">Gespeicherte Listen</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {savedWordLists.map(list => (
+                              <div key={list.id} className="flex items-center gap-1">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => loadWordList(list)}
+                                  disabled={isTesting}
+                                >
+                                  <FolderOpen className="w-3 h-3 mr-1" />
+                                  {list.name} ({list.entries.length})
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                                  onClick={() => deleteWordList(list.id, list.name)}
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {isLoadingLists && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Lade Listen...
+                        </div>
+                      )}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+
               {/* Input Area */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="wordList" className="flex items-center gap-2">
-                    <ListChecks className="w-4 h-4" />
-                    Wortenergien (eine pro Zeile)
-                  </Label>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const points = getAllMeridianPointsFlat();
-                      setWordInput(points.join('\n'));
-                      toast({
-                        title: "Meridianpunkte geladen",
-                        description: `${points.length} Akupunkturpunkte aus ${MERIDIANS.length} Meridianen bereit zur Analyse`,
-                      });
-                    }}
-                    disabled={isTesting}
-                    className="flex items-center gap-2"
-                  >
-                    <MapPin className="w-4 h-4" />
-                    Alle Meridianpunkte laden ({getTotalPointCount()})
-                  </Button>
-                </div>
+                <Label htmlFor="wordList" className="flex items-center gap-2">
+                  <ListChecks className="w-4 h-4" />
+                  Wortenergien (eine pro Zeile)
+                </Label>
                 <Textarea
                   id="wordList"
                   placeholder={"Arnica\nBelladonna\nCalcarea carbonica\nLycopodium\n..."}
