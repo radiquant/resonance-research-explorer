@@ -14,8 +14,23 @@ import {
   berechneKlientenFeld, 
   type KlientenDaten, 
   type TCMElement,
+  type Planet,
+  type FünfElementeProfile,
   type KlientenFeldErgebnis 
 } from '@/utils/clientFieldAlgorithms';
+
+const PLANET_LABELS: Record<Planet, string> = {
+  sonne: '☀️ Sonne',
+  mond: '🌙 Mond',
+  merkur: '☿️ Merkur',
+  venus: '♀️ Venus',
+  mars: '♂️ Mars',
+  jupiter: '♃ Jupiter',
+  saturn: '♄ Saturn',
+  uranus: '⛢ Uranus',
+  neptun: '♆ Neptun',
+  pluto: '♇ Pluto'
+};
 
 interface PatientV2 {
   id: string;
@@ -137,6 +152,11 @@ const ClientFieldCalculator = () => {
   const [geburtsdatum, setGeburtsdatum] = useState('');
   const [geburtsort, setGeburtsort] = useState('');
   const [tcmTyp, setTcmTyp] = useState<TCMElement | ''>('');
+  const [geburtsplanet, setGeburtsplanet] = useState<Planet | ''>('');
+  const [fünfElemente, setFünfElemente] = useState<FünfElementeProfile>({
+    holz: 20, feuer: 20, erde: 20, metall: 20, wasser: 20
+  });
+  const [showFünfElemente, setShowFünfElemente] = useState(false);
   const [bildSignatur, setBildSignatur] = useState<string>('');
   const [bildPreview, setBildPreview] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
@@ -372,12 +392,28 @@ const ClientFieldCalculator = () => {
     const optionale: string[] = [];
     if (tcmTyp) optionale.push('TCM-Typ');
     if (bildSignatur) optionale.push('Bild-Signatur');
+    if (geburtsplanet) optionale.push('Geburtsplanet');
+    if (showFünfElemente) optionale.push('5-Elemente-Profil');
     
-    // Finde passende Konfiguration
+    // Finde passende Konfiguration oder beste Annäherung
     const match = PARAMETER_KOMBINATIONEN.find(k => 
       k.optionaleFelder.length === optionale.length &&
       k.optionaleFelder.every(f => optionale.includes(f))
     );
+    
+    // Falls keine exakte Übereinstimmung, berechne dynamisch
+    if (!match && optionale.length > 0) {
+      const baseAcc = 72;
+      const bonus = optionale.length * 6;
+      return {
+        pflichtFelder: ['Name', 'Vornamen', 'Geburtsdatum', 'Geburtsort'],
+        optionaleFelder: optionale,
+        akkuranz: Math.min(97, baseAcc + bonus),
+        effektivität: Math.min(95, baseAcc - 4 + bonus),
+        authentizität: Math.min(98, baseAcc + 3 + bonus),
+        beschreibung: `Benutzerdefiniert: ${optionale.join(' + ')}`
+      };
+    }
     
     return match || PARAMETER_KOMBINATIONEN[0];
   };
@@ -395,7 +431,9 @@ const ClientFieldCalculator = () => {
         geburtsdatum: new Date(geburtsdatum),
         geburtsort,
         tcmTyp: tcmTyp || undefined,
-        bildSignatur: bildSignatur || undefined
+        bildSignatur: bildSignatur || undefined,
+        geburtsplanet: geburtsplanet || undefined,
+        fünfElemente: showFünfElemente ? fünfElemente : undefined
       };
 
       const feldErgebnis = await berechneKlientenFeld(klient);
@@ -447,12 +485,12 @@ const ClientFieldCalculator = () => {
                 <span className="text-sm font-medium">Patient aus Datenbank laden</span>
                 <Badge variant="outline" className="text-[10px]">Optional</Badge>
               </div>
-              <Select value={selectedPatientId} onValueChange={handlePatientSelect}>
+              <Select value={selectedPatientId || "none"} onValueChange={(val) => handlePatientSelect(val === "none" ? "" : val)}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={isLoadingPatients ? "Lade Patienten..." : "Patient auswählen (optional)"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">-- Manuell eingeben --</SelectItem>
+                  <SelectItem value="none">-- Manuell eingeben --</SelectItem>
                   {patients.map(patient => (
                     <SelectItem key={patient.id} value={patient.id}>
                       <div className="flex items-center gap-2">
@@ -670,9 +708,10 @@ const ClientFieldCalculator = () => {
                 TCM-Konstitution 
                 <Badge variant="outline" className="text-[10px] ml-1">optional</Badge>
               </Label>
-              <Select value={tcmTyp} onValueChange={(v) => setTcmTyp(v as TCMElement)}>
+              <Select value={tcmTyp || "none"} onValueChange={(v) => setTcmTyp(v === "none" ? '' : v as TCMElement)}>
                 <SelectTrigger><SelectValue placeholder="Automatisch aus Geburtsdatum" /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">-- Nicht ausgewählt --</SelectItem>
                   <SelectItem value="holz">{ELEMENT_LABELS.holz}</SelectItem>
                   <SelectItem value="feuer">{ELEMENT_LABELS.feuer}</SelectItem>
                   <SelectItem value="erde">{ELEMENT_LABELS.erde}</SelectItem>
@@ -680,6 +719,70 @@ const ClientFieldCalculator = () => {
                   <SelectItem value="wasser">{ELEMENT_LABELS.wasser}</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Geburtsplanet */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-1">
+                🪐 Geburtsplanet 
+                <Badge variant="outline" className="text-[10px] ml-1">optional</Badge>
+              </Label>
+              <Select value={geburtsplanet || "none"} onValueChange={(v) => setGeburtsplanet(v === "none" ? '' : v as Planet)}>
+                <SelectTrigger><SelectValue placeholder="Planet auswählen" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- Nicht ausgewählt --</SelectItem>
+                  {Object.entries(PLANET_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* 5-Elemente Profil */}
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1">
+                  🔮 5-Elemente-Profil (Akupunkturlehre)
+                  <Badge variant="outline" className="text-[10px] ml-1">optional</Badge>
+                </Label>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowFünfElemente(!showFünfElemente)}
+                >
+                  {showFünfElemente ? 'Ausblenden' : 'Aktivieren'}
+                </Button>
+              </div>
+              
+              {showFünfElemente && (
+                <Card className="border-primary/10 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+                  <CardContent className="pt-4 space-y-3">
+                    {(Object.entries(fünfElemente) as [TCMElement, number][]).map(([element, value]) => (
+                      <div key={element} className="space-y-1">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs">{ELEMENT_LABELS[element]}</Label>
+                          <span className="text-xs font-medium">{value}%</span>
+                        </div>
+                        <Input 
+                          type="range" 
+                          min="0" 
+                          max="100" 
+                          value={value}
+                          onChange={(e) => setFünfElemente(prev => ({
+                            ...prev,
+                            [element]: parseInt(e.target.value)
+                          }))}
+                          className="h-2"
+                        />
+                      </div>
+                    ))}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Gesamtsumme: {Object.values(fünfElemente).reduce((a, b) => a + b, 0)}% 
+                      <span className="ml-2">(Empfohlen: ~100%)</span>
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
             
             <div className="space-y-2 md:col-span-2">
