@@ -48,7 +48,8 @@ import {
   ChevronUp,
   Brain,
   Bone,
-  Utensils
+  Utensils,
+  Search
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
@@ -206,6 +207,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   // Clarke Materia Medica Symptom-Map (Remedy -> Symptoms)
   const [clarkeSymptomMap, setClarkeSymptomMap] = useState<Map<string, string[]>>(new Map());
   const [isClarkeLoaded, setIsClarkeLoaded] = useState(false);
+  
+  // Clarke Symptom-Suche
+  const [clarkeSymptomSearch, setClarkeSymptomSearch] = useState('');
+  const [allClarkeSymptoms, setAllClarkeSymptoms] = useState<string[]>([]);
   // Effektiver Fokus (Kategorie oder Custom Keywords)
   const effectiveFokus = useMemo(() => {
     if (customFokus.trim()) return customFokus.trim();
@@ -466,6 +471,18 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       filtered = filtered.filter(r => r.dominanteEbene === ebeneFilter);
     }
     
+    // Clarke Symptom-Suche Filter
+    if (clarkeSymptomSearch.trim() && isClarkeLoaded) {
+      const searchTerms = clarkeSymptomSearch.toLowerCase().split(',').map(s => s.trim()).filter(s => s);
+      filtered = filtered.filter(r => {
+        if (!r.clarkeSymptoms || r.clarkeSymptoms.length === 0) return false;
+        const symptomsLower = r.clarkeSymptoms.map(s => s.toLowerCase());
+        return searchTerms.some(term => 
+          symptomsLower.some(symptom => symptom.includes(term))
+        );
+      });
+    }
+    
     filtered.sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
@@ -495,15 +512,16 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     });
     
     return filtered;
-  }, [results, sortField, sortDirection, polaritätFilter, minResonanz, ebeneFilter]);
+  }, [results, sortField, sortDirection, polaritätFilter, minResonanz, ebeneFilter, clarkeSymptomSearch, isClarkeLoaded]);
 
   const resetFilters = () => {
     setPolaritätFilter('alle');
     setMinResonanz(0);
     setEbeneFilter(null);
+    setClarkeSymptomSearch('');
   };
 
-  const hasActiveFilters = polaritätFilter !== 'alle' || minResonanz > 0 || ebeneFilter !== null;
+  const hasActiveFilters = polaritätFilter !== 'alle' || minResonanz > 0 || ebeneFilter !== null || clarkeSymptomSearch.trim() !== '';
 
   const parseWords = (input: string): string[] => {
     return input
@@ -1150,6 +1168,12 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                   });
                                 });
                                 
+                                // Alle einzigartigen Symptome sammeln für Autocomplete
+                                const uniqueSymptoms = Array.from(new Set(
+                                  data.clinicalSymptoms.map((item: ClarkeSymptomEntry) => item.symptom)
+                                )).sort() as string[];
+                                setAllClarkeSymptoms(uniqueSymptoms);
+                                
                                 setClarkeSymptomMap(symptomMap);
                                 setIsClarkeLoaded(true);
                                 
@@ -1157,7 +1181,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 setWordInput(remedies.join('\n'));
                                 toast({
                                   title: "Clarke Materia Medica geladen",
-                                  description: `${remedies.length} Mittel mit Symptom-Zuordnung bereit`,
+                                  description: `${remedies.length} Mittel, ${uniqueSymptoms.length} Symptome bereit`,
                                 });
                               } catch (error) {
                                 console.error('Error loading Clarke data:', error);
@@ -1451,6 +1475,62 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                             ))}
                           </div>
                         </div>
+
+                        {/* Clarke Symptom-Suche */}
+                        {isClarkeLoaded && (
+                          <div className="space-y-2">
+                            <Label className="text-xs flex items-center gap-1">
+                              <Search className="w-3 h-3" />
+                              Clarke Symptom-Suche
+                            </Label>
+                            <div className="relative">
+                              <Input
+                                placeholder="z.B. Kopfschmerz, Herz, Angst... (Komma-getrennt)"
+                                value={clarkeSymptomSearch}
+                                onChange={(e) => setClarkeSymptomSearch(e.target.value)}
+                                className="h-9 pr-8"
+                              />
+                              {clarkeSymptomSearch && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute right-0 top-0 h-9 w-8 p-0"
+                                  onClick={() => setClarkeSymptomSearch('')}
+                                >
+                                  <X className="w-4 h-4 text-muted-foreground" />
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              {allClarkeSymptoms.length} verfügbare Symptome • Mehrere Suchbegriffe mit Komma trennen
+                            </p>
+                            {clarkeSymptomSearch && (
+                              <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                {allClarkeSymptoms
+                                  .filter(s => s.toLowerCase().includes(clarkeSymptomSearch.split(',')[clarkeSymptomSearch.split(',').length - 1]?.trim().toLowerCase() || ''))
+                                  .slice(0, 10)
+                                  .map((symptom, idx) => (
+                                    <Badge 
+                                      key={idx} 
+                                      variant="secondary" 
+                                      className="text-[10px] cursor-pointer hover:bg-primary/20"
+                                      onClick={() => {
+                                        const parts = clarkeSymptomSearch.split(',').map(s => s.trim()).filter(s => s);
+                                        if (parts.length > 0) {
+                                          parts[parts.length - 1] = symptom;
+                                        } else {
+                                          parts.push(symptom);
+                                        }
+                                        setClarkeSymptomSearch(parts.join(', '));
+                                      }}
+                                    >
+                                      {symptom}
+                                    </Badge>
+                                  ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
 
                         {hasActiveFilters && (
                           <Button variant="ghost" size="sm" onClick={resetFilters} className="text-muted-foreground">
