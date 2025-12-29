@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Activity, Clock, Zap, Timer, Pause, Play, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Activity, Clock, Zap, Timer, Pause, Play, User, Square, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface SessionStatus {
   id: string;
@@ -36,7 +39,10 @@ export const SessionStatusList: React.FC = () => {
   const [selectedSession, setSelectedSession] = useState<SessionStatus | null>(null);
   const [patientInfo, setPatientInfo] = useState<PatientInfo | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { user } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!user) return;
@@ -144,6 +150,141 @@ export const SessionStatusList: React.FC = () => {
   const handleSessionClick = (session: SessionStatus) => {
     setSelectedSession(session);
     setDialogOpen(true);
+  };
+
+  // Session pausieren
+  const handlePauseSession = async (sessionId: string) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .update({ status: 'paused' })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Session pausiert",
+        description: "Die Harmonisierung wurde pausiert.",
+      });
+      
+      // Session aktualisieren
+      if (selectedSession) {
+        setSelectedSession({ ...selectedSession, status: 'paused' });
+      }
+    } catch (error) {
+      console.error('Fehler beim Pausieren:', error);
+      toast({
+        title: "Fehler",
+        description: "Session konnte nicht pausiert werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Session fortsetzen
+  const handleResumeSession = async (sessionId: string) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .update({ status: 'running' })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Session fortgesetzt",
+        description: "Die Harmonisierung läuft weiter.",
+      });
+      
+      if (selectedSession) {
+        setSelectedSession({ ...selectedSession, status: 'running' });
+      }
+    } catch (error) {
+      console.error('Fehler beim Fortsetzen:', error);
+      toast({
+        title: "Fehler",
+        description: "Session konnte nicht fortgesetzt werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Session sofort starten (pending -> running)
+  const handleStartSession = async (sessionId: string) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .update({ 
+          status: 'running',
+          job_started_at: new Date().toISOString(),
+          started_at: new Date().toISOString()
+        })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      // Worker triggern
+      await supabase.functions.invoke('harmonization-worker');
+
+      toast({
+        title: "Session gestartet",
+        description: "Die Harmonisierung wurde gestartet.",
+      });
+      
+      if (selectedSession) {
+        setSelectedSession({ ...selectedSession, status: 'running' });
+      }
+    } catch (error) {
+      console.error('Fehler beim Starten:', error);
+      toast({
+        title: "Fehler",
+        description: "Session konnte nicht gestartet werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Session abbrechen
+  const handleCancelSession = async (sessionId: string) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .update({ 
+          status: 'cancelled',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', sessionId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Session abgebrochen",
+        description: "Die Harmonisierung wurde beendet.",
+      });
+      
+      setCancelDialogOpen(false);
+      setDialogOpen(false);
+      setSelectedSession(null);
+    } catch (error) {
+      console.error('Fehler beim Abbrechen:', error);
+      toast({
+        title: "Fehler",
+        description: "Session konnte nicht abgebrochen werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   if (sessions.length === 0) return null;
@@ -304,10 +445,81 @@ export const SessionStatusList: React.FC = () => {
                   Letzter Heartbeat: {new Date(selectedSession.job_last_heartbeat).toLocaleString('de-DE')}
                 </div>
               )}
+
+              {/* Aktions-Buttons */}
+              <DialogFooter className="flex-col sm:flex-row gap-2 pt-4 border-t">
+                {selectedSession.status === 'running' && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handlePauseSession(selectedSession.id)}
+                    disabled={isUpdating}
+                    className="w-full sm:w-auto"
+                  >
+                    <Pause className="w-4 h-4 mr-2" />
+                    Pausieren
+                  </Button>
+                )}
+                
+                {selectedSession.status === 'paused' && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleResumeSession(selectedSession.id)}
+                    disabled={isUpdating}
+                    className="w-full sm:w-auto"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Fortsetzen
+                  </Button>
+                )}
+                
+                {selectedSession.status === 'pending' && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => handleStartSession(selectedSession.id)}
+                    disabled={isUpdating}
+                    className="w-full sm:w-auto"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Sofort starten
+                  </Button>
+                )}
+                
+                <Button 
+                  variant="destructive" 
+                  onClick={() => setCancelDialogOpen(true)}
+                  disabled={isUpdating}
+                  className="w-full sm:w-auto"
+                >
+                  <Square className="w-4 h-4 mr-2" />
+                  Abbrechen
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Session abbrechen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Möchten Sie diese Harmonisierungs-Session wirklich abbrechen? 
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Zurück</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => selectedSession && handleCancelSession(selectedSession.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Abbrechen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };
