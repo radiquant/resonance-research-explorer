@@ -61,6 +61,7 @@ import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
 import { MERIDIANS, getAllMeridianPointsFlat, getTotalPointCount, getMeridianStats } from '@/utils/meridianPointsDatabase';
 import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics } from '@/utils/anatomyDatabases';
 import SymptomBrowser from '@/components/SymptomBrowser';
+import AnatomyDatabaseOverview from '@/components/AnatomyDatabaseOverview';
 
 // Clarke Materia Medica Symptom-Mapping
 interface ClarkeSymptomEntry {
@@ -916,10 +917,14 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
         {clientResult && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="test" className="flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 Test
+              </TabsTrigger>
+              <TabsTrigger value="anatomie" className="flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Anatomie
               </TabsTrigger>
               <TabsTrigger value="symptome" className="flex items-center gap-2" disabled={!isClarkeLoaded}>
                 <Search className="w-4 h-4" />
@@ -1206,11 +1211,21 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                         </div>
                       </div>
 
-                      {/* Anatomische Datenbanken */}
+                      {/* Anatomische Datenbanken - Kompaktansicht */}
                       <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Anatomische Datenbanken (Terminologia Anatomica)</Label>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs text-muted-foreground">Anatomische Datenbanken (Terminologia Anatomica)</Label>
+                          <Button
+                            variant="link"
+                            size="sm"
+                            className="h-auto p-0 text-xs"
+                            onClick={() => setActiveTab('anatomie')}
+                          >
+                            Gesamtübersicht →
+                          </Button>
+                        </div>
                         <div className="flex flex-wrap gap-2">
-                          {Object.entries(ANATOMY_DATABASES).map(([key, db]) => (
+                          {Object.entries(ANATOMY_DATABASES).slice(0, 4).map(([key, db]) => (
                             <Button
                               key={key}
                               variant="outline"
@@ -1233,6 +1248,13 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                               {db.name} ({db.totalEntries})
                             </Button>
                           ))}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => setActiveTab('anatomie')}
+                          >
+                            +{Object.keys(ANATOMY_DATABASES).length - 4} weitere...
+                          </Button>
                         </div>
                       </div>
 
@@ -1879,6 +1901,21 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                   )}
                 </div>
               )}
+            </TabsContent>
+
+            {/* ANATOMIE TAB */}
+            <TabsContent value="anatomie" className="space-y-4">
+              <AnatomyDatabaseOverview
+                onLoadDatabase={(entries, name, count) => {
+                  setWordInput(entries.join('\n'));
+                  setActiveTab('test');
+                  toast({
+                    title: `${name} geladen`,
+                    description: `${count.toLocaleString()} anatomische Strukturen bereit zur Analyse`,
+                  });
+                }}
+                disabled={isTesting}
+              />
             </TabsContent>
 
             {/* SYMPTOME TAB - Clarke Symptom Browser */}
