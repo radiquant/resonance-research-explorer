@@ -3,6 +3,8 @@
 
 import ZNS_DATABASE, { getAllZNSEntries } from './znsDatabase';
 import HERZ_KREISLAUF_DATABASE, { getAllHerzKreislaufEntries } from './herzKreislaufDatabase';
+import VERDAUUNG_DATABASE, { getAllVerdauungEntries } from './verdauungDatabase';
+import BEWEGUNGSAPPARAT_DATABASE, { getAllBewegungsapparatEntries } from './bewegungsapparatDatabase';
 
 // Typ für anatomische Datenbanken
 export interface AnatomyDatabase {
@@ -21,6 +23,8 @@ export interface AnatomyDatabase {
 export const ANATOMY_DATABASES: { [key: string]: AnatomyDatabase } = {
   zns: ZNS_DATABASE,
   herzKreislauf: HERZ_KREISLAUF_DATABASE,
+  verdauung: VERDAUUNG_DATABASE,
+  bewegungsapparat: BEWEGUNGSAPPARAT_DATABASE,
 };
 
 // Statistik über alle Datenbanken
@@ -48,6 +52,10 @@ export {
   getAllZNSEntries,
   HERZ_KREISLAUF_DATABASE, 
   getAllHerzKreislaufEntries,
+  VERDAUUNG_DATABASE,
+  getAllVerdauungEntries,
+  BEWEGUNGSAPPARAT_DATABASE,
+  getAllBewegungsapparatEntries,
 };
 
 // Alle Einträge aller Datenbanken
@@ -55,6 +63,8 @@ export const getAllAnatomyEntries = (): string[] => {
   return [
     ...getAllZNSEntries(),
     ...getAllHerzKreislaufEntries(),
+    ...getAllVerdauungEntries(),
+    ...getAllBewegungsapparatEntries(),
   ];
 };
 
@@ -65,6 +75,10 @@ export const getEntriesForDatabase = (databaseKey: string): string[] => {
       return getAllZNSEntries();
     case 'herzKreislauf':
       return getAllHerzKreislaufEntries();
+    case 'verdauung':
+      return getAllVerdauungEntries();
+    case 'bewegungsapparat':
+      return getAllBewegungsapparatEntries();
     default:
       return [];
   }
