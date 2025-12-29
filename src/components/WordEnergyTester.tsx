@@ -101,7 +101,7 @@ interface TrendItem {
 }
 
 interface CategoryTrends {
-  resonanzFokus: TrendItem[];
+  resonanz: TrendItem[];
   intensität: TrendItem[];
   polarität: TrendItem[];
   ebenen: TrendItem[];
@@ -143,17 +143,19 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [selectedFokus, setSelectedFokus] = useState<string | null>(null);
   const [customFokus, setCustomFokus] = useState('');
   const [fokusGewichtung, setFokusGewichtung] = useState(15); // 15% Standard
+  const [customFokusHistory, setCustomFokusHistory] = useState<string[]>([]);
+  const [showFokusHistory, setShowFokusHistory] = useState(false);
   
   // Archiv & Trend State
   const [archivedTests, setArchivedTests] = useState<ArchivedTest[]>([]);
   const [trendItems, setTrendItems] = useState<TrendItem[]>([]);
   const [categoryTrends, setCategoryTrends] = useState<CategoryTrends>({
-    resonanzFokus: [],
+    resonanz: [],
     intensität: [],
     polarität: [],
     ebenen: []
   });
-  const [activeTrendCategory, setActiveTrendCategory] = useState<'resonanzFokus' | 'intensität' | 'polarität' | 'ebenen'>('resonanzFokus');
+  const [activeTrendCategory, setActiveTrendCategory] = useState<'resonanz' | 'intensität' | 'polarität' | 'ebenen'>('resonanz');
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('test');
@@ -344,7 +346,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const calculateTrends = (archives: ArchivedTest[]) => {
     if (archives.length < 2) {
       setTrendItems([]);
-      setCategoryTrends({ resonanzFokus: [], intensität: [], polarität: [], ebenen: [] });
+      setCategoryTrends({ resonanz: [], intensität: [], polarität: [], ebenen: [] });
       return;
     }
 
@@ -408,8 +410,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       }
     });
 
-    // Kategorisierte Trends
-    const resonanzFokus = [...allTrends]
+    // Kategorisierte Trends - Resonanz als eigenständiges Kriterium (ohne Fokus als Sortierkriterium)
+    const resonanz = [...allTrends]
       .sort((a, b) => Math.abs(b.trendValue) - Math.abs(a.trendValue))
       .slice(0, 15);
 
@@ -429,8 +431,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                        Math.abs((a.currentLevel || 0) - (a.previousLevel || 0)))
       .slice(0, 15);
 
-    setCategoryTrends({ resonanzFokus, intensität, polarität, ebenen });
-    setTrendItems(resonanzFokus);
+    setCategoryTrends({ resonanz, intensität, polarität, ebenen });
+    setTrendItems(resonanz);
   };
 
   // Gefilterte und sortierte Ergebnisse
@@ -559,10 +561,24 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     };
   }, [effectiveFokus, fokusGewichtung]);
 
+  // Custom Fokus zur Historie hinzufügen
+  const addToFokusHistory = useCallback((fokus: string) => {
+    if (!fokus.trim()) return;
+    setCustomFokusHistory(prev => {
+      const filtered = prev.filter(f => f !== fokus.trim());
+      return [fokus.trim(), ...filtered].slice(0, 10);
+    });
+  }, []);
+
   // PARALLEL TESTING - alle Wörter gleichzeitig
   const handleParallelTest = useCallback(async () => {
     const words = parseWords(wordInput);
     if (words.length === 0) return;
+
+    // Custom Fokus zur Historie hinzufügen
+    if (customFokus.trim()) {
+      addToFokusHistory(customFokus.trim());
+    }
 
     setIsTesting(true);
     setResults([]);
@@ -585,12 +601,17 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       title: "Parallele Analyse abgeschlossen",
       description: `${allResults.length} Wortenergien in < 1 Sekunde getestet`,
     });
-  }, [wordInput, clientResult, testWordEnergy, toast]);
+  }, [wordInput, clientResult, testWordEnergy, toast, customFokus, addToFokusHistory]);
 
   // SEQUENTIELL TESTING - mit visueller Sequenz
   const handleSequentialTest = async () => {
     const words = parseWords(wordInput);
     if (words.length === 0) return;
+
+    // Custom Fokus zur Historie hinzufügen
+    if (customFokus.trim()) {
+      addToFokusHistory(customFokus.trim());
+    }
 
     setIsTesting(true);
     setResults([]);
@@ -946,17 +967,48 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                       </Select>
                     </div>
                     
-                    <div className="space-y-1">
+                    <div className="space-y-1 relative">
                       <Label className="text-xs text-muted-foreground">Oder: Custom Keywords</Label>
-                      <Input
-                        placeholder="herz, rhythmus, blut..."
-                        value={customFokus}
-                        onChange={(e) => {
-                          setCustomFokus(e.target.value);
-                          if (e.target.value) setSelectedFokus(null);
-                        }}
-                        className="h-9 text-sm"
-                      />
+                      <div className="relative">
+                        <Input
+                          placeholder="herz, rhythmus, blut..."
+                          value={customFokus}
+                          onChange={(e) => {
+                            setCustomFokus(e.target.value);
+                            if (e.target.value) setSelectedFokus(null);
+                          }}
+                          onFocus={() => customFokusHistory.length > 0 && setShowFokusHistory(true)}
+                          onBlur={() => setTimeout(() => setShowFokusHistory(false), 200)}
+                          className="h-9 text-sm pr-8"
+                        />
+                        {customFokusHistory.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute right-0 top-0 h-9 w-8 p-0"
+                            onClick={() => setShowFokusHistory(!showFokusHistory)}
+                          >
+                            <History className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        )}
+                        {showFokusHistory && customFokusHistory.length > 0 && (
+                          <div className="absolute z-50 top-10 left-0 right-0 bg-popover border rounded-md shadow-lg p-1 max-h-40 overflow-y-auto">
+                            {customFokusHistory.map((item, idx) => (
+                              <button
+                                key={idx}
+                                className="w-full text-left px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors"
+                                onClick={() => {
+                                  setCustomFokus(item);
+                                  setSelectedFokus(null);
+                                  setShowFokusHistory(false);
+                                }}
+                              >
+                                {item}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="space-y-1">
@@ -1050,6 +1102,38 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                           >
                             <MapPin className="w-4 h-4 mr-1" />
                             Alle Meridianpunkte ({getTotalPointCount()})
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                const response = await fetch('/databases/clarkeMateriaMedica.json');
+                                const data = await response.json();
+                                // Extrahiere alle einzigartigen Remedies
+                                const remediesSet = new Set<string>();
+                                data.clinicalSymptoms.forEach((item: { remedies: string[] }) => {
+                                  item.remedies.forEach(remedy => remediesSet.add(remedy));
+                                });
+                                const remedies = Array.from(remediesSet).sort();
+                                setWordInput(remedies.join('\n'));
+                                toast({
+                                  title: "Clarke Materia Medica geladen",
+                                  description: `${remedies.length} homöopathische Mittel bereit zur Analyse`,
+                                });
+                              } catch (error) {
+                                console.error('Error loading Clarke data:', error);
+                                toast({
+                                  title: "Fehler beim Laden",
+                                  description: "Clarke Materia Medica konnte nicht geladen werden",
+                                  variant: "destructive"
+                                });
+                              }
+                            }}
+                            disabled={isTesting}
+                          >
+                            <Database className="w-4 h-4 mr-1" />
+                            Clarke Materia Medica
                           </Button>
                         </div>
                       </div>
@@ -1666,7 +1750,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                           </div>
                           {archive.top_items.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
-                              {archive.top_items.slice(0, 3).map((item, idx) => (
+                              {archive.top_items.slice(0, 10).map((item, idx) => (
                                 <Badge key={idx} variant="outline" className="text-xs">
                                   {item.word}: {item.resonanz}%
                                 </Badge>
@@ -1688,7 +1772,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                   <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>Bitte einen Klienten verknüpfen für Trendanalyse</p>
                 </div>
-              ) : categoryTrends.resonanzFokus.length === 0 ? (
+              ) : categoryTrends.resonanz.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
                   <TrendingUp className="w-8 h-8 mx-auto mb-2 opacity-50" />
                   <p>Mindestens 2 archivierte Tests mit gemeinsamen Wörtern erforderlich</p>
@@ -1698,13 +1782,13 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                   {/* Kategorie-Tabs */}
                   <div className="flex flex-wrap gap-2">
                     <Button
-                      variant={activeTrendCategory === 'resonanzFokus' ? 'default' : 'outline'}
+                      variant={activeTrendCategory === 'resonanz' ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setActiveTrendCategory('resonanzFokus')}
+                      onClick={() => setActiveTrendCategory('resonanz')}
                       className="flex items-center gap-1"
                     >
                       <Target className="w-3 h-3" />
-                      Resonanz & Fokus ({categoryTrends.resonanzFokus.length})
+                      Resonanz ({categoryTrends.resonanz.length})
                     </Button>
                     <Button
                       variant={activeTrendCategory === 'intensität' ? 'default' : 'outline'}
@@ -1754,7 +1838,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 </div>
                               </div>
                               <div className="text-right">
-                                {activeTrendCategory === 'resonanzFokus' && (
+                                {activeTrendCategory === 'resonanz' && (
                                   <>
                                     <div className="flex items-center gap-2">
                                       <span className="text-muted-foreground text-sm">{item.previousResonance.toFixed(1)}%</span>
