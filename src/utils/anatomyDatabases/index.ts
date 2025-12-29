@@ -5,6 +5,11 @@ import ZNS_DATABASE, { getAllZNSEntries } from './znsDatabase';
 import HERZ_KREISLAUF_DATABASE, { getAllHerzKreislaufEntries } from './herzKreislaufDatabase';
 import VERDAUUNG_DATABASE, { getAllVerdauungEntries } from './verdauungDatabase';
 import BEWEGUNGSAPPARAT_DATABASE, { getAllBewegungsapparatEntries } from './bewegungsapparatDatabase';
+import RESPIRATION_DATABASE, { getAllRespirationEntries } from './respirationDatabase';
+import UROGENITAL_DATABASE, { getAllUrogenitalEntries } from './urogenitalDatabase';
+import ENDOKRINES_DATABASE, { getAllEndokrinesEntries } from './endokrinesDatabase';
+import SINNESORGANE_DATABASE, { getAllSinnesorganeEntries } from './sinnesorganeDatabase';
+import HAUT_DATABASE, { getAllHautEntries } from './hautDatabase';
 
 // Typ für anatomische Datenbanken
 export interface AnatomyDatabase {
@@ -25,6 +30,11 @@ export const ANATOMY_DATABASES: { [key: string]: AnatomyDatabase } = {
   herzKreislauf: HERZ_KREISLAUF_DATABASE,
   verdauung: VERDAUUNG_DATABASE,
   bewegungsapparat: BEWEGUNGSAPPARAT_DATABASE,
+  respiration: RESPIRATION_DATABASE,
+  urogenital: UROGENITAL_DATABASE,
+  endokrines: ENDOKRINES_DATABASE,
+  sinnesorgane: SINNESORGANE_DATABASE,
+  haut: HAUT_DATABASE,
 };
 
 // Statistik über alle Datenbanken
@@ -48,14 +58,15 @@ export const getAnatomyStatistics = () => {
 
 // Export einzelner Datenbanken
 export { 
-  ZNS_DATABASE, 
-  getAllZNSEntries,
-  HERZ_KREISLAUF_DATABASE, 
-  getAllHerzKreislaufEntries,
-  VERDAUUNG_DATABASE,
-  getAllVerdauungEntries,
-  BEWEGUNGSAPPARAT_DATABASE,
-  getAllBewegungsapparatEntries,
+  ZNS_DATABASE, getAllZNSEntries,
+  HERZ_KREISLAUF_DATABASE, getAllHerzKreislaufEntries,
+  VERDAUUNG_DATABASE, getAllVerdauungEntries,
+  BEWEGUNGSAPPARAT_DATABASE, getAllBewegungsapparatEntries,
+  RESPIRATION_DATABASE, getAllRespirationEntries,
+  UROGENITAL_DATABASE, getAllUrogenitalEntries,
+  ENDOKRINES_DATABASE, getAllEndokrinesEntries,
+  SINNESORGANE_DATABASE, getAllSinnesorganeEntries,
+  HAUT_DATABASE, getAllHautEntries,
 };
 
 // Alle Einträge aller Datenbanken
@@ -65,22 +76,27 @@ export const getAllAnatomyEntries = (): string[] => {
     ...getAllHerzKreislaufEntries(),
     ...getAllVerdauungEntries(),
     ...getAllBewegungsapparatEntries(),
+    ...getAllRespirationEntries(),
+    ...getAllUrogenitalEntries(),
+    ...getAllEndokrinesEntries(),
+    ...getAllSinnesorganeEntries(),
+    ...getAllHautEntries(),
   ];
 };
 
 // Einträge einer spezifischen Datenbank abrufen
 export const getEntriesForDatabase = (databaseKey: string): string[] => {
   switch (databaseKey) {
-    case 'zns':
-      return getAllZNSEntries();
-    case 'herzKreislauf':
-      return getAllHerzKreislaufEntries();
-    case 'verdauung':
-      return getAllVerdauungEntries();
-    case 'bewegungsapparat':
-      return getAllBewegungsapparatEntries();
-    default:
-      return [];
+    case 'zns': return getAllZNSEntries();
+    case 'herzKreislauf': return getAllHerzKreislaufEntries();
+    case 'verdauung': return getAllVerdauungEntries();
+    case 'bewegungsapparat': return getAllBewegungsapparatEntries();
+    case 'respiration': return getAllRespirationEntries();
+    case 'urogenital': return getAllUrogenitalEntries();
+    case 'endokrines': return getAllEndokrinesEntries();
+    case 'sinnesorgane': return getAllSinnesorganeEntries();
+    case 'haut': return getAllHautEntries();
+    default: return [];
   }
 };
 
