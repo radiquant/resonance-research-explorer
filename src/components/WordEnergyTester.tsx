@@ -62,6 +62,7 @@ import { MERIDIANS, getAllMeridianPointsFlat, getTotalPointCount, getMeridianSta
 import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics } from '@/utils/anatomyDatabases';
 import SymptomBrowser from '@/components/SymptomBrowser';
 import AnatomyDatabaseOverview from '@/components/AnatomyDatabaseOverview';
+import FrequencyDatabaseOverview from '@/components/FrequencyDatabaseOverview';
 
 // Clarke Materia Medica Symptom-Mapping
 interface ClarkeSymptomEntry {
@@ -917,26 +918,30 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
         {clientResult && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="test" className="flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 Test
               </TabsTrigger>
               <TabsTrigger value="anatomie" className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
+                <Bone className="w-4 h-4" />
                 Anatomie
+              </TabsTrigger>
+              <TabsTrigger value="frequenzen" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Frequenzen
               </TabsTrigger>
               <TabsTrigger value="symptome" className="flex items-center gap-2" disabled={!isClarkeLoaded}>
                 <Search className="w-4 h-4" />
-                Symptome {isClarkeLoaded && `(${allClarkeSymptoms.length})`}
+                Symptome
               </TabsTrigger>
               <TabsTrigger value="archiv" className="flex items-center gap-2">
                 <Archive className="w-4 h-4" />
-                Archiv ({archivedTests.length})
+                Archiv
               </TabsTrigger>
               <TabsTrigger value="trends" className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
-                Trends ({trendItems.length})
+                Trends
               </TabsTrigger>
             </TabsList>
 
@@ -1912,6 +1917,21 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                   toast({
                     title: `${name} geladen`,
                     description: `${count.toLocaleString()} anatomische Strukturen bereit zur Analyse`,
+                  });
+                }}
+                disabled={isTesting}
+              />
+            </TabsContent>
+
+            {/* FREQUENZEN TAB */}
+            <TabsContent value="frequenzen" className="space-y-4">
+              <FrequencyDatabaseOverview
+                onLoadDatabase={(entries, name, count) => {
+                  setWordInput(entries.join('\n'));
+                  setActiveTab('test');
+                  toast({
+                    title: `${name} geladen`,
+                    description: `${count.toLocaleString()} Frequenz-Einträge bereit zur Analyse`,
                   });
                 }}
                 disabled={isTesting}
