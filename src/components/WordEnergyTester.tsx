@@ -55,6 +55,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
 import { MERIDIANS, getAllMeridianPointsFlat, getTotalPointCount, getMeridianStats } from '@/utils/meridianPointsDatabase';
+import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics } from '@/utils/anatomyDatabases';
 
 interface WordEnergyTestResult {
   word: string;
@@ -1085,7 +1086,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
                       {/* Schnellzugriff-Buttons */}
                       <div className="space-y-2">
-                        <Label className="text-xs text-muted-foreground">Schnellzugriff</Label>
+                        <Label className="text-xs text-muted-foreground">Schnellzugriff - Meridiane & Homöopathie</Label>
                         <div className="flex flex-wrap gap-2">
                           <Button
                             variant="outline"
@@ -1110,7 +1111,6 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                               try {
                                 const response = await fetch('/databases/clarkeMateriaMedica.json');
                                 const data = await response.json();
-                                // Extrahiere alle einzigartigen Remedies
                                 const remediesSet = new Set<string>();
                                 data.clinicalSymptoms.forEach((item: { remedies: string[] }) => {
                                   item.remedies.forEach(remedy => remediesSet.add(remedy));
@@ -1135,6 +1135,34 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                             <Database className="w-4 h-4 mr-1" />
                             Clarke Materia Medica
                           </Button>
+                        </div>
+                      </div>
+
+                      {/* Anatomische Datenbanken */}
+                      <div className="space-y-2">
+                        <Label className="text-xs text-muted-foreground">Anatomische Datenbanken (Terminologia Anatomica)</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(ANATOMY_DATABASES).map(([key, db]) => (
+                            <Button
+                              key={key}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const entries = getEntriesForDatabase(key);
+                                setWordInput(entries.join('\n'));
+                                toast({
+                                  title: `${db.name} geladen`,
+                                  description: `${entries.length} anatomische Strukturen bereit zur Analyse`,
+                                });
+                              }}
+                              disabled={isTesting}
+                              className="border-primary/30 hover:border-primary"
+                            >
+                              {key === 'zns' && <Atom className="w-4 h-4 mr-1" />}
+                              {key === 'herzKreislauf' && <Heart className="w-4 h-4 mr-1" />}
+                              {db.name} ({db.totalEntries})
+                            </Button>
+                          ))}
                         </div>
                       </div>
 
