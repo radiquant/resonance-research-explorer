@@ -373,67 +373,78 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       return;
     }
 
-    const wordMap = new Map<string, { 
-      resonances: number[], 
-      intensities: number[], 
-      polarities: number[], 
-      levels: number[],
-      fokusKorrelations: number[],
-      occurrences: number 
+    // FIX: Count occurrences per SESSION (archive), not per word entry
+    // For each word, track which sessions it appeared in and take the BEST value from each session
+    const wordSessionMap = new Map<string, { 
+      sessionValues: Map<string, {
+        resonanz: number;
+        intensität: number;
+        polarität: number;
+        level: number;
+        fokusKorrelation: number;
+      }>;
     }>();
 
-    // Collect all word occurrences across tests
+    // Collect word data per session - take highest resonanz per word per session
     archives.forEach(archive => {
+      const sessionId = archive.id;
       archive.results.forEach(result => {
-        const existing = wordMap.get(result.word) || { 
-          resonances: [], 
-          intensities: [], 
-          polarities: [], 
-          levels: [],
-          fokusKorrelations: [],
-          occurrences: 0 
-        };
-        existing.resonances.push(result.resonanz);
-        existing.intensities.push(result.intensität);
-        existing.polarities.push(result.polaritätWert);
-        existing.levels.push(result.dominanteEbene);
-        existing.fokusKorrelations.push(result.fokusKorrelation || 0);
-        existing.occurrences++;
-        wordMap.set(result.word, existing);
+        const existing = wordSessionMap.get(result.word) || { sessionValues: new Map() };
+        
+        const currentSessionValue = existing.sessionValues.get(sessionId);
+        if (!currentSessionValue || result.resonanz > currentSessionValue.resonanz) {
+          existing.sessionValues.set(sessionId, {
+            resonanz: result.resonanz,
+            intensität: result.intensität,
+            polarität: result.polaritätWert,
+            level: result.dominanteEbene,
+            fokusKorrelation: result.fokusKorrelation || 0
+          });
+        }
+        wordSessionMap.set(result.word, existing);
       });
     });
 
-    // Calculate trends for items appearing more than once
+    // Calculate trends for items appearing in more than one SESSION
     const allTrends: TrendItem[] = [];
-    wordMap.forEach((data, word) => {
-      if (data.occurrences >= 2) {
-        const currentResonance = data.resonances[0];
-        const previousResonance = data.resonances[1];
-        const trendValue = currentResonance - previousResonance;
+    wordSessionMap.forEach((data, word) => {
+      const sessionCount = data.sessionValues.size;
+      if (sessionCount >= 2) {
+        // Get values ordered by session recency (archives are already ordered by created_at desc)
+        const orderedArchiveIds = archives.map(a => a.id);
+        const orderedValues = orderedArchiveIds
+          .filter(id => data.sessionValues.has(id))
+          .map(id => data.sessionValues.get(id)!);
         
-        let trend: 'up' | 'down' | 'stable' = 'stable';
-        if (trendValue > 5) trend = 'up';
-        else if (trendValue < -5) trend = 'down';
+        if (orderedValues.length >= 2) {
+          const current = orderedValues[0];
+          const previous = orderedValues[1];
+          const trendValue = current.resonanz - previous.resonanz;
+          
+          let trend: 'up' | 'down' | 'stable' = 'stable';
+          if (trendValue > 5) trend = 'up';
+          else if (trendValue < -5) trend = 'down';
 
-        allTrends.push({
-          word,
-          currentResonance,
-          previousResonance,
-          trend,
-          trendValue,
-          occurrences: data.occurrences,
-          currentIntensity: data.intensities[0],
-          previousIntensity: data.intensities[1],
-          currentPolarity: data.polarities[0],
-          previousPolarity: data.polarities[1],
-          currentLevel: data.levels[0],
-          previousLevel: data.levels[1],
-          fokusKorrelation: data.fokusKorrelations[0]
-        });
+          allTrends.push({
+            word,
+            currentResonance: current.resonanz,
+            previousResonance: previous.resonanz,
+            trend,
+            trendValue,
+            occurrences: sessionCount, // Now correctly counts SESSIONS, not word entries
+            currentIntensity: current.intensität,
+            previousIntensity: previous.intensität,
+            currentPolarity: current.polarität,
+            previousPolarity: previous.polarität,
+            currentLevel: current.level,
+            previousLevel: previous.level,
+            fokusKorrelation: current.fokusKorrelation
+          });
+        }
       }
     });
 
-    // Kategorisierte Trends - Resonanz als eigenständiges Kriterium (ohne Fokus als Sortierkriterium)
+    // Kategorisierte Trends
     const resonanz = [...allTrends]
       .sort((a, b) => Math.abs(b.trendValue) - Math.abs(a.trendValue))
       .slice(0, 15);
@@ -584,8 +595,24 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     const harmonisierungsRateResult = calculateCopenRate(harmonisierungsWort, 0, 'D', 'latin');
     const harmonisierungsRate = harmonisierungsRateResult.rate;
     
-    // Clarke Symptome zuordnen (falls verfügbar) - NUR für Anzeige, nicht für Rate-Berechnung
-    const clarkeSymptoms = clarkeSymptomMap.get(word) || [];
+    // Clarke Symptome zuordnen (case-insensitive) - NUR für Anzeige, nicht für Rate-Berechnung
+    // FIX: Case-insensitive matching for Clarke symptom lookup
+    let clarkeSymptoms: string[] = [];
+    if (clarkeSymptomMap.size > 0) {
+      // Try exact match first
+      clarkeSymptoms = clarkeSymptomMap.get(word) || [];
+      
+      // If no exact match, try case-insensitive
+      if (clarkeSymptoms.length === 0) {
+        const wordLower = word.toLowerCase();
+        for (const [remedy, symptoms] of clarkeSymptomMap.entries()) {
+          if (remedy.toLowerCase() === wordLower) {
+            clarkeSymptoms = symptoms;
+            break;
+          }
+        }
+      }
+    }
     
     return {
       word,
@@ -792,8 +819,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     }
   };
 
-  // Harmonisierung starten
-  const startHarmonization = () => {
+  // Persistente Harmonisierung starten (Cloud-basiert)
+  const startHarmonization = async () => {
     const topItems = [...filteredAndSortedResults].slice(0, harmonizationItemCount);
     if (topItems.length === 0) {
       toast({
@@ -803,92 +830,283 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       });
       return;
     }
-    
-    setHarmonization(prev => ({
-      ...prev,
-      isActive: true,
-      isPaused: false,
-      selectedItems: topItems,
-      elapsedSeconds: 0,
-      currentItemIndex: 0,
-      inPulsePhase: true
-    }));
-    
-    toast({
-      title: "Harmonisierung gestartet",
-      description: `${topItems.length} Items werden harmonisiert`,
-    });
+
+    if (!patientId) {
+      toast({
+        title: "Kein Klient ausgewählt",
+        description: "Bitte verknüpfen Sie einen Klienten für persistente Harmonisierung",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Nicht authentifiziert",
+          description: "Bitte melden Sie sich an",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Calculate duration per item (total duration / number of items)
+      const totalDurationSeconds = harmonization.maxDuration * 60;
+      const durationPerItem = Math.floor(totalDurationSeconds / topItems.length);
+
+      // Create individual harmonization sessions for each item
+      const sessionsToCreate = topItems.map(item => ({
+        user_id: user.id,
+        patient_id: patientId,
+        word: item.harmonisierungsWort,
+        copen_rate: item.harmonisierungsRate?.toString() || item.copenRate.toString(),
+        tested_potency: 'D0',
+        duration_seconds: durationPerItem,
+        remaining_seconds: durationPerItem,
+        status: 'pending' as const,
+        pulse_pause_active: harmonization.pulseDuration !== harmonization.pauseDuration || harmonization.pulseDuration !== 5,
+        pulse_seconds: harmonization.pulseDuration,
+        pause_seconds: harmonization.pauseDuration,
+        progress: 0
+      }));
+
+      const { data, error } = await supabase
+        .from('harmonization_sessions_v2')
+        .insert(sessionsToCreate)
+        .select();
+
+      if (error) throw error;
+
+      // Trigger worker to start processing
+      await supabase.functions.invoke('harmonization-worker');
+
+      toast({
+        title: "Persistente Harmonisierung gestartet",
+        description: `${topItems.length} Sessions erstellt (${Math.floor(durationPerItem / 60)}min je). Läuft im Hintergrund weiter.`,
+      });
+
+      // Update local state to show harmonization is active
+      setHarmonization(prev => ({
+        ...prev,
+        isActive: true,
+        isPaused: false,
+        selectedItems: topItems,
+        elapsedSeconds: 0,
+        currentItemIndex: 0,
+        inPulsePhase: true
+      }));
+
+    } catch (error) {
+      console.error('Error creating harmonization sessions:', error);
+      toast({
+        title: "Fehler",
+        description: "Harmonisierung konnte nicht gestartet werden",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Harmonisierung stoppen
-  const stopHarmonization = () => {
-    setHarmonization(prev => ({
-      ...prev,
-      isPaused: !prev.isPaused
-    }));
+  // Harmonisierung pausieren/fortsetzen
+  const stopHarmonization = async () => {
+    if (!patientId) return;
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Pause all running sessions for this patient
+      const newStatus = harmonization.isPaused ? 'running' : 'paused';
+      
+      await supabase
+        .from('harmonization_sessions_v2')
+        .update({ status: newStatus })
+        .eq('patient_id', patientId)
+        .eq('user_id', user.id)
+        .in('status', ['running', 'paused']);
+
+      setHarmonization(prev => ({
+        ...prev,
+        isPaused: !prev.isPaused
+      }));
+
+      toast({
+        title: harmonization.isPaused ? "Fortgesetzt" : "Pausiert",
+        description: harmonization.isPaused ? "Harmonisierung wird fortgesetzt" : "Harmonisierung wurde pausiert",
+      });
+    } catch (error) {
+      console.error('Error toggling harmonization:', error);
+    }
   };
 
   // Harmonisierung löschen/abbrechen
-  const cancelHarmonization = () => {
-    setHarmonization({
-      isActive: false,
-      isPaused: false,
-      selectedItems: [],
-      pulseDuration: harmonization.pulseDuration,
-      pauseDuration: harmonization.pauseDuration,
-      maxDuration: harmonization.maxDuration,
-      elapsedSeconds: 0,
-      currentItemIndex: 0,
-      inPulsePhase: true
-    });
-    toast({
-      title: "Harmonisierung beendet",
-      description: "Der Prozess wurde abgebrochen",
-    });
+  const cancelHarmonization = async () => {
+    if (!patientId) {
+      setHarmonization({
+        isActive: false,
+        isPaused: false,
+        selectedItems: [],
+        pulseDuration: harmonization.pulseDuration,
+        pauseDuration: harmonization.pauseDuration,
+        maxDuration: harmonization.maxDuration,
+        elapsedSeconds: 0,
+        currentItemIndex: 0,
+        inPulsePhase: true
+      });
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Cancel all pending/running sessions for this patient that we just created
+      await supabase
+        .from('harmonization_sessions_v2')
+        .update({ status: 'cancelled' })
+        .eq('patient_id', patientId)
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'running', 'paused']);
+
+      setHarmonization({
+        isActive: false,
+        isPaused: false,
+        selectedItems: [],
+        pulseDuration: harmonization.pulseDuration,
+        pauseDuration: harmonization.pauseDuration,
+        maxDuration: harmonization.maxDuration,
+        elapsedSeconds: 0,
+        currentItemIndex: 0,
+        inPulsePhase: true
+      });
+
+      toast({
+        title: "Harmonisierung abgebrochen",
+        description: "Alle laufenden Sessions wurden beendet",
+      });
+    } catch (error) {
+      console.error('Error cancelling harmonization:', error);
+    }
   };
 
-  // Harmonisierungs-Timer
+  // Realtime subscription for harmonization updates
   useEffect(() => {
-    if (!harmonization.isActive || harmonization.isPaused) return;
-    
-    const interval = setInterval(() => {
-      setHarmonization(prev => {
-        const newElapsed = prev.elapsedSeconds + 1;
-        const maxSeconds = prev.maxDuration * 60;
-        
-        // Max Zeit erreicht?
-        if (newElapsed >= maxSeconds) {
-          toast({
-            title: "Harmonisierung abgeschlossen",
-            description: `${prev.selectedItems.length} Items in ${prev.maxDuration} Minuten harmonisiert`,
-          });
-          return {
-            ...prev,
-            isActive: false,
-            elapsedSeconds: maxSeconds
-          };
+    if (!patientId) return;
+
+    const channel = supabase
+      .channel(`harmonization-${patientId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'harmonization_sessions_v2',
+          filter: `patient_id=eq.${patientId}`
+        },
+        async (payload) => {
+          // Refresh active sessions count
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+
+          const { data: activeSessions } = await supabase
+            .from('harmonization_sessions_v2')
+            .select('*')
+            .eq('patient_id', patientId)
+            .eq('user_id', user.id)
+            .in('status', ['pending', 'running', 'paused'])
+            .order('created_at', { ascending: true });
+
+          if (activeSessions && activeSessions.length > 0) {
+            // Find current running session
+            const runningSession = activeSessions.find(s => s.status === 'running');
+            const currentIndex = runningSession 
+              ? activeSessions.findIndex(s => s.id === runningSession.id)
+              : 0;
+
+            setHarmonization(prev => ({
+              ...prev,
+              isActive: true,
+              currentItemIndex: currentIndex,
+              elapsedSeconds: runningSession 
+                ? (runningSession.duration_seconds - (runningSession.remaining_seconds || 0))
+                : 0,
+              inPulsePhase: true
+            }));
+          } else {
+            setHarmonization(prev => ({
+              ...prev,
+              isActive: false,
+              selectedItems: []
+            }));
+          }
         }
-        
-        // Impuls/Pause Phasen berechnen
-        const cycleLength = prev.pulseDuration + prev.pauseDuration;
-        const cyclePosition = newElapsed % cycleLength;
-        const inPulse = cyclePosition < prev.pulseDuration;
-        
-        // Aktuelles Item Index basierend auf Zeit
-        const itemCycleTime = cycleLength * 3; // Jedes Item 3 Zyklen
-        const newItemIndex = Math.floor(newElapsed / itemCycleTime) % prev.selectedItems.length;
-        
-        return {
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [patientId]);
+
+  // Load active harmonization sessions on mount
+  useEffect(() => {
+    const loadActiveSessions = async () => {
+      if (!patientId) return;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: activeSessions } = await supabase
+        .from('harmonization_sessions_v2')
+        .select('*')
+        .eq('patient_id', patientId)
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'running', 'paused'])
+        .order('created_at', { ascending: true });
+
+      if (activeSessions && activeSessions.length > 0) {
+        // Reconstruct harmonization state from active sessions
+        const topItems = activeSessions.map(s => ({
+          word: s.word.replace('Kohärente Harmonisierung Regulation ', ''),
+          copenRate: parseInt(s.copen_rate || '0'),
+          resonanz: 0,
+          resonanzBasis: 0,
+          fokusKorrelation: 0,
+          interferenzMuster: 'neutral' as const,
+          intensität: 0,
+          polarität: 'neutral' as const,
+          polaritätWert: 0,
+          dominanteEbene: 1,
+          dominanteEbeneWert: 0,
+          ebenVerteilung: {},
+          harmonisierungsWort: s.word,
+          harmonisierungsRate: parseInt(s.copen_rate || '0')
+        }));
+
+        const runningSession = activeSessions.find(s => s.status === 'running');
+        const pausedSession = activeSessions.find(s => s.status === 'paused');
+        const currentIndex = runningSession 
+          ? activeSessions.findIndex(s => s.id === runningSession.id)
+          : pausedSession
+            ? activeSessions.findIndex(s => s.id === pausedSession.id)
+            : 0;
+
+        setHarmonization(prev => ({
           ...prev,
-          elapsedSeconds: newElapsed,
-          inPulsePhase: inPulse,
-          currentItemIndex: newItemIndex
-        };
-      });
-    }, 1000);
-    
-    return () => clearInterval(interval);
-  }, [harmonization.isActive, harmonization.isPaused, toast]);
+          isActive: true,
+          isPaused: !!pausedSession && !runningSession,
+          selectedItems: topItems,
+          currentItemIndex: currentIndex,
+          pulseDuration: activeSessions[0].pulse_seconds || 5,
+          pauseDuration: activeSessions[0].pause_seconds || 3,
+          maxDuration: Math.ceil((activeSessions[0].duration_seconds * activeSessions.length) / 60),
+          inPulsePhase: true
+        }));
+      }
+    };
+
+    loadActiveSessions();
+  }, [patientId]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
