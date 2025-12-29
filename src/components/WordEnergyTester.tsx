@@ -161,7 +161,12 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [selectedFokus, setSelectedFokus] = useState<string | null>(null);
   const [customFokus, setCustomFokus] = useState('');
   const [fokusGewichtung, setFokusGewichtung] = useState(15); // 15% Standard
-  const [customFokusHistory, setCustomFokusHistory] = useState<string[]>([]);
+  const [customFokusHistory, setCustomFokusHistory] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem('fokusHistory');
+      return stored ? JSON.parse(stored) : [];
+    } catch { return []; }
+  });
   const [showFokusHistory, setShowFokusHistory] = useState(false);
   
   // Archiv & Trend State
@@ -372,25 +377,31 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
   // Normalisiert ebenVerteilung-Keys zu level_1, level_2, etc.
   const normalizeEbenVerteilung = (result: WordEnergyTestResult): number => {
-    if (result.dominanteEbene && result.dominanteEbene > 0) {
+    // FIRST: Check dominanteEbene directly if it's a valid value (1-12)
+    if (result.dominanteEbene && result.dominanteEbene >= 1 && result.dominanteEbene <= 12) {
       return result.dominanteEbene;
     }
     
-    // Fallback: Aus ebenVerteilung extrahieren
+    // SECOND: Extract from ebenVerteilung - supports multiple key formats
     const ebenVerteilung = result.ebenVerteilung || {};
-    let maxLevel = 1;
-    let maxValue = 0;
+    let maxLevel = 0;
+    let maxValue = -1;
     
     for (const [key, value] of Object.entries(ebenVerteilung)) {
-      // Match level_1, level_2, ... level_1_physical_particles, etc.
+      // Match multiple formats: level_1, level_1_physical_particles, etc.
       const match = key.match(/level_(\d+)/);
-      if (match && typeof value === 'number' && value > maxValue) {
-        maxValue = value;
-        maxLevel = parseInt(match[1]);
+      if (match && typeof value === 'number') {
+        const levelNum = parseInt(match[1]);
+        // Only consider levels 1-12
+        if (levelNum >= 1 && levelNum <= 12 && value > maxValue) {
+          maxValue = value;
+          maxLevel = levelNum;
+        }
       }
     }
     
-    return maxLevel;
+    // Return found level or default to 1 (never 0 or invalid)
+    return maxLevel >= 1 ? maxLevel : 1;
   };
 
   const calculateTrends = (archives: ArchivedTest[]) => {
@@ -474,33 +485,33 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       }
     });
 
-    // Kategorisierte Trends
+    // Kategorisierte Trends - Limit 25 statt 15
     const resonanz = [...allTrends]
       .sort((a, b) => Math.abs(b.trendValue) - Math.abs(a.trendValue))
-      .slice(0, 15);
+      .slice(0, 25);
 
     const intensität = [...allTrends]
       .sort((a, b) => Math.abs((b.currentIntensity || 0) - (b.previousIntensity || 0)) - 
                        Math.abs((a.currentIntensity || 0) - (a.previousIntensity || 0)))
-      .slice(0, 15);
+      .slice(0, 25);
 
     const polarität = [...allTrends]
       .sort((a, b) => Math.abs((b.currentPolarity || 0) - (b.previousPolarity || 0)) - 
                        Math.abs((a.currentPolarity || 0) - (a.previousPolarity || 0)))
-      .slice(0, 15);
+      .slice(0, 25);
 
-    // FIX: Include all items with valid level changes, even if levels are same but non-zero
+    // FIX: Include all items with valid levels (1-12), sort by level change then by current level
     const ebenen = [...allTrends]
-      .filter(t => (t.currentLevel || 0) > 0 || (t.previousLevel || 0) > 0)
+      .filter(t => (t.currentLevel || 0) >= 1 && (t.currentLevel || 0) <= 12)
       .sort((a, b) => {
         // First by level change magnitude
         const aDiff = Math.abs((a.currentLevel || 0) - (a.previousLevel || 0));
         const bDiff = Math.abs((b.currentLevel || 0) - (b.previousLevel || 0));
         if (bDiff !== aDiff) return bDiff - aDiff;
-        // Then by current level
+        // Then by current level value (higher first)
         return (b.currentLevel || 0) - (a.currentLevel || 0);
       })
-      .slice(0, 15);
+      .slice(0, 25);
 
     setCategoryTrends({ resonanz, intensität, polarität, ebenen });
     setTrendItems(resonanz);
@@ -670,12 +681,18 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     };
   }, [effectiveFokus, fokusGewichtung, clarkeSymptomMap]);
 
-  // Custom Fokus zur Historie hinzufügen
+  // Custom Fokus zur Historie hinzufügen (persistent in localStorage)
   const addToFokusHistory = useCallback((fokus: string) => {
     if (!fokus.trim()) return;
     setCustomFokusHistory(prev => {
       const filtered = prev.filter(f => f !== fokus.trim());
-      return [fokus.trim(), ...filtered].slice(0, 10);
+      const updated = [fokus.trim(), ...filtered].slice(0, 10);
+      try {
+        localStorage.setItem('fokusHistory', JSON.stringify(updated));
+      } catch (e) {
+        console.error('Failed to save fokus history:', e);
+      }
+      return updated;
     });
   }, []);
 
@@ -856,7 +873,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     }
   };
 
-  // Persistente Harmonisierung starten (Cloud-basiert)
+  // Persistente Harmonisierung starten (Cloud-basiert) - Sessions werden NICHT sofort gestartet
+  // Der Benutzer muss explizit "Starten" drücken in der SessionStatusList
   const startHarmonization = async () => {
     const topItems = [...filteredAndSortedResults].slice(0, harmonizationItemCount);
     if (topItems.length === 0) {
@@ -893,6 +911,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const durationPerItem = Math.floor(totalDurationSeconds / topItems.length);
 
       // Create individual harmonization sessions for each item
+      // Sessions are created with status 'pending' and NO job_started_at
+      // They will NOT start automatically - user must start them via SessionStatusList
       const sessionsToCreate = topItems.map(item => ({
         user_id: user.id,
         patient_id: patientId,
@@ -906,6 +926,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         pulse_seconds: harmonization.pulseDuration,
         pause_seconds: harmonization.pauseDuration,
         progress: 0
+        // NO job_started_at - sessions won't start automatically
       }));
 
       const { data, error } = await supabase
@@ -915,15 +936,15 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
       if (error) throw error;
 
-      // Trigger worker to start processing
-      await supabase.functions.invoke('harmonization-worker');
+      // DO NOT trigger worker here - sessions should wait for explicit user action
+      // The user will start sessions via the SessionStatusList "Starten" button
 
       toast({
-        title: "Persistente Harmonisierung gestartet",
-        description: `${topItems.length} Sessions erstellt (${Math.floor(durationPerItem / 60)}min je). Läuft im Hintergrund weiter.`,
+        title: "Harmonisierung vorbereitet",
+        description: `${topItems.length} Sessions erstellt (${Math.floor(durationPerItem / 60)}min je). Starten Sie diese über die Session-Status-Liste.`,
       });
 
-      // Update local state to show harmonization is active
+      // Update local state to show harmonization is pending (not yet active)
       setHarmonization(prev => ({
         ...prev,
         isActive: true,
@@ -931,14 +952,16 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         selectedItems: topItems,
         elapsedSeconds: 0,
         currentItemIndex: 0,
-        inPulsePhase: true
+        inPulsePhase: false, // Not active yet
+        totalDurationSeconds,
+        remainingSeconds: totalDurationSeconds
       }));
 
     } catch (error) {
       console.error('Error creating harmonization sessions:', error);
       toast({
         title: "Fehler",
-        description: "Harmonisierung konnte nicht gestartet werden",
+        description: "Harmonisierung konnte nicht vorbereitet werden",
         variant: "destructive"
       });
     }
@@ -1173,7 +1196,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                 <Activity className="w-4 h-4" />
                 Frequenzen
               </TabsTrigger>
-              <TabsTrigger value="symptome" className="flex items-center gap-2" disabled={!isClarkeLoaded}>
+              <TabsTrigger value="symptome" className="flex items-center gap-2">
                 <Search className="w-4 h-4" />
                 Symptome
               </TabsTrigger>
@@ -2343,6 +2366,52 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Header mit Reset-Button */}
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Longitudinale Trends für {clientName} (max. 25 Items)
+                    </h4>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!patientId) return;
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser();
+                          if (!user) return;
+                          
+                          const { error } = await supabase
+                            .from('word_energy_archives')
+                            .delete()
+                            .eq('patient_id', patientId)
+                            .eq('user_id', user.id);
+                          
+                          if (error) throw error;
+                          
+                          setArchivedTests([]);
+                          setCategoryTrends({ resonanz: [], intensität: [], polarität: [], ebenen: [] });
+                          setTrendItems([]);
+                          
+                          toast({
+                            title: "Trends zurückgesetzt",
+                            description: `Alle archivierten Tests für ${clientName} wurden gelöscht`,
+                          });
+                        } catch (error) {
+                          console.error('Error resetting trends:', error);
+                          toast({
+                            title: "Fehler",
+                            description: "Trends konnten nicht zurückgesetzt werden",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-1" />
+                      Trends zurücksetzen
+                    </Button>
+                  </div>
+
                   {/* Kategorie-Tabs */}
                   <div className="flex flex-wrap gap-2">
                     <Button
