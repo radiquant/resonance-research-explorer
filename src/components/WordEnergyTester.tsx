@@ -133,6 +133,8 @@ interface HarmonizationState {
   elapsedSeconds: number;
   currentItemIndex: number;
   inPulsePhase: boolean;
+  totalDurationSeconds: number; // Gesamtdauer in Sekunden
+  remainingSeconds: number; // Verbleibende Zeit
 }
 
 type SortField = 'word' | 'resonanz' | 'intensität' | 'polaritätWert' | 'dominanteEbene' | 'copenRate' | 'symptomCount';
@@ -186,7 +188,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     maxDuration: 30,
     elapsedSeconds: 0,
     currentItemIndex: 0,
-    inPulsePhase: true
+    inPulsePhase: true,
+    totalDurationSeconds: 0,
+    remainingSeconds: 0
   });
   const [showHarmonization, setShowHarmonization] = useState(false);
   const [harmonizationItemCount, setHarmonizationItemCount] = useState<21 | 42 | 63>(21);
@@ -366,6 +370,29 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     }
   };
 
+  // Normalisiert ebenVerteilung-Keys zu level_1, level_2, etc.
+  const normalizeEbenVerteilung = (result: WordEnergyTestResult): number => {
+    if (result.dominanteEbene && result.dominanteEbene > 0) {
+      return result.dominanteEbene;
+    }
+    
+    // Fallback: Aus ebenVerteilung extrahieren
+    const ebenVerteilung = result.ebenVerteilung || {};
+    let maxLevel = 1;
+    let maxValue = 0;
+    
+    for (const [key, value] of Object.entries(ebenVerteilung)) {
+      // Match level_1, level_2, ... level_1_physical_particles, etc.
+      const match = key.match(/level_(\d+)/);
+      if (match && typeof value === 'number' && value > maxValue) {
+        maxValue = value;
+        maxLevel = parseInt(match[1]);
+      }
+    }
+    
+    return maxLevel;
+  };
+
   const calculateTrends = (archives: ArchivedTest[]) => {
     if (archives.length < 2) {
       setTrendItems([]);
@@ -392,12 +419,15 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         const existing = wordSessionMap.get(result.word) || { sessionValues: new Map() };
         
         const currentSessionValue = existing.sessionValues.get(sessionId);
+        // FIX: Normalize level from ebenVerteilung for robust level tracking
+        const normalizedLevel = normalizeEbenVerteilung(result);
+        
         if (!currentSessionValue || result.resonanz > currentSessionValue.resonanz) {
           existing.sessionValues.set(sessionId, {
             resonanz: result.resonanz,
             intensität: result.intensität,
             polarität: result.polaritätWert,
-            level: result.dominanteEbene,
+            level: normalizedLevel,
             fokusKorrelation: result.fokusKorrelation || 0
           });
         }
@@ -459,10 +489,17 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                        Math.abs((a.currentPolarity || 0) - (a.previousPolarity || 0)))
       .slice(0, 15);
 
+    // FIX: Include all items with valid level changes, even if levels are same but non-zero
     const ebenen = [...allTrends]
-      .filter(t => t.currentLevel !== t.previousLevel)
-      .sort((a, b) => Math.abs((b.currentLevel || 0) - (b.previousLevel || 0)) - 
-                       Math.abs((a.currentLevel || 0) - (a.previousLevel || 0)))
+      .filter(t => (t.currentLevel || 0) > 0 || (t.previousLevel || 0) > 0)
+      .sort((a, b) => {
+        // First by level change magnitude
+        const aDiff = Math.abs((a.currentLevel || 0) - (a.previousLevel || 0));
+        const bDiff = Math.abs((b.currentLevel || 0) - (b.previousLevel || 0));
+        if (bDiff !== aDiff) return bDiff - aDiff;
+        // Then by current level
+        return (b.currentLevel || 0) - (a.currentLevel || 0);
+      })
       .slice(0, 15);
 
     setCategoryTrends({ resonanz, intensität, polarität, ebenen });
@@ -951,7 +988,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         maxDuration: harmonization.maxDuration,
         elapsedSeconds: 0,
         currentItemIndex: 0,
-        inPulsePhase: true
+        inPulsePhase: true,
+        totalDurationSeconds: 0,
+        remainingSeconds: 0
       });
       return;
     }
@@ -977,7 +1016,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         maxDuration: harmonization.maxDuration,
         elapsedSeconds: 0,
         currentItemIndex: 0,
-        inPulsePhase: true
+        inPulsePhase: true,
+        totalDurationSeconds: 0,
+        remainingSeconds: 0
       });
 
       toast({
@@ -989,70 +1030,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     }
   };
 
-  // Realtime subscription for harmonization updates
+  // Realtime subscription + Polling for harmonization updates
   useEffect(() => {
     if (!patientId) return;
 
-    const channel = supabase
-      .channel(`harmonization-${patientId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'harmonization_sessions_v2',
-          filter: `patient_id=eq.${patientId}`
-        },
-        async (payload) => {
-          // Refresh active sessions count
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
-
-          const { data: activeSessions } = await supabase
-            .from('harmonization_sessions_v2')
-            .select('*')
-            .eq('patient_id', patientId)
-            .eq('user_id', user.id)
-            .in('status', ['pending', 'running', 'paused'])
-            .order('created_at', { ascending: true });
-
-          if (activeSessions && activeSessions.length > 0) {
-            // Find current running session
-            const runningSession = activeSessions.find(s => s.status === 'running');
-            const currentIndex = runningSession 
-              ? activeSessions.findIndex(s => s.id === runningSession.id)
-              : 0;
-
-            setHarmonization(prev => ({
-              ...prev,
-              isActive: true,
-              currentItemIndex: currentIndex,
-              elapsedSeconds: runningSession 
-                ? (runningSession.duration_seconds - (runningSession.remaining_seconds || 0))
-                : 0,
-              inPulsePhase: true
-            }));
-          } else {
-            setHarmonization(prev => ({
-              ...prev,
-              isActive: false,
-              selectedItems: []
-            }));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [patientId]);
-
-  // Load active harmonization sessions on mount
-  useEffect(() => {
     const loadActiveSessions = async () => {
-      if (!patientId) return;
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
@@ -1085,11 +1067,17 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
         const runningSession = activeSessions.find(s => s.status === 'running');
         const pausedSession = activeSessions.find(s => s.status === 'paused');
+        const currentSession = runningSession || pausedSession || activeSessions[0];
         const currentIndex = runningSession 
           ? activeSessions.findIndex(s => s.id === runningSession.id)
           : pausedSession
             ? activeSessions.findIndex(s => s.id === pausedSession.id)
             : 0;
+
+        // Calculate total duration and remaining across all sessions
+        const totalDurationSeconds = activeSessions.reduce((sum, s) => sum + s.duration_seconds, 0);
+        const totalRemainingSeconds = activeSessions.reduce((sum, s) => sum + (s.remaining_seconds ?? s.duration_seconds), 0);
+        const elapsedSeconds = totalDurationSeconds - totalRemainingSeconds;
 
         setHarmonization(prev => ({
           ...prev,
@@ -1097,15 +1085,51 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
           isPaused: !!pausedSession && !runningSession,
           selectedItems: topItems,
           currentItemIndex: currentIndex,
-          pulseDuration: activeSessions[0].pulse_seconds || 5,
-          pauseDuration: activeSessions[0].pause_seconds || 3,
-          maxDuration: Math.ceil((activeSessions[0].duration_seconds * activeSessions.length) / 60),
-          inPulsePhase: true
+          pulseDuration: currentSession.pulse_seconds || 5,
+          pauseDuration: currentSession.pause_seconds || 3,
+          maxDuration: Math.ceil(totalDurationSeconds / 60),
+          totalDurationSeconds,
+          remainingSeconds: totalRemainingSeconds,
+          elapsedSeconds,
+          inPulsePhase: runningSession !== undefined
+        }));
+      } else {
+        setHarmonization(prev => ({
+          ...prev,
+          isActive: false,
+          selectedItems: [],
+          elapsedSeconds: 0,
+          remainingSeconds: 0,
+          totalDurationSeconds: 0
         }));
       }
     };
 
+    // Initial load
     loadActiveSessions();
+
+    // Polling every 3 seconds for reliable timer updates
+    const pollInterval = setInterval(loadActiveSessions, 3000);
+
+    // Realtime subscription for instant updates
+    const channel = supabase
+      .channel(`harmonization-${patientId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'harmonization_sessions_v2',
+          filter: `patient_id=eq.${patientId}`
+        },
+        () => loadActiveSessions()
+      )
+      .subscribe();
+
+    return () => {
+      clearInterval(pollInterval);
+      supabase.removeChannel(channel);
+    };
   }, [patientId]);
 
   const formatTime = (seconds: number) => {
@@ -2029,13 +2053,22 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                   {harmonization.inPulsePhase ? 'Impuls' : 'Pause'}
                                 </span>
                               </div>
-                              <Badge variant="outline">
-                                {formatTime(harmonization.elapsedSeconds)} / {formatTime(harmonization.maxDuration * 60)}
+                              <Badge variant="outline" className="font-mono">
+                                {formatTime(harmonization.remainingSeconds || 0)} verbleibend
                               </Badge>
                             </div>
                             
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                              <Timer className="w-3 h-3" />
+                              <span>
+                                Fortschritt: {formatTime(harmonization.elapsedSeconds)} / {formatTime(harmonization.totalDurationSeconds || harmonization.maxDuration * 60)}
+                              </span>
+                            </div>
+                            
                             <Progress 
-                              value={(harmonization.elapsedSeconds / (harmonization.maxDuration * 60)) * 100} 
+                              value={harmonization.totalDurationSeconds > 0 
+                                ? ((harmonization.totalDurationSeconds - harmonization.remainingSeconds) / harmonization.totalDurationSeconds) * 100 
+                                : 0} 
                               className="h-2"
                             />
                             
