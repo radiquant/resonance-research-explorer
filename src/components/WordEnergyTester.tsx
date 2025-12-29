@@ -60,6 +60,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
 import { MERIDIANS, getAllMeridianPointsFlat, getTotalPointCount, getMeridianStats } from '@/utils/meridianPointsDatabase';
 import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics } from '@/utils/anatomyDatabases';
+import SymptomBrowser from '@/components/SymptomBrowser';
 
 // Clarke Materia Medica Symptom-Mapping
 interface ClarkeSymptomEntry {
@@ -915,10 +916,14 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
         {clientResult && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="test" className="flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 Test
+              </TabsTrigger>
+              <TabsTrigger value="symptome" className="flex items-center gap-2" disabled={!isClarkeLoaded}>
+                <Search className="w-4 h-4" />
+                Symptome {isClarkeLoaded && `(${allClarkeSymptoms.length})`}
               </TabsTrigger>
               <TabsTrigger value="archiv" className="flex items-center gap-2">
                 <Archive className="w-4 h-4" />
@@ -1873,6 +1878,85 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                     </Card>
                   )}
                 </div>
+              )}
+            </TabsContent>
+
+            {/* SYMPTOME TAB - Clarke Symptom Browser */}
+            <TabsContent value="symptome" className="space-y-4">
+              {!isClarkeLoaded ? (
+                <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
+                  <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p className="mb-3">Bitte zuerst die Clarke Materia Medica laden</p>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/databases/clarkeMateriaMedica.json');
+                        const data = await response.json();
+                        
+                        const symptomMap = new Map<string, string[]>();
+                        const remediesSet = new Set<string>();
+                        
+                        data.clinicalSymptoms.forEach((item: ClarkeSymptomEntry) => {
+                          item.remedies.forEach(remedy => {
+                            remediesSet.add(remedy);
+                            const existing = symptomMap.get(remedy) || [];
+                            if (!existing.includes(item.symptom)) {
+                              existing.push(item.symptom);
+                            }
+                            symptomMap.set(remedy, existing);
+                          });
+                        });
+                        
+                        const uniqueSymptoms = Array.from(new Set(
+                          data.clinicalSymptoms.map((item: ClarkeSymptomEntry) => item.symptom)
+                        )).sort() as string[];
+                        setAllClarkeSymptoms(uniqueSymptoms);
+                        
+                        setClarkeSymptomMap(symptomMap);
+                        setIsClarkeLoaded(true);
+                        
+                        const remedies = Array.from(remediesSet).sort();
+                        setWordInput(remedies.join('\n'));
+                        toast({
+                          title: "Clarke Materia Medica geladen",
+                          description: `${remedies.length} Mittel, ${uniqueSymptoms.length} Symptome bereit`,
+                        });
+                      } catch (error) {
+                        console.error('Error loading Clarke data:', error);
+                        toast({
+                          title: "Fehler beim Laden",
+                          description: "Clarke Materia Medica konnte nicht geladen werden",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
+                  >
+                    <Database className="w-4 h-4 mr-2" />
+                    Clarke Materia Medica laden
+                  </Button>
+                </div>
+              ) : (
+                <SymptomBrowser
+                  symptoms={allClarkeSymptoms}
+                  symptomMap={clarkeSymptomMap}
+                  onSymptomSelect={(symptom) => {
+                    setClarkeSymptomSearch(symptom);
+                    setActiveTab('test');
+                    toast({
+                      title: "Symptom-Filter gesetzt",
+                      description: `Ergebnisse werden nach "${symptom}" gefiltert`,
+                    });
+                  }}
+                  onRemediesSelect={(remedies) => {
+                    setWordInput(remedies.join('\n'));
+                    setActiveTab('test');
+                    toast({
+                      title: "Mittel geladen",
+                      description: `${remedies.length} Mittel für das Symptom bereit zur Analyse`,
+                    });
+                  }}
+                />
               )}
             </TabsContent>
 
