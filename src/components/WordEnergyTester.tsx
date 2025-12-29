@@ -45,7 +45,10 @@ import {
   FolderOpen,
   Plus,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Brain,
+  Bone,
+  Utensils
 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
@@ -56,6 +59,12 @@ import { useToast } from '@/hooks/use-toast';
 import type { KlientenFeldErgebnis } from '@/utils/clientFieldAlgorithms';
 import { MERIDIANS, getAllMeridianPointsFlat, getTotalPointCount, getMeridianStats } from '@/utils/meridianPointsDatabase';
 import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics } from '@/utils/anatomyDatabases';
+
+// Clarke Materia Medica Symptom-Mapping
+interface ClarkeSymptomEntry {
+  symptom: string;
+  remedies: string[];
+}
 
 interface WordEnergyTestResult {
   word: string;
@@ -73,6 +82,8 @@ interface WordEnergyTestResult {
   // Kohärente Harmonisierung Felder
   harmonisierungsWort: string;
   harmonisierungsRate: number;
+  // Clarke Materia Medica Symptome (optional)
+  clarkeSymptoms?: string[];
 }
 
 interface ArchivedTest {
@@ -120,7 +131,7 @@ interface HarmonizationState {
   inPulsePhase: boolean;
 }
 
-type SortField = 'word' | 'resonanz' | 'intensität' | 'polaritätWert' | 'dominanteEbene' | 'copenRate';
+type SortField = 'word' | 'resonanz' | 'intensität' | 'polaritätWert' | 'dominanteEbene' | 'copenRate' | 'symptomCount';
 type SortDirection = 'asc' | 'desc';
 type PolaritätFilter = 'alle' | 'positiv' | 'negativ' | 'neutral';
 type TestMode = 'parallel' | 'sequentiell';
@@ -192,6 +203,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [isLoadingLists, setIsLoadingLists] = useState(false);
   const [isSavingList, setIsSavingList] = useState(false);
   
+  // Clarke Materia Medica Symptom-Map (Remedy -> Symptoms)
+  const [clarkeSymptomMap, setClarkeSymptomMap] = useState<Map<string, string[]>>(new Map());
+  const [isClarkeLoaded, setIsClarkeLoaded] = useState(false);
   // Effektiver Fokus (Kategorie oder Custom Keywords)
   const effectiveFokus = useMemo(() => {
     if (customFokus.trim()) return customFokus.trim();
@@ -473,6 +487,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         case 'copenRate':
           comparison = a.copenRate - b.copenRate;
           break;
+        case 'symptomCount':
+          comparison = (a.clarkeSymptoms?.length || 0) - (b.clarkeSymptoms?.length || 0);
+          break;
       }
       return sortDirection === 'desc' ? -comparison : comparison;
     });
@@ -546,6 +563,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
     const harmonisierungsRateResult = calculateCopenRate(harmonisierungsWort, 0, 'D', 'latin');
     const harmonisierungsRate = harmonisierungsRateResult.rate;
     
+    // Clarke Symptome zuordnen (falls verfügbar) - NUR für Anzeige, nicht für Rate-Berechnung
+    const clarkeSymptoms = clarkeSymptomMap.get(word) || [];
+    
     return {
       word,
       copenRate,
@@ -560,9 +580,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       dominanteEbeneWert: Math.round(dominanteEbeneWert * 10) / 10,
       ebenVerteilung,
       harmonisierungsWort,
-      harmonisierungsRate
+      harmonisierungsRate,
+      clarkeSymptoms: clarkeSymptoms.length > 0 ? clarkeSymptoms : undefined
     };
-  }, [effectiveFokus, fokusGewichtung]);
+  }, [effectiveFokus, fokusGewichtung, clarkeSymptomMap]);
 
   // Custom Fokus zur Historie hinzufügen
   const addToFokusHistory = useCallback((fokus: string) => {
@@ -1113,15 +1134,30 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                               try {
                                 const response = await fetch('/databases/clarkeMateriaMedica.json');
                                 const data = await response.json();
+                                
+                                // Build symptom map: Remedy -> Symptoms[]
+                                const symptomMap = new Map<string, string[]>();
                                 const remediesSet = new Set<string>();
-                                data.clinicalSymptoms.forEach((item: { remedies: string[] }) => {
-                                  item.remedies.forEach(remedy => remediesSet.add(remedy));
+                                
+                                data.clinicalSymptoms.forEach((item: ClarkeSymptomEntry) => {
+                                  item.remedies.forEach(remedy => {
+                                    remediesSet.add(remedy);
+                                    const existing = symptomMap.get(remedy) || [];
+                                    if (!existing.includes(item.symptom)) {
+                                      existing.push(item.symptom);
+                                    }
+                                    symptomMap.set(remedy, existing);
+                                  });
                                 });
+                                
+                                setClarkeSymptomMap(symptomMap);
+                                setIsClarkeLoaded(true);
+                                
                                 const remedies = Array.from(remediesSet).sort();
                                 setWordInput(remedies.join('\n'));
                                 toast({
                                   title: "Clarke Materia Medica geladen",
-                                  description: `${remedies.length} homöopathische Mittel bereit zur Analyse`,
+                                  description: `${remedies.length} Mittel mit Symptom-Zuordnung bereit`,
                                 });
                               } catch (error) {
                                 console.error('Error loading Clarke data:', error);
@@ -1133,9 +1169,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                               }
                             }}
                             disabled={isTesting}
+                            className={isClarkeLoaded ? "border-green-500/50 bg-green-500/10" : ""}
                           >
                             <Database className="w-4 h-4 mr-1" />
-                            Clarke Materia Medica
+                            Clarke Materia Medica {isClarkeLoaded && "✓"}
                           </Button>
                         </div>
                       </div>
@@ -1160,8 +1197,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                               disabled={isTesting}
                               className="border-primary/30 hover:border-primary"
                             >
-                              {key === 'zns' && <Atom className="w-4 h-4 mr-1" />}
+                              {key === 'zns' && <Brain className="w-4 h-4 mr-1" />}
                               {key === 'herzKreislauf' && <Heart className="w-4 h-4 mr-1" />}
+                              {key === 'verdauung' && <Utensils className="w-4 h-4 mr-1" />}
+                              {key === 'bewegungsapparat' && <Bone className="w-4 h-4 mr-1" />}
                               {db.name} ({db.totalEntries})
                             </Button>
                           ))}
@@ -1340,6 +1379,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 <SelectItem value="dominanteEbene">Ebene</SelectItem>
                                 <SelectItem value="copenRate">Copen-Rate</SelectItem>
                                 <SelectItem value="word">Wort (A-Z)</SelectItem>
+                                {isClarkeLoaded && <SelectItem value="symptomCount">Symptom-Anzahl</SelectItem>}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1497,6 +1537,28 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                                 </Badge>
                               </div>
                             </div>
+
+                            {/* Clarke Symptome anzeigen */}
+                            {result.clarkeSymptoms && result.clarkeSymptoms.length > 0 && (
+                              <details className="mt-3 border-t pt-2">
+                                <summary className="text-xs text-primary cursor-pointer hover:text-primary/80 flex items-center gap-1">
+                                  <Database className="w-3 h-3" />
+                                  Clarke-Symptome ({result.clarkeSymptoms.length})
+                                </summary>
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {result.clarkeSymptoms.slice(0, 20).map((symptom, sIdx) => (
+                                    <Badge key={sIdx} variant="secondary" className="text-[10px] font-normal">
+                                      {symptom}
+                                    </Badge>
+                                  ))}
+                                  {result.clarkeSymptoms.length > 20 && (
+                                    <Badge variant="outline" className="text-[10px]">
+                                      +{result.clarkeSymptoms.length - 20} weitere
+                                    </Badge>
+                                  )}
+                                </div>
+                              </details>
+                            )}
 
                             <details className="mt-3">
                               <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
