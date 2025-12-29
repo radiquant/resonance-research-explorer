@@ -498,7 +498,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const calculateResonanz = (copenRate: number, clientWellenfunktion: number): number => {
     const ratio = copenRate / (clientWellenfunktion || 1);
     const normalized = Math.abs(1 - (ratio % 1));
-    return Math.min(100, normalized * 100 + (Math.random() * 15));
+    // Deterministischer Jitter basierend auf Rate statt Math.random()
+    const deterministicJitter = ((copenRate % 1000) / 1000) * 15;
+    return Math.min(100, normalized * 100 + deterministicJitter);
   };
 
   const calculateIntensität = (copenRate: number, resonanz: number): number => {
