@@ -9,6 +9,7 @@ const corsHeaders = {
 interface HarmonizationSession {
   id: string;
   user_id: string;
+  patient_id: string;
   status: string;
   duration_seconds: number;
   remaining_seconds: number | null;
@@ -82,30 +83,51 @@ serve(async (req) => {
     );
 
     // 2. Aktive Sessions ticken lassen (Heartbeat, Restzeit, Abschluss)
-    const { data: activeSessions, error: fetchActiveError } = await supabase
+    // WICHTIG: "Continuous" Sessions nutzen extrem große duration_seconds (z.B. 10 Jahre),
+    // um unbegrenzte Harmonisierung zu simulieren. Diese dürfen die Tick-Pipeline nicht verstopfen.
+    // Daher priorisieren wir "finite" Sessions und behandeln sehr lange Sessions separat.
+    const CONTINUOUS_THRESHOLD_SECONDS = 31_536_000; // 1 Jahr
+
+    const { data: finiteSessions, error: fetchFiniteError } = await supabase
       .from('harmonization_sessions_v2')
       .select('*')
       .eq('status', 'running')
+      .lt('duration_seconds', CONTINUOUS_THRESHOLD_SECONDS)
       .order('job_last_heartbeat', { ascending: true, nullsFirst: true })
       .order('created_at', { ascending: true })
       .limit(100);
 
-    if (fetchActiveError) {
-      console.error('❌ Fehler beim Abrufen der aktiven Sessions:', fetchActiveError);
-      throw fetchActiveError;
+    if (fetchFiniteError) {
+      console.error('❌ Fehler beim Abrufen der aktiven (finite) Sessions:', fetchFiniteError);
+      throw fetchFiniteError;
     }
 
-    console.log(`⏱️ Aktive Sessions: ${activeSessions?.length || 0}`);
+    const { data: continuousSessions, error: fetchContinuousError } = await supabase
+      .from('harmonization_sessions_v2')
+      .select('*')
+      .eq('status', 'running')
+      .gte('duration_seconds', CONTINUOUS_THRESHOLD_SECONDS)
+      .order('job_last_heartbeat', { ascending: true, nullsFirst: true })
+      .order('created_at', { ascending: true })
+      .limit(25);
+
+    if (fetchContinuousError) {
+      console.error('❌ Fehler beim Abrufen der aktiven (continuous) Sessions:', fetchContinuousError);
+      throw fetchContinuousError;
+    }
+
+    console.log(`⏱️ Aktive Sessions (finite): ${finiteSessions?.length || 0}`);
+    console.log(`♾️ Aktive Sessions (continuous): ${continuousSessions?.length || 0}`);
+
+    const allRunning = [...(finiteSessions || []), ...(continuousSessions || [])] as HarmonizationSession[];
 
     // 2a. Sessions die "running" sind aber noch keinen Heartbeat haben, initialisieren
-    const uninitializedSessions = (activeSessions || []).filter(
-      (s: HarmonizationSession) => !s.job_last_heartbeat
-    );
-    
+    const uninitializedSessions = allRunning.filter((s) => !s.job_last_heartbeat);
+
     for (const session of uninitializedSessions) {
       const nowIso = new Date().toISOString();
       console.log(`🔧 Initialisiere Session ${session.id} mit erstem Heartbeat`);
-      
+
       await supabase
         .from('harmonization_sessions_v2')
         .update({
@@ -116,8 +138,20 @@ serve(async (req) => {
         .eq('id', session.id);
     }
 
-    // Filter: nur Sessions mit Heartbeat für Tick-Logik
-    const sessionsToTick = (activeSessions || []).filter(
+    // 2b. Continuous Sessions: nur Heartbeat aktualisieren (keine Restzeit-Berechnung)
+    // → verhindert "Hängen" bei kurzen Sessions durch Worker-Limit.
+    for (const session of (continuousSessions || []) as HarmonizationSession[]) {
+      const nowIso = new Date().toISOString();
+      await supabase
+        .from('harmonization_sessions_v2')
+        .update({
+          job_last_heartbeat: nowIso,
+        })
+        .eq('id', session.id);
+    }
+
+    // Nur finite Sessions mit Heartbeat ticken
+    const sessionsToTick = (finiteSessions || []).filter(
       (s: HarmonizationSession) => s.job_last_heartbeat !== null
     );
 
@@ -172,8 +206,37 @@ serve(async (req) => {
             }
 
             console.log(`✅ Session ${session.id} abgeschlossen`);
+
+            // Sequenziell weiterlaufen: nächstes queued Item (gleicher User + Patient) automatisch starten
+            const { data: nextQueued } = await supabase
+              .from('harmonization_sessions_v2')
+              .select('id, duration_seconds')
+              .eq('status', 'queued')
+              .eq('user_id', session.user_id)
+              .eq('patient_id', session.patient_id)
+              .order('created_at', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+
+            if (nextQueued?.id) {
+              const nowIso = now.toISOString();
+              console.log(`➡️ Starte nächstes queued Item: ${nextQueued.id}`);
+
+              await supabase
+                .from('harmonization_sessions_v2')
+                .update({
+                  status: 'running',
+                  job_started_at: nowIso,
+                  job_last_heartbeat: nowIso,
+                  started_at: nowIso,
+                  remaining_seconds: nextQueued.duration_seconds,
+                  progress: 0,
+                })
+                .eq('id', nextQueued.id);
+            }
+
             return { id: session.id, status: 'completed' };
-          } else {
+          }
             // Heartbeat + Fortschritt
             const { error: hbError } = await supabase
               .from('harmonization_sessions_v2')

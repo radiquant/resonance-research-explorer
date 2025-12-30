@@ -41,6 +41,7 @@ export const SessionStatusList: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [nowTs, setNowTs] = useState(() => Date.now());
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -84,6 +85,11 @@ export const SessionStatusList: React.FC = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
   // Lade Patienteninfo wenn Session ausgewählt wird
   useEffect(() => {
     if (!selectedSession) {
@@ -97,7 +103,7 @@ export const SessionStatusList: React.FC = () => {
         .select('id, first_name, last_name')
         .eq('id', selectedSession.patient_id)
         .maybeSingle();
-      
+
       if (data) {
         setPatientInfo(data);
       }
@@ -139,15 +145,46 @@ export const SessionStatusList: React.FC = () => {
 
   const formatDuration = (seconds: number | null): string => {
     if (seconds === null || seconds === undefined) return '--:--:--';
-    
+
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
       return `${hours}h ${minutes}m ${secs}s`;
     }
     return `${minutes}m ${secs}s`;
+  };
+
+  const getEffectiveElapsedSeconds = (elapsed: number, session: SessionStatus) => {
+    if (!session.pulse_pause_active || !session.pulse_seconds || !session.pause_seconds) return elapsed;
+
+    const cycleLength = session.pulse_seconds + session.pause_seconds;
+    const cycles = Math.floor(elapsed / cycleLength);
+    const remainder = elapsed % cycleLength;
+
+    // Nur die Impuls-Zeiten zählen als effektive Zeit
+    let effectiveElapsed = cycles * session.pulse_seconds;
+    if (remainder <= session.pulse_seconds) {
+      effectiveElapsed += remainder;
+    } else {
+      effectiveElapsed += session.pulse_seconds;
+    }
+
+    return effectiveElapsed;
+  };
+
+  // UI-Countdown: zeigt Restzeit auch zwischen Worker-Ticks sauber an
+  const getDisplayRemainingSeconds = (session: SessionStatus) => {
+    const base = session.remaining_seconds ?? session.duration_seconds;
+    if (session.status !== 'running') return base;
+    if (!session.job_last_heartbeat) return base;
+
+    const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
+    const elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
+    const effectiveElapsed = getEffectiveElapsedSeconds(elapsed, session);
+
+    return Math.max(0, base - effectiveElapsed);
   };
 
   const handleSessionClick = (session: SessionStatus) => {
@@ -343,7 +380,7 @@ export const SessionStatusList: React.FC = () => {
                       <span>{session.progress}%</span>
                       <span className="flex items-center gap-1">
                         <Timer className="w-3 h-3" />
-                        {formatDuration(session.remaining_seconds)}
+                        {formatDuration(getDisplayRemainingSeconds(session))}
                       </span>
                       {session.pulse_pause_active && (
                         <span className="flex items-center gap-1 text-purple-400">
@@ -411,7 +448,7 @@ export const SessionStatusList: React.FC = () => {
                     <Timer className="w-3 h-3" />
                     Verbleibend
                   </div>
-                  <div className="font-semibold text-lg">{formatDuration(selectedSession.remaining_seconds)}</div>
+                  <div className="font-semibold text-lg">{formatDuration(getDisplayRemainingSeconds(selectedSession))}</div>
                 </div>
                 <div className="p-3 bg-muted/30 rounded-lg">
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
