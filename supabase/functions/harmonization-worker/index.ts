@@ -236,7 +236,7 @@ serve(async (req) => {
             }
 
             return { id: session.id, status: 'completed' };
-          }
+          } else {
             // Heartbeat + Fortschritt
             const { error: hbError } = await supabase
               .from('harmonization_sessions_v2')
