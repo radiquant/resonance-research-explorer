@@ -14,6 +14,7 @@ interface HarmonizationSession {
   remaining_seconds: number | null;
   job_started_at: string | null;
   job_last_heartbeat: string | null;
+  started_at: string | null;
   pulse_seconds: number | null;
   pause_seconds: number | null;
   pulse_pause_active: boolean | null;
@@ -32,7 +33,7 @@ serve(async (req) => {
 
     console.log('🔄 Harmonization Worker gestartet');
 
-    // 1. Pending Sessions auf "active" setzen (Start)
+    // 1. Pending Sessions auf "running" setzen (Start)
     const { data: pendingSessions, error: fetchPendingError } = await supabase
       .from('harmonization_sessions_v2')
       .select('*')
@@ -85,8 +86,6 @@ serve(async (req) => {
       .from('harmonization_sessions_v2')
       .select('*')
       .eq('status', 'running')
-      // WICHTIG: Bei vielen parallelen Sessions immer die ÄLTESTEN Heartbeats zuerst ticken,
-      // sonst bleiben Sessions > limit(100) dauerhaft „stehen“.
       .order('job_last_heartbeat', { ascending: true, nullsFirst: true })
       .order('created_at', { ascending: true })
       .limit(100);
@@ -98,13 +97,35 @@ serve(async (req) => {
 
     console.log(`⏱️ Aktive Sessions: ${activeSessions?.length || 0}`);
 
+    // 2a. Sessions die "running" sind aber noch keinen Heartbeat haben, initialisieren
+    const uninitializedSessions = (activeSessions || []).filter(
+      (s: HarmonizationSession) => !s.job_last_heartbeat
+    );
+    
+    for (const session of uninitializedSessions) {
+      const nowIso = new Date().toISOString();
+      console.log(`🔧 Initialisiere Session ${session.id} mit erstem Heartbeat`);
+      
+      await supabase
+        .from('harmonization_sessions_v2')
+        .update({
+          job_last_heartbeat: nowIso,
+          job_started_at: session.job_started_at || nowIso,
+          remaining_seconds: session.remaining_seconds ?? session.duration_seconds,
+        })
+        .eq('id', session.id);
+    }
+
+    // Filter: nur Sessions mit Heartbeat für Tick-Logik
+    const sessionsToTick = (activeSessions || []).filter(
+      (s: HarmonizationSession) => s.job_last_heartbeat !== null
+    );
+
     const tickResults = await Promise.all(
-      (activeSessions || []).map(async (session: HarmonizationSession) => {
+      sessionsToTick.map(async (session: HarmonizationSession) => {
         try {
           const now = new Date();
-          const last = session.job_last_heartbeat
-            ? new Date(session.job_last_heartbeat)
-            : (session.started_at ? new Date(session.started_at) : new Date());
+          const last = new Date(session.job_last_heartbeat!);
 
           let elapsed = Math.floor((now.getTime() - last.getTime()) / 1000);
           if (!Number.isFinite(elapsed) || elapsed < 1) elapsed = 1;
@@ -180,13 +201,15 @@ serve(async (req) => {
     const started = startResults.filter(r => r.status === 'started').length;
     const completed = tickResults.filter(r => r.status === 'completed').length;
     const ticked = tickResults.filter(r => r.status === 'ticked').length;
+    const initialized = uninitializedSessions.length;
 
-    console.log(`✅ Worker abgeschlossen: gestartet=${started}, getickt=${ticked}, abgeschlossen=${completed}`);
+    console.log(`✅ Worker abgeschlossen: gestartet=${started}, initialisiert=${initialized}, getickt=${ticked}, abgeschlossen=${completed}`);
 
     return new Response(
       JSON.stringify({
         message: 'Harmonization Worker abgeschlossen',
         started,
+        initialized,
         ticked,
         completed,
         startResults,

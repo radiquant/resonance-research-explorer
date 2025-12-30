@@ -218,16 +218,28 @@ export const SessionStatusList: React.FC = () => {
     }
   };
 
-  // Session sofort starten (pending -> running)
+  // Session sofort starten (queued/pending -> running)
   const handleStartSession = async (sessionId: string) => {
     setIsUpdating(true);
     try {
+      const nowIso = new Date().toISOString();
+      
+      // Hole aktuelle Session-Daten für korrekte Initialisierung
+      const { data: currentSession } = await supabase
+        .from('harmonization_sessions_v2')
+        .select('duration_seconds, remaining_seconds')
+        .eq('id', sessionId)
+        .maybeSingle();
+
       const { error } = await supabase
         .from('harmonization_sessions_v2')
         .update({ 
           status: 'running',
-          job_started_at: new Date().toISOString(),
-          started_at: new Date().toISOString()
+          job_started_at: nowIso,
+          job_last_heartbeat: nowIso,
+          started_at: nowIso,
+          remaining_seconds: currentSession?.remaining_seconds ?? currentSession?.duration_seconds ?? 60,
+          progress: 0
         })
         .eq('id', sessionId);
 
@@ -242,7 +254,7 @@ export const SessionStatusList: React.FC = () => {
       });
       
       if (selectedSession) {
-        setSelectedSession({ ...selectedSession, status: 'running' });
+        setSelectedSession({ ...selectedSession, status: 'running', progress: 0 });
       }
     } catch (error) {
       console.error('Fehler beim Starten:', error);
