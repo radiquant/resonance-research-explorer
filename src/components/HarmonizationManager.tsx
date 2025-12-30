@@ -76,7 +76,112 @@ interface HarmonizationManagerProps {
 }
 
 // ========================
-// COMPONENT
+// SESSION CARD COMPONENT (memoized for realtime countdown)
+// ========================
+
+interface SessionCardProps {
+  session: SessionStatus;
+  nowTs: number;
+  onStart: (id: string) => void;
+  onPause: (id: string) => void;
+  onResume: (id: string) => void;
+  onSelect: (session: SessionStatus) => void;
+  formatDuration: (seconds: number | null) => string;
+  getStatusBadge: (status: string) => React.ReactNode;
+}
+
+const SessionCard: React.FC<SessionCardProps> = ({
+  session,
+  nowTs,
+  onStart,
+  onPause,
+  onResume,
+  onSelect,
+  formatDuration,
+  getStatusBadge
+}) => {
+  // Calculate remaining seconds with live countdown
+  const getDisplayRemainingSeconds = (): number => {
+    const base = session.remaining_seconds ?? session.duration_seconds;
+    if (session.status !== 'running' || !session.job_last_heartbeat) return base;
+
+    const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
+    let elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
+
+    // Apply pulse/pause calculation
+    if (session.pulse_pause_active && session.pulse_seconds && session.pause_seconds) {
+      const cycleLength = session.pulse_seconds + session.pause_seconds;
+      const cycles = Math.floor(elapsed / cycleLength);
+      const remainder = elapsed % cycleLength;
+      elapsed = cycles * session.pulse_seconds + Math.min(remainder, session.pulse_seconds);
+    }
+
+    return Math.max(0, base - elapsed);
+  };
+
+  const remaining = getDisplayRemainingSeconds();
+  const progressPercent = session.duration_seconds > 0
+    ? Math.round(((session.duration_seconds - remaining) / session.duration_seconds) * 100)
+    : session.progress;
+
+  return (
+    <div
+      className="p-3 bg-muted/30 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+      onClick={() => onSelect(session)}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex-1 min-w-0 mr-3">
+          <p className="font-medium text-sm truncate">{session.word}</p>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+            <span className="flex items-center gap-1">
+              <Timer className="w-3 h-3" />
+              {formatDuration(remaining)}
+            </span>
+            <span>{progressPercent}%</span>
+            {session.pulse_pause_active && (
+              <span className="flex items-center gap-1 text-purple-400">
+                <Zap className="w-3 h-3" />
+                {session.pulse_seconds}s/{session.pause_seconds}s
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {getStatusBadge(session.status)}
+          
+          {session.status === 'queued' && (
+            <Button size="sm" variant="ghost" onClick={(e) => {
+              e.stopPropagation();
+              onStart(session.id);
+            }}>
+              <Play className="w-4 h-4" />
+            </Button>
+          )}
+          {session.status === 'running' && (
+            <Button size="sm" variant="ghost" onClick={(e) => {
+              e.stopPropagation();
+              onPause(session.id);
+            }}>
+              <Pause className="w-4 h-4" />
+            </Button>
+          )}
+          {session.status === 'paused' && (
+            <Button size="sm" variant="ghost" onClick={(e) => {
+              e.stopPropagation();
+              onResume(session.id);
+            }}>
+              <Play className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+      <Progress value={progressPercent} className="h-1" />
+    </div>
+  );
+};
+
+// ========================
+// MAIN COMPONENT
 // ========================
 
 const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
@@ -717,71 +822,22 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
             ) : (
               <ScrollArea className="h-[400px]">
                 <div className="space-y-2 pr-4">
-                  {sessions.map(session => {
-                    const remaining = getDisplayRemainingSeconds(session);
-                    const progressPercent = session.duration_seconds > 0
-                      ? Math.round(((session.duration_seconds - remaining) / session.duration_seconds) * 100)
-                      : session.progress;
-
-                    return (
-                      <div
-                        key={session.id}
-                        className="p-3 bg-muted/30 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                        onClick={() => {
-                          setSelectedSession(session);
-                          setDetailDialogOpen(true);
-                        }}
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex-1 min-w-0 mr-3">
-                            <p className="font-medium text-sm truncate">{session.word}</p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-                              <span className="flex items-center gap-1">
-                                <Timer className="w-3 h-3" />
-                                {formatDuration(remaining)}
-                              </span>
-                              <span>{progressPercent}%</span>
-                              {session.pulse_pause_active && (
-                                <span className="flex items-center gap-1 text-purple-400">
-                                  <Zap className="w-3 h-3" />
-                                  {session.pulse_seconds}s/{session.pause_seconds}s
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(session.status)}
-                            
-                            {session.status === 'queued' && (
-                              <Button size="sm" variant="ghost" onClick={(e) => {
-                                e.stopPropagation();
-                                startSession(session.id);
-                              }}>
-                                <Play className="w-4 h-4" />
-                              </Button>
-                            )}
-                            {session.status === 'running' && (
-                              <Button size="sm" variant="ghost" onClick={(e) => {
-                                e.stopPropagation();
-                                pauseSession(session.id);
-                              }}>
-                                <Pause className="w-4 h-4" />
-                              </Button>
-                            )}
-                            {session.status === 'paused' && (
-                              <Button size="sm" variant="ghost" onClick={(e) => {
-                                e.stopPropagation();
-                                resumeSession(session.id);
-                              }}>
-                                <Play className="w-4 h-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                        <Progress value={progressPercent} className="h-1" />
-                      </div>
-                    );
-                  })}
+                  {sessions.map(session => (
+                    <SessionCard
+                      key={session.id}
+                      session={session}
+                      nowTs={nowTs}
+                      onStart={startSession}
+                      onPause={pauseSession}
+                      onResume={resumeSession}
+                      onSelect={(s) => {
+                        setSelectedSession(s);
+                        setDetailDialogOpen(true);
+                      }}
+                      formatDuration={formatDuration}
+                      getStatusBadge={getStatusBadge}
+                    />
+                  ))}
                 </div>
               </ScrollArea>
             )}
