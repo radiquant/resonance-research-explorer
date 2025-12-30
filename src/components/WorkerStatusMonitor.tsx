@@ -43,12 +43,12 @@ export const WorkerStatusMonitor: React.FC = () => {
           .from('harmonization_sessions_v2')
           .select('id, status, job_last_heartbeat')
           .eq('user_id', user.id)
-          .in('status', ['running', 'pending']);
+          .in('status', ['running', 'pending', 'queued']);
 
         if (error) throw error;
 
         const runningSessions = sessions?.filter(s => s.status === 'running') || [];
-        const pendingSessionsList = sessions?.filter(s => s.status === 'pending') || [];
+        const pendingSessionsList = sessions?.filter(s => s.status === 'pending' || s.status === 'queued') || [];
         
         setActiveSessions(runningSessions.length);
         setPendingSessions(pendingSessionsList.length);

@@ -38,6 +38,7 @@ serve(async (req) => {
       .select('*')
       .eq('status', 'pending')
       .is('job_started_at', null)
+      .order('created_at', { ascending: true })
       .limit(25);
 
     if (fetchPendingError) {
@@ -84,6 +85,10 @@ serve(async (req) => {
       .from('harmonization_sessions_v2')
       .select('*')
       .eq('status', 'running')
+      // WICHTIG: Bei vielen parallelen Sessions immer die ÄLTESTEN Heartbeats zuerst ticken,
+      // sonst bleiben Sessions > limit(100) dauerhaft „stehen“.
+      .order('job_last_heartbeat', { ascending: true, nullsFirst: true })
+      .order('created_at', { ascending: true })
       .limit(100);
 
     if (fetchActiveError) {
