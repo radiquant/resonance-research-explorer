@@ -13,9 +13,10 @@ import {
   Eye, 
   Fingerprint,
   Shield,
+  Layers,
+  Network,
   Database,
   Download,
-  Layers,
   ChevronRight
 } from 'lucide-react';
 import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics, getAllAnatomyEntries } from '@/utils/anatomyDatabases';
@@ -37,6 +38,8 @@ const DATABASE_ICONS: Record<string, React.ReactNode> = {
   sinnesorgane: <Eye className="w-5 h-5" />,
   haut: <Fingerprint className="w-5 h-5" />,
   immunLymph: <Shield className="w-5 h-5" />,
+  faszien: <Layers className="w-5 h-5" />,
+  peripheresNervensystem: <Network className="w-5 h-5" />,
 };
 
 const DATABASE_COLORS: Record<string, string> = {
@@ -50,6 +53,8 @@ const DATABASE_COLORS: Record<string, string> = {
   sinnesorgane: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
   haut: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
   immunLymph: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+  faszien: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
+  peripheresNervensystem: 'text-cyan-500 bg-cyan-500/10 border-cyan-500/20',
 };
 
 const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDatabaseOverviewProps) => {
