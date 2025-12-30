@@ -179,23 +179,79 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     loadTemplates();
   }, [loadSessions, loadTemplates]);
 
-  // Polling + Realtime for sessions
+  // Track previous session IDs to detect completions
+  const [previousSessionIds, setPreviousSessionIds] = useState<Set<string>>(new Set());
+
+  // Polling + Realtime for sessions with completion detection
   useEffect(() => {
     if (!user || !patientId) return;
 
-    const interval = setInterval(loadSessions, 5000);
+    const checkForCompletions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('harmonization_sessions_v2')
+          .select('id, word, status, progress, remaining_seconds, duration_seconds, job_last_heartbeat, pulse_pause_active, pulse_seconds, pause_seconds, copen_rate, created_at')
+          .eq('user_id', user.id)
+          .eq('patient_id', patientId)
+          .in('status', ['queued', 'pending', 'running', 'paused'])
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+        
+        const newData = data as SessionStatus[] || [];
+        const newIds = new Set(newData.map(s => s.id));
+        
+        // Find sessions that were active before but are no longer in the active list
+        previousSessionIds.forEach(async (oldId) => {
+          if (!newIds.has(oldId)) {
+            // This session is no longer active - check if it completed
+            const { data: completedSession } = await supabase
+              .from('harmonization_sessions_v2')
+              .select('word, status')
+              .eq('id', oldId)
+              .maybeSingle();
+            
+            if (completedSession?.status === 'completed') {
+              toast({
+                title: "✅ Session abgeschlossen",
+                description: `"${completedSession.word.substring(0, 50)}..." ist fertig`,
+              });
+            }
+          }
+        });
+        
+        setPreviousSessionIds(newIds);
+        setSessions(newData);
+        setIsLoadingSessions(false);
+      } catch (error) {
+        console.error('Error loading sessions:', error);
+        setIsLoadingSessions(false);
+      }
+    };
+
+    checkForCompletions();
+    const interval = setInterval(checkForCompletions, 5000);
 
     const channel = supabase
       .channel(`harmonization-manager-${patientId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'harmonization_sessions_v2',
           filter: `patient_id=eq.${patientId}`
         },
-        () => loadSessions()
+        (payload) => {
+          const updated = payload.new as any;
+          if (updated.status === 'completed') {
+            toast({
+              title: "✅ Session abgeschlossen",
+              description: `"${updated.word?.substring(0, 50) || 'Session'}..." ist fertig`,
+            });
+          }
+          checkForCompletions();
+        }
       )
       .subscribe();
 
@@ -203,7 +259,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [user, patientId, loadSessions]);
+  }, [user, patientId, toast, previousSessionIds]);
 
   // Live timer update
   useEffect(() => {
