@@ -8,6 +8,7 @@ import {
   Music, 
   Flower2, 
   Pill,
+  Bug,
   Database,
   Download,
   Layers,
@@ -33,6 +34,7 @@ const DATABASE_ICONS: Record<string, React.ReactNode> = {
   solfeggio: <Music className="w-5 h-5" />,
   bachBlueten: <Flower2 className="w-5 h-5" />,
   schuesslerSalze: <Pill className="w-5 h-5" />,
+  nosoden: <Bug className="w-5 h-5" />,
 };
 
 const DATABASE_COLORS: Record<string, string> = {
@@ -41,6 +43,7 @@ const DATABASE_COLORS: Record<string, string> = {
   solfeggio: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
   bachBlueten: 'text-pink-500 bg-pink-500/10 border-pink-500/20',
   schuesslerSalze: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+  nosoden: 'text-red-500 bg-red-500/10 border-red-500/20',
 };
 
 const FrequencyDatabaseOverview = ({ onLoadDatabase, disabled = false }: FrequencyDatabaseOverviewProps) => {
@@ -70,7 +73,7 @@ const FrequencyDatabaseOverview = ({ onLoadDatabase, disabled = false }: Frequen
               Frequenz-Datenbanken
             </CardTitle>
             <CardDescription>
-              Bioresonanz, Rife, Solfeggio, Bach-Blüten & Schüssler-Salze
+              Bioresonanz, Rife, Solfeggio, Bach-Blüten, Schüssler-Salze & Nosoden
             </CardDescription>
           </div>
           <Badge variant="secondary" className="text-lg px-3 py-1">

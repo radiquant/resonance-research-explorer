@@ -6,6 +6,7 @@ import RIFE_DATABASE, { getAllRifeEntries } from './rifeDatabase';
 import SOLFEGGIO_DATABASE, { getAllSolfeggioEntries } from './solfeggioDatabase';
 import BACH_BLUETEN_DATABASE, { getAllBachBluetenEntries } from './bachBluetenDatabase';
 import SCHUESSLER_SALZE_DATABASE, { getAllSchuesslerSalzeEntries } from './schuesslerSalzeDatabase';
+import NOSODEN_DATABASE, { getAllNosodenEntries } from './nosodenDatabase';
 
 // Typ für Frequenz-Datenbanken
 export interface FrequencyDatabase {
@@ -27,6 +28,7 @@ export const FREQUENCY_DATABASES: { [key: string]: FrequencyDatabase } = {
   solfeggio: SOLFEGGIO_DATABASE,
   bachBlueten: BACH_BLUETEN_DATABASE,
   schuesslerSalze: SCHUESSLER_SALZE_DATABASE,
+  nosoden: NOSODEN_DATABASE,
 };
 
 // Statistik über alle Datenbanken
@@ -55,6 +57,7 @@ export {
   SOLFEGGIO_DATABASE, getAllSolfeggioEntries,
   BACH_BLUETEN_DATABASE, getAllBachBluetenEntries,
   SCHUESSLER_SALZE_DATABASE, getAllSchuesslerSalzeEntries,
+  NOSODEN_DATABASE, getAllNosodenEntries,
 };
 
 // Alle Einträge aller Datenbanken
@@ -65,6 +68,7 @@ export const getAllFrequencyEntries = (): string[] => {
     ...getAllSolfeggioEntries(),
     ...getAllBachBluetenEntries(),
     ...getAllSchuesslerSalzeEntries(),
+    ...getAllNosodenEntries(),
   ];
 };
 
@@ -76,6 +80,7 @@ export const getEntriesForFrequencyDatabase = (databaseKey: string): string[] =>
     case 'solfeggio': return getAllSolfeggioEntries();
     case 'bachBlueten': return getAllBachBluetenEntries();
     case 'schuesslerSalze': return getAllSchuesslerSalzeEntries();
+    case 'nosoden': return getAllNosodenEntries();
     default: return [];
   }
 };
