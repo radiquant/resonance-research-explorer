@@ -911,8 +911,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const durationPerItem = Math.floor(totalDurationSeconds / topItems.length);
 
       // Create individual harmonization sessions for each item
-      // Sessions are created with status 'pending' and NO job_started_at
-      // They will NOT start automatically - user must start them via SessionStatusList
+      // Sessions are created with status 'queued' and NO job_started_at
+      // → sie starten NICHT automatisch. Der Benutzer startet sie explizit in der SessionStatusList.
       const sessionsToCreate = topItems.map(item => ({
         user_id: user.id,
         patient_id: patientId,
@@ -921,12 +921,12 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         tested_potency: 'D0',
         duration_seconds: durationPerItem,
         remaining_seconds: durationPerItem,
-        status: 'pending' as const,
+        status: 'queued' as const,
         pulse_pause_active: harmonization.pulseDuration !== harmonization.pauseDuration || harmonization.pulseDuration !== 5,
         pulse_seconds: harmonization.pulseDuration,
         pause_seconds: harmonization.pauseDuration,
         progress: 0
-        // NO job_started_at - sessions won't start automatically
+        // NO job_started_at
       }));
 
       const { data, error } = await supabase
@@ -1022,13 +1022,13 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Cancel all pending/running sessions for this patient that we just created
+      // Cancel all queued/pending/running sessions for this patient that we just created
       await supabase
         .from('harmonization_sessions_v2')
         .update({ status: 'cancelled' })
         .eq('patient_id', patientId)
         .eq('user_id', user.id)
-        .in('status', ['pending', 'running', 'paused']);
+        .in('status', ['queued', 'pending', 'running', 'paused']);
 
       setHarmonization({
         isActive: false,
@@ -1066,7 +1066,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         .select('*')
         .eq('patient_id', patientId)
         .eq('user_id', user.id)
-        .in('status', ['pending', 'running', 'paused'])
+        .in('status', ['queued', 'pending', 'running', 'paused'])
         .order('created_at', { ascending: true });
 
       if (activeSessions && activeSessions.length > 0) {

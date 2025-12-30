@@ -52,7 +52,7 @@ export const SessionStatusList: React.FC = () => {
         .from('harmonization_sessions_v2')
         .select('id, word, status, job_last_heartbeat, job_started_at, progress, patient_id, remaining_seconds, duration_seconds, pulse_pause_active, pulse_seconds, pause_seconds, copen_rate, tested_potency, created_at')
         .eq('user_id', user.id)
-        .in('status', ['running', 'pending', 'paused'])
+        .in('status', ['running', 'pending', 'paused', 'queued'])
         .order('created_at', { ascending: false });
 
       if (!error && data) {
@@ -106,29 +106,32 @@ export const SessionStatusList: React.FC = () => {
     loadPatient();
   }, [selectedSession]);
 
-  const getWorkerStatus = (session: SessionStatus): 'active' | 'idle' | 'pending' | 'paused' => {
+  const getWorkerStatus = (session: SessionStatus): 'active' | 'idle' | 'pending' | 'paused' | 'queued' => {
+    if (session.status === 'queued') return 'queued';
     if (session.status === 'pending') return 'pending';
     if (session.status === 'paused') return 'paused';
     if (!session.job_last_heartbeat) return 'idle';
-    
+
     const heartbeat = new Date(session.job_last_heartbeat);
     const now = new Date();
     const diff = now.getTime() - heartbeat.getTime();
-    
+
     return diff < 120000 ? 'active' : 'idle';
   };
 
-  const getStatusBadge = (status: 'active' | 'idle' | 'pending' | 'paused') => {
+  const getStatusBadge = (status: 'active' | 'idle' | 'pending' | 'paused' | 'queued') => {
     const colors = {
       active: 'bg-green-500',
       idle: 'bg-yellow-500',
       pending: 'bg-blue-500',
+      queued: 'bg-slate-500',
       paused: 'bg-orange-500'
     };
     const labels = {
       active: 'Aktiv',
-      idle: 'Bereit',
+      idle: 'Inaktiv',
       pending: 'Wartet',
+      queued: 'Bereit',
       paused: 'Pausiert'
     };
     return <Badge className={colors[status]}>{labels[status]}</Badge>;
@@ -287,7 +290,21 @@ export const SessionStatusList: React.FC = () => {
     }
   };
 
-  if (sessions.length === 0) return null;
+  if (sessions.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="py-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            Session-Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="py-3">
+          <div className="text-sm text-muted-foreground">Keine aktiven Harmonisierungen.</div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <>
@@ -472,7 +489,7 @@ export const SessionStatusList: React.FC = () => {
                   </Button>
                 )}
                 
-                {selectedSession.status === 'pending' && (
+                {(selectedSession.status === 'pending' || selectedSession.status === 'queued') && (
                   <Button 
                     variant="outline" 
                     onClick={() => handleStartSession(selectedSession.id)}
