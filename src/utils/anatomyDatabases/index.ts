@@ -11,6 +11,8 @@ import ENDOKRINES_DATABASE, { getAllEndokrinesEntries } from './endokrinesDataba
 import SINNESORGANE_DATABASE, { getAllSinnesorganeEntries } from './sinnesorganeDatabase';
 import HAUT_DATABASE, { getAllHautEntries } from './hautDatabase';
 import IMMUN_LYMPH_DATABASE, { getAllImmunLymphEntries } from './immunLymphDatabase';
+import FASZIEN_DATABASE, { getAllFaszienEntries } from './faszienDatabase';
+import PERIPHERES_NERVENSYSTEM_DATABASE, { getAllPeripheresNervensystemEntries } from './peripheresNervensystemDatabase';
 
 // Typ für anatomische Datenbanken
 export interface AnatomyDatabase {
@@ -37,6 +39,8 @@ export const ANATOMY_DATABASES: { [key: string]: AnatomyDatabase } = {
   sinnesorgane: SINNESORGANE_DATABASE,
   haut: HAUT_DATABASE,
   immunLymph: IMMUN_LYMPH_DATABASE,
+  faszien: FASZIEN_DATABASE,
+  peripheresNervensystem: PERIPHERES_NERVENSYSTEM_DATABASE,
 };
 
 // Statistik über alle Datenbanken
@@ -70,6 +74,8 @@ export {
   SINNESORGANE_DATABASE, getAllSinnesorganeEntries,
   HAUT_DATABASE, getAllHautEntries,
   IMMUN_LYMPH_DATABASE, getAllImmunLymphEntries,
+  FASZIEN_DATABASE, getAllFaszienEntries,
+  PERIPHERES_NERVENSYSTEM_DATABASE, getAllPeripheresNervensystemEntries,
 };
 
 // Alle Einträge aller Datenbanken
@@ -85,6 +91,8 @@ export const getAllAnatomyEntries = (): string[] => {
     ...getAllSinnesorganeEntries(),
     ...getAllHautEntries(),
     ...getAllImmunLymphEntries(),
+    ...getAllFaszienEntries(),
+    ...getAllPeripheresNervensystemEntries(),
   ];
 };
 
@@ -101,6 +109,8 @@ export const getEntriesForDatabase = (databaseKey: string): string[] => {
     case 'sinnesorgane': return getAllSinnesorganeEntries();
     case 'haut': return getAllHautEntries();
     case 'immunLymph': return getAllImmunLymphEntries();
+    case 'faszien': return getAllFaszienEntries();
+    case 'peripheresNervensystem': return getAllPeripheresNervensystemEntries();
     default: return [];
   }
 };
