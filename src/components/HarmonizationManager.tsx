@@ -119,10 +119,24 @@ const SessionCard: React.FC<SessionCardProps> = ({
     return Math.max(0, base - elapsed);
   };
 
+  // Determine if currently in pulse or pause phase
+  const getPulsePhase = (): 'pulse' | 'pause' | null => {
+    if (!session.pulse_pause_active || !session.pulse_seconds || !session.pause_seconds) return null;
+    if (session.status !== 'running' || !session.job_last_heartbeat) return null;
+
+    const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
+    const elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
+    const cycleLength = session.pulse_seconds + session.pause_seconds;
+    const positionInCycle = elapsed % cycleLength;
+
+    return positionInCycle < session.pulse_seconds ? 'pulse' : 'pause';
+  };
+
   const remaining = getDisplayRemainingSeconds();
   const progressPercent = session.duration_seconds > 0
     ? Math.round(((session.duration_seconds - remaining) / session.duration_seconds) * 100)
     : session.progress;
+  const pulsePhase = getPulsePhase();
 
   return (
     <div
@@ -139,9 +153,17 @@ const SessionCard: React.FC<SessionCardProps> = ({
             </span>
             <span>{progressPercent}%</span>
             {session.pulse_pause_active && (
-              <span className="flex items-center gap-1 text-purple-400">
-                <Zap className="w-3 h-3" />
-                {session.pulse_seconds}s/{session.pause_seconds}s
+              <span className="flex items-center gap-1">
+                {pulsePhase === 'pulse' ? (
+                  <Zap className="w-3 h-3 text-green-400 animate-pulse" />
+                ) : pulsePhase === 'pause' ? (
+                  <Pause className="w-3 h-3 text-orange-400 animate-pulse" />
+                ) : (
+                  <Zap className="w-3 h-3 text-purple-400" />
+                )}
+                <span className={pulsePhase === 'pulse' ? 'text-green-400' : pulsePhase === 'pause' ? 'text-orange-400' : 'text-purple-400'}>
+                  {session.pulse_seconds}s/{session.pause_seconds}s
+                </span>
               </span>
             )}
           </div>
@@ -239,7 +261,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
         .eq('user_id', user.id)
         .eq('patient_id', patientId)
         .in('status', ['queued', 'pending', 'running', 'paused'])
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setSessions(data as SessionStatus[] || []);
@@ -301,12 +323,12 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
           .eq('user_id', user.id)
           .eq('patient_id', patientId)
           .in('status', ['queued', 'pending', 'running', 'paused'])
-          .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        const newData = (data as SessionStatus[]) || [];
-        const newIds = new Set(newData.map((s) => s.id));
+      const newData = (data as SessionStatus[]) || [];
+      const newIds = new Set(newData.map((s) => s.id));
 
         const prevIds = previousSessionIdsRef.current;
         const removedIds = Array.from(prevIds).filter((id) => !newIds.has(id));
@@ -600,8 +622,42 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     const queuedSessions = sessions.filter(s => s.status === 'queued');
     if (queuedSessions.length === 0) return;
 
-    // Start only the first queued session - the worker will handle the rest sequentially
-    await startSession(queuedSessions[0].id);
+    // Start ALL queued sessions in parallel
+    const nowIso = new Date().toISOString();
+    
+    try {
+      const { error } = await supabase
+        .from('harmonization_sessions_v2')
+        .update({
+          status: 'running',
+          job_started_at: nowIso,
+          job_last_heartbeat: nowIso,
+          started_at: nowIso,
+          progress: 0
+        })
+        .eq('user_id', user?.id)
+        .eq('patient_id', patientId)
+        .eq('status', 'queued');
+
+      if (error) throw error;
+
+      // Trigger worker
+      await supabase.functions.invoke('harmonization-worker');
+
+      toast({
+        title: "Alle Sessions gestartet",
+        description: `${queuedSessions.length} Harmonisierungen laufen parallel`,
+      });
+
+      await loadSessions();
+    } catch (error: any) {
+      console.error('Error starting all sessions:', error);
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   // ========================
