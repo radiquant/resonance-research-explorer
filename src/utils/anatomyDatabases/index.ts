@@ -10,6 +10,7 @@ import UROGENITAL_DATABASE, { getAllUrogenitalEntries } from './urogenitalDataba
 import ENDOKRINES_DATABASE, { getAllEndokrinesEntries } from './endokrinesDatabase';
 import SINNESORGANE_DATABASE, { getAllSinnesorganeEntries } from './sinnesorganeDatabase';
 import HAUT_DATABASE, { getAllHautEntries } from './hautDatabase';
+import IMMUN_LYMPH_DATABASE, { getAllImmunLymphEntries } from './immunLymphDatabase';
 
 // Typ für anatomische Datenbanken
 export interface AnatomyDatabase {
@@ -35,6 +36,7 @@ export const ANATOMY_DATABASES: { [key: string]: AnatomyDatabase } = {
   endokrines: ENDOKRINES_DATABASE,
   sinnesorgane: SINNESORGANE_DATABASE,
   haut: HAUT_DATABASE,
+  immunLymph: IMMUN_LYMPH_DATABASE,
 };
 
 // Statistik über alle Datenbanken
@@ -67,6 +69,7 @@ export {
   ENDOKRINES_DATABASE, getAllEndokrinesEntries,
   SINNESORGANE_DATABASE, getAllSinnesorganeEntries,
   HAUT_DATABASE, getAllHautEntries,
+  IMMUN_LYMPH_DATABASE, getAllImmunLymphEntries,
 };
 
 // Alle Einträge aller Datenbanken
