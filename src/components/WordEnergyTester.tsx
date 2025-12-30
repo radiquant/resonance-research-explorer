@@ -938,9 +938,13 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const { data, error } = await supabase
         .from('harmonization_sessions_v2')
         .insert(sessionsToCreate)
-        .select();
+        .select('id');
 
       if (error) throw error;
+
+      // Speichere die IDs der erstellten Sessions für dieses Fenster
+      const createdIds = (data || []).map((s: { id: string }) => s.id);
+      setManagedSessionIds(createdIds);
 
       // DO NOT trigger worker here - sessions should wait for explicit user action
       // The user will start sessions via the SessionStatusList "Starten" button
@@ -1036,13 +1040,25 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Cancel all queued/pending/running sessions for this patient that we just created
+      // Nur Sessions abbrechen, die in DIESEM Fenster erstellt wurden
+      if (managedSessionIds.length === 0) {
+        toast({
+          title: "Hinweis",
+          description: "Keine Sessions zum Abbrechen. Nutze den Harmonisierung-Tab für globale Verwaltung.",
+        });
+        setHarmonization(prev => ({ ...prev, isActive: false }));
+        return;
+      }
+
       await supabase
         .from('harmonization_sessions_v2')
-        .update({ status: 'cancelled' })
-        .eq('patient_id', patientId)
+        .update({ status: 'cancelled', completed_at: new Date().toISOString() })
         .eq('user_id', user.id)
+        .in('id', managedSessionIds)
         .in('status', ['queued', 'pending', 'running', 'paused']);
+
+      // Clear managed IDs nach Abbruch
+      setManagedSessionIds([]);
 
       setHarmonization({
         isActive: false,
@@ -1060,7 +1076,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
       toast({
         title: "Harmonisierung abgebrochen",
-        description: "Alle laufenden Sessions wurden beendet",
+        description: "Die Sessions dieses Fensters wurden beendet",
       });
     } catch (error) {
       console.error('Error cancelling harmonization:', error);
