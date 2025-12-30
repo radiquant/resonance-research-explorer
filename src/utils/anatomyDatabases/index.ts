@@ -99,6 +99,7 @@ export const getEntriesForDatabase = (databaseKey: string): string[] => {
     case 'endokrines': return getAllEndokrinesEntries();
     case 'sinnesorgane': return getAllSinnesorganeEntries();
     case 'haut': return getAllHautEntries();
+    case 'immunLymph': return getAllImmunLymphEntries();
     default: return [];
   }
 };
