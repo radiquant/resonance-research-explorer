@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -179,8 +179,10 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     loadTemplates();
   }, [loadSessions, loadTemplates]);
 
-  // Track previous session IDs to detect completions
-  const [previousSessionIds, setPreviousSessionIds] = useState<Set<string>>(new Set());
+  // Track previous active sessions to detect completions (without re-subscribing on every poll)
+  const previousSessionIdsRef = useRef<Set<string>>(new Set());
+  const completionToastIdsRef = useRef<Set<string>>(new Set());
+  const completionNudgeIdsRef = useRef<Set<string>>(new Set());
 
   // Polling + Realtime for sessions with completion detection
   useEffect(() => {
@@ -197,34 +199,35 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-        
-        const newData = data as SessionStatus[] || [];
-        const newIds = new Set(newData.map(s => s.id));
-        
-        // Find sessions that were active before but are no longer in the active list
-        previousSessionIds.forEach(async (oldId) => {
-          if (!newIds.has(oldId)) {
-            // This session is no longer active - check if it completed
-            const { data: completedSession } = await supabase
-              .from('harmonization_sessions_v2')
-              .select('word, status')
-              .eq('id', oldId)
-              .maybeSingle();
-            
-            if (completedSession?.status === 'completed') {
+
+        const newData = (data as SessionStatus[]) || [];
+        const newIds = new Set(newData.map((s) => s.id));
+
+        const prevIds = previousSessionIdsRef.current;
+        const removedIds = Array.from(prevIds).filter((id) => !newIds.has(id));
+
+        if (removedIds.length > 0) {
+          const { data: removedSessions } = await supabase
+            .from('harmonization_sessions_v2')
+            .select('id, word, status')
+            .in('id', removedIds);
+
+          (removedSessions || []).forEach((s: any) => {
+            if (s.status === 'completed' && !completionToastIdsRef.current.has(s.id)) {
+              completionToastIdsRef.current.add(s.id);
               toast({
-                title: "✅ Session abgeschlossen",
-                description: `"${completedSession.word.substring(0, 50)}..." ist fertig`,
+                title: '✅ Session abgeschlossen',
+                description: `"${String(s.word || '').substring(0, 50)}..." ist fertig`,
               });
             }
-          }
-        });
-        
-        setPreviousSessionIds(newIds);
+          });
+        }
+
+        previousSessionIdsRef.current = newIds;
         setSessions(newData);
-        setIsLoadingSessions(false);
       } catch (error) {
         console.error('Error loading sessions:', error);
+      } finally {
         setIsLoadingSessions(false);
       }
     };
@@ -237,19 +240,27 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: '*',
           schema: 'public',
           table: 'harmonization_sessions_v2',
-          filter: `patient_id=eq.${patientId}`
+          filter: `patient_id=eq.${patientId}`,
         },
         (payload) => {
           const updated = payload.new as any;
-          if (updated.status === 'completed') {
+
+          // Only toast for the current user/patient
+          if (
+            updated?.user_id === user.id &&
+            updated.status === 'completed' &&
+            !completionToastIdsRef.current.has(updated.id)
+          ) {
+            completionToastIdsRef.current.add(updated.id);
             toast({
-              title: "✅ Session abgeschlossen",
+              title: '✅ Session abgeschlossen',
               description: `"${updated.word?.substring(0, 50) || 'Session'}..." ist fertig`,
             });
           }
+
           checkForCompletions();
         }
       )
@@ -259,13 +270,60 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [user, patientId, toast, previousSessionIds]);
+  }, [user, patientId, toast]);
 
   // Live timer update
   useEffect(() => {
     const timer = setInterval(() => setNowTs(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // UI-Sync: Wenn der Countdown (UI) auf 0 ist, der Backend-Worker aber noch nicht getickt hat,
+  // triggern wir EINMAL den Worker, damit Status/Queue sofort weiterläuft.
+  useEffect(() => {
+    if (!user || !patientId) return;
+
+    // Clean up IDs that are no longer running
+    const runningIds = new Set(sessions.filter((s) => s.status === 'running').map((s) => s.id));
+    completionNudgeIdsRef.current.forEach((id) => {
+      if (!runningIds.has(id)) completionNudgeIdsRef.current.delete(id);
+    });
+
+    const getRemainingForNudge = (session: SessionStatus) => {
+      const base = session.remaining_seconds ?? session.duration_seconds;
+      if (session.status !== 'running' || !session.job_last_heartbeat) return base;
+
+      const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
+      let elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
+
+      if (session.pulse_pause_active && session.pulse_seconds && session.pause_seconds) {
+        const cycleLength = session.pulse_seconds + session.pause_seconds;
+        const cycles = Math.floor(elapsed / cycleLength);
+        const remainder = elapsed % cycleLength;
+        elapsed = cycles * session.pulse_seconds + Math.min(remainder, session.pulse_seconds);
+      }
+
+      return Math.max(0, base - elapsed);
+    };
+
+    const shouldNudge = sessions.some((s) => {
+      if (s.status !== 'running') return false;
+      const remaining = getRemainingForNudge(s);
+      return remaining <= 0 && !completionNudgeIdsRef.current.has(s.id);
+    });
+
+    if (!shouldNudge) return;
+
+    sessions.forEach((s) => {
+      if (s.status !== 'running') return;
+      const remaining = getRemainingForNudge(s);
+      if (remaining <= 0) completionNudgeIdsRef.current.add(s.id);
+    });
+
+    supabase.functions.invoke('harmonization-worker').catch((err) => {
+      console.error('Failed to nudge harmonization-worker:', err);
+    });
+  }, [sessions, nowTs, user, patientId]);
 
   // ========================
   // SESSION ACTIONS
