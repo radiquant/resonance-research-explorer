@@ -174,6 +174,19 @@ export const SessionStatusList: React.FC = () => {
     return effectiveElapsed;
   };
 
+  // Determine if currently in pulse or pause phase
+  const getPulsePhase = (session: SessionStatus): 'pulse' | 'pause' | null => {
+    if (!session.pulse_pause_active || !session.pulse_seconds || !session.pause_seconds) return null;
+    if (session.status !== 'running' || !session.job_last_heartbeat) return null;
+
+    const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
+    const elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
+    const cycleLength = session.pulse_seconds + session.pause_seconds;
+    const positionInCycle = elapsed % cycleLength;
+
+    return positionInCycle < session.pulse_seconds ? 'pulse' : 'pause';
+  };
+
   // UI-Countdown: zeigt Restzeit auch zwischen Worker-Ticks sauber an
   const getDisplayRemainingSeconds = (session: SessionStatus) => {
     const base = session.remaining_seconds ?? session.duration_seconds;
@@ -366,8 +379,9 @@ export const SessionStatusList: React.FC = () => {
         </CardHeader>
         <CardContent className="py-3">
           <div className="space-y-1">
-            {sessions.map(session => {
+          {sessions.map(session => {
               const workerStatus = getWorkerStatus(session);
+              const pulsePhase = getPulsePhase(session);
               return (
                 <div 
                   key={session.id} 
@@ -383,9 +397,17 @@ export const SessionStatusList: React.FC = () => {
                         {formatDuration(getDisplayRemainingSeconds(session))}
                       </span>
                       {session.pulse_pause_active && (
-                        <span className="flex items-center gap-1 text-purple-400">
-                          <Zap className="w-3 h-3" />
-                          P/P
+                        <span className="flex items-center gap-1">
+                          {pulsePhase === 'pulse' ? (
+                            <Zap className="w-3 h-3 text-green-400 animate-pulse" />
+                          ) : pulsePhase === 'pause' ? (
+                            <Pause className="w-3 h-3 text-orange-400 animate-pulse" />
+                          ) : (
+                            <Zap className="w-3 h-3 text-purple-400" />
+                          )}
+                          <span className={pulsePhase === 'pulse' ? 'text-green-400' : pulsePhase === 'pause' ? 'text-orange-400' : 'text-purple-400'}>
+                            P/P
+                          </span>
                         </span>
                       )}
                     </div>
