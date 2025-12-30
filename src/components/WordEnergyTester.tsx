@@ -201,6 +201,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   const [showHarmonization, setShowHarmonization] = useState(false);
   const [harmonizationItemCount, setHarmonizationItemCount] = useState<21 | 42 | 63>(21);
   const harmonizationIntervalRef = useState<NodeJS.Timeout | null>(null);
+
+  // Schutz für Multi-Session-Harmonisierungen:
+  // Steuer-/Abbruch-Buttons in diesem Tab dürfen nur Sessions beeinflussen,
+  // die in DIESEM Fenster/Context erzeugt wurden.
+  const [managedSessionIds, setManagedSessionIds] = useState<string[]>([]);
   
   // Sortier- und Filter-State
   const [sortField, setSortField] = useState<SortField>('resonanz');
@@ -976,14 +981,22 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Pause all running sessions for this patient
+      // Pause/Fortsetzen nur für Sessions, die in diesem Fenster erstellt wurden
+      if (managedSessionIds.length === 0) {
+        toast({
+          title: "Hinweis",
+          description: "Zum Schutz von Multi-Session-Harmonisierungen steuert dieser Button nur Sessions, die in diesem Fenster erstellt wurden. Bitte nutze den Harmonisierung-Tab zur Verwaltung.",
+        });
+        return;
+      }
+
       const newStatus = harmonization.isPaused ? 'running' : 'paused';
-      
+
       await supabase
         .from('harmonization_sessions_v2')
         .update({ status: newStatus })
-        .eq('patient_id', patientId)
         .eq('user_id', user.id)
+        .in('id', managedSessionIds)
         .in('status', ['running', 'paused']);
 
       setHarmonization(prev => ({
@@ -1058,6 +1071,23 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   useEffect(() => {
     if (!patientId) return;
 
+    // Wenn dieses Fenster keine Sessions verwaltet, zeigen wir hier nichts an.
+    // (Globale Verwaltung erfolgt im Tab "Harmonisierung" via HarmonizationManager.)
+    if (managedSessionIds.length === 0) {
+      setHarmonization(prev => ({
+        ...prev,
+        isActive: false,
+        isPaused: false,
+        selectedItems: [],
+        elapsedSeconds: 0,
+        remainingSeconds: 0,
+        totalDurationSeconds: 0,
+        currentItemIndex: 0,
+        inPulsePhase: false,
+      }));
+      return;
+    }
+
     const loadActiveSessions = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -1065,8 +1095,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const { data: activeSessions } = await supabase
         .from('harmonization_sessions_v2')
         .select('*')
-        .eq('patient_id', patientId)
         .eq('user_id', user.id)
+        .in('id', managedSessionIds)
         .in('status', ['queued', 'pending', 'running', 'paused'])
         .order('created_at', { ascending: true });
 
@@ -1092,7 +1122,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         const runningSession = activeSessions.find(s => s.status === 'running');
         const pausedSession = activeSessions.find(s => s.status === 'paused');
         const currentSession = runningSession || pausedSession || activeSessions[0];
-        const currentIndex = runningSession 
+        const currentIndex = runningSession
           ? activeSessions.findIndex(s => s.id === runningSession.id)
           : pausedSession
             ? activeSessions.findIndex(s => s.id === pausedSession.id)
@@ -1154,7 +1184,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
-  }, [patientId]);
+  }, [patientId, managedSessionIds]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
