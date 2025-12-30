@@ -84,6 +84,7 @@ export const getAllAnatomyEntries = (): string[] => {
     ...getAllEndokrinesEntries(),
     ...getAllSinnesorganeEntries(),
     ...getAllHautEntries(),
+    ...getAllImmunLymphEntries(),
   ];
 };
 
