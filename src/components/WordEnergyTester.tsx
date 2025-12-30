@@ -51,6 +51,7 @@ import {
   Utensils,
   Search
 } from 'lucide-react';
+import HarmonizationManager from './HarmonizationManager';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, LEVELS_DISPLAY, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
@@ -1183,17 +1184,21 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
         {clientResult && (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-7">
               <TabsTrigger value="test" className="flex items-center gap-2">
                 <Zap className="w-4 h-4" />
                 Test
+              </TabsTrigger>
+              <TabsTrigger value="harmonisierung" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Harmonisierung
               </TabsTrigger>
               <TabsTrigger value="anatomie" className="flex items-center gap-2">
                 <Bone className="w-4 h-4" />
                 Anatomie
               </TabsTrigger>
               <TabsTrigger value="frequenzen" className="flex items-center gap-2">
-                <Activity className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
                 Frequenzen
               </TabsTrigger>
               <TabsTrigger value="symptome" className="flex items-center gap-2">
@@ -2195,6 +2200,27 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                 }}
                 disabled={isTesting}
               />
+            </TabsContent>
+
+            {/* HARMONISIERUNG TAB - Neue saubere Engine */}
+            <TabsContent value="harmonisierung" className="space-y-4">
+              {patientId ? (
+                <HarmonizationManager
+                  patientId={patientId}
+                  clientName={clientName}
+                  clientRate={clientResult?.klientenWellenfunktion?.toString()}
+                  analysisResults={filteredAndSortedResults.map(r => ({
+                    word: r.harmonisierungsWort,
+                    rate: r.harmonisierungsRate,
+                    potency: 'D0'
+                  }))}
+                />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">
+                  <Activity className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                  <p>Bitte einen Klienten verknüpfen für Harmonisierung</p>
+                </div>
+              )}
             </TabsContent>
 
             {/* FREQUENZEN TAB */}
