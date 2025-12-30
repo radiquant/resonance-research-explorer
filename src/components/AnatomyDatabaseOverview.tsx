@@ -12,6 +12,7 @@ import {
   Gauge, 
   Eye, 
   Fingerprint,
+  Shield,
   Database,
   Download,
   Layers,
@@ -35,6 +36,7 @@ const DATABASE_ICONS: Record<string, React.ReactNode> = {
   endokrines: <Gauge className="w-5 h-5" />,
   sinnesorgane: <Eye className="w-5 h-5" />,
   haut: <Fingerprint className="w-5 h-5" />,
+  immunLymph: <Shield className="w-5 h-5" />,
 };
 
 const DATABASE_COLORS: Record<string, string> = {
@@ -47,6 +49,7 @@ const DATABASE_COLORS: Record<string, string> = {
   endokrines: 'text-teal-500 bg-teal-500/10 border-teal-500/20',
   sinnesorgane: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
   haut: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+  immunLymph: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
 };
 
 const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDatabaseOverviewProps) => {
