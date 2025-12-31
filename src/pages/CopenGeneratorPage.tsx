@@ -185,6 +185,7 @@ const CopenGeneratorPage: React.FC = () => {
       pulse_seconds: pulsePauseActive ? pulseSeconds : null,
       pause_seconds: pulsePauseActive ? pauseSeconds : null,
       pulse_pause_active: pulsePauseActive,
+      source_module: 'copen_v2'
     };
 
     const { error } = await supabase

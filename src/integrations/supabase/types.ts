@@ -269,6 +269,7 @@ export type Database = {
           pulse_pause_active: boolean | null
           pulse_seconds: number | null
           remaining_seconds: number | null
+          source_module: string | null
           started_at: string | null
           status: string
           tested_potency: string | null
@@ -291,6 +292,7 @@ export type Database = {
           pulse_pause_active?: boolean | null
           pulse_seconds?: number | null
           remaining_seconds?: number | null
+          source_module?: string | null
           started_at?: string | null
           status?: string
           tested_potency?: string | null
@@ -313,6 +315,7 @@ export type Database = {
           pulse_pause_active?: boolean | null
           pulse_seconds?: number | null
           remaining_seconds?: number | null
+          source_module?: string | null
           started_at?: string | null
           status?: string
           tested_potency?: string | null

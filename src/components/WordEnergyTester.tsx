@@ -935,7 +935,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         pulse_seconds: harmonization.pulseDuration,
         pause_seconds: harmonization.pauseDuration,
         progress: 0,
-        batch_id: batchId // Gruppierung aller Sessions dieser Analyse
+        batch_id: batchId, // Gruppierung aller Sessions dieser Analyse
+        source_module: 'word_energy'
         // NO job_started_at
       }));
 
