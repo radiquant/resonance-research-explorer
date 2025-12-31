@@ -147,9 +147,10 @@ interface WordEnergyTesterProps {
   clientResult: KlientenFeldErgebnis | null;
   clientName: string;
   patientId?: string;
+  sourceModule?: string; // 'morphic_field', 'word_energy', etc. - für Session-Isolation
 }
 
-const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTesterProps) => {
+const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 'morphic_field' }: WordEnergyTesterProps) => {
   const { toast } = useToast();
   const [wordInput, setWordInput] = useState('');
   const [isTesting, setIsTesting] = useState(false);
@@ -936,7 +937,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         pause_seconds: harmonization.pauseDuration,
         progress: 0,
         batch_id: batchId, // Gruppierung aller Sessions dieser Analyse
-        source_module: 'word_energy'
+        source_module: sourceModule
         // NO job_started_at
       }));
 
@@ -2257,6 +2258,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
                     rate: r.harmonisierungsRate,
                     potency: 'D0'
                   }))}
+                  sourceModule={sourceModule}
                 />
               ) : (
                 <div className="text-center py-8 text-muted-foreground bg-muted/30 rounded-lg">

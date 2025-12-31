@@ -73,6 +73,7 @@ interface HarmonizationManagerProps {
   clientName: string;
   clientRate?: string;
   analysisResults?: HarmonizationItem[];
+  sourceModule?: string; // z.B. 'word_energy', 'morphic_field', 'copen_v2' - für Session-Isolation
 }
 
 // ========================
@@ -210,7 +211,8 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   patientId,
   clientName,
   clientRate,
-  analysisResults = []
+  analysisResults = [],
+  sourceModule = 'harmonization_manager'
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -255,13 +257,20 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     if (!user || !patientId) return;
     
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('harmonization_sessions_v2')
         .select('id, word, status, progress, remaining_seconds, duration_seconds, job_last_heartbeat, pulse_pause_active, pulse_seconds, pause_seconds, copen_rate, created_at')
         .eq('user_id', user.id)
         .eq('patient_id', patientId)
         .in('status', ['queued', 'pending', 'running', 'paused'])
         .order('created_at', { ascending: false });
+
+      // Filter nach source_module für Modul-Isolation
+      if (sourceModule) {
+        query = query.eq('source_module', sourceModule);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setSessions(data as SessionStatus[] || []);
@@ -270,7 +279,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     } finally {
       setIsLoadingSessions(false);
     }
-  }, [user, patientId]);
+  }, [user, patientId, sourceModule]);
 
   const loadTemplates = useCallback(async () => {
     if (!user || !patientId) return;
@@ -317,13 +326,20 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
 
     const checkForCompletions = async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from('harmonization_sessions_v2')
           .select('id, word, status, progress, remaining_seconds, duration_seconds, job_last_heartbeat, pulse_pause_active, pulse_seconds, pause_seconds, copen_rate, created_at')
           .eq('user_id', user.id)
           .eq('patient_id', patientId)
           .in('status', ['queued', 'pending', 'running', 'paused'])
-        .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false });
+
+        // Filter nach source_module für Modul-Isolation
+        if (sourceModule) {
+          query = query.eq('source_module', sourceModule);
+        }
+
+        const { data, error } = await query;
 
       if (error) throw error;
 
@@ -397,7 +413,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       clearInterval(interval);
       supabase.removeChannel(channel);
     };
-  }, [user, patientId, toast]);
+  }, [user, patientId, toast, sourceModule]);
 
   // Live timer update
   useEffect(() => {
@@ -477,7 +493,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
         pulse_seconds: pulsePauseActive ? pulseSeconds : null,
         pause_seconds: pulsePauseActive ? pauseSeconds : null,
         progress: 0,
-        source_module: 'harmonization_manager'
+        source_module: sourceModule
       }));
 
       const { error } = await supabase
