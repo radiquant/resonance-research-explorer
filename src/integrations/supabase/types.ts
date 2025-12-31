@@ -255,6 +255,7 @@ export type Database = {
       }
       harmonization_sessions_v2: {
         Row: {
+          batch_id: string | null
           completed_at: string | null
           copen_rate: string | null
           created_at: string
@@ -276,6 +277,7 @@ export type Database = {
           word: string
         }
         Insert: {
+          batch_id?: string | null
           completed_at?: string | null
           copen_rate?: string | null
           created_at?: string
@@ -297,6 +299,7 @@ export type Database = {
           word: string
         }
         Update: {
+          batch_id?: string | null
           completed_at?: string | null
           copen_rate?: string | null
           created_at?: string
