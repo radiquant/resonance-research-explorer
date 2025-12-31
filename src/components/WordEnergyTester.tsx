@@ -55,6 +55,7 @@ import HarmonizationManager from './HarmonizationManager';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { calculateLevelResonance, LEVELS, LEVELS_DISPLAY, findHighestResonanceLevel, getLevelDisplayName } from '@/utils/levelResonance';
+import { getSessionTable, type SourceModule, prepareSessionInsert } from '@/utils/sessionTableRouter';
 import { calculateFokusResonanz, FOKUS_OPTIONS } from '@/utils/quantumFocusAlgorithm';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -151,6 +152,8 @@ interface WordEnergyTesterProps {
 }
 
 const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 'morphic_field' }: WordEnergyTesterProps) => {
+  // Bestimme die korrekte Tabelle basierend auf dem Modul
+  const sessionTable = getSessionTable(sourceModule as SourceModule);
   const { toast } = useToast();
   const [wordInput, setWordInput] = useState('');
   const [isTesting, setIsTesting] = useState(false);
@@ -923,26 +926,41 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
       // Create individual harmonization sessions for each item
       // Sessions are created with status 'queued' and NO job_started_at
       // → sie starten NICHT automatisch. Der Benutzer startet sie explizit in der SessionStatusList.
-      const sessionsToCreate = topItems.map(item => ({
-        user_id: user.id,
-        patient_id: patientId,
-        word: item.harmonisierungsWort,
-        copen_rate: item.harmonisierungsRate?.toString() || item.copenRate.toString(),
-        tested_potency: 'D0',
-        duration_seconds: durationPerItem,
-        remaining_seconds: durationPerItem,
-        status: 'queued' as const,
-        pulse_pause_active: harmonization.pulseDuration !== harmonization.pauseDuration || harmonization.pulseDuration !== 5,
-        pulse_seconds: harmonization.pulseDuration,
-        pause_seconds: harmonization.pauseDuration,
-        progress: 0,
-        batch_id: batchId, // Gruppierung aller Sessions dieser Analyse
-        source_module: sourceModule
-        // NO job_started_at
-      }));
+      const sessionsToCreate = topItems.map(item => {
+        const baseSession = {
+          user_id: user.id,
+          patient_id: patientId,
+          word: item.harmonisierungsWort,
+          copen_rate: item.harmonisierungsRate?.toString() || item.copenRate.toString(),
+          tested_potency: 'D0',
+          duration_seconds: durationPerItem,
+          remaining_seconds: durationPerItem,
+          status: 'queued' as const,
+          pulse_pause_active: harmonization.pulseDuration !== harmonization.pauseDuration || harmonization.pulseDuration !== 5,
+          pulse_seconds: harmonization.pulseDuration,
+          pause_seconds: harmonization.pauseDuration,
+          progress: 0,
+          batch_id: batchId,
+        };
+        
+        // Für morphic_field: keine source_module, dafür optionale Morphic-Feld-Daten
+        if (sourceModule === 'morphic_field') {
+          return {
+            ...baseSession,
+            // field_intensity und coherence können später bei Bedarf ergänzt werden
+          };
+        }
+        
+        // Für andere Module: source_module explizit setzen
+        return {
+          ...baseSession,
+          source_module: sourceModule,
+        };
+      });
 
+      // Verwende die korrekte Tabelle basierend auf sourceModule
       const { data, error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(sessionTable)
         .insert(sessionsToCreate)
         .select('id');
 
@@ -1003,7 +1021,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
       const newStatus = harmonization.isPaused ? 'running' : 'paused';
 
       await supabase
-        .from('harmonization_sessions_v2')
+        .from(sessionTable)
         .update({ status: newStatus })
         .eq('user_id', user.id)
         .in('id', managedSessionIds)
@@ -1057,7 +1075,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
       }
 
       await supabase
-        .from('harmonization_sessions_v2')
+        .from(sessionTable)
         .update({ status: 'cancelled', completed_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .in('id', managedSessionIds)
@@ -1107,7 +1125,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
       if (!user) return;
 
       const { data: activeSessions } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(sessionTable)
         .select('*')
         .eq('user_id', user.id)
         .in('id', managedSessionIds)
@@ -1181,13 +1199,13 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
 
     // Realtime subscription for instant updates
     const channel = supabase
-      .channel(`harmonization-${patientId}`)
+      .channel(`harmonization-${sourceModule}-${patientId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'harmonization_sessions_v2',
+          table: sessionTable,
           filter: `patient_id=eq.${patientId}`
         },
         () => loadActiveSessions()
