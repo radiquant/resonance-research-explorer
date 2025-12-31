@@ -916,6 +916,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
       const totalDurationSeconds = harmonization.maxDuration * 60;
       const durationPerItem = Math.floor(totalDurationSeconds / topItems.length);
 
+      // Erzeuge eine eindeutige Batch-ID für diese Analyse-Session
+      const batchId = crypto.randomUUID();
+
       // Create individual harmonization sessions for each item
       // Sessions are created with status 'queued' and NO job_started_at
       // → sie starten NICHT automatisch. Der Benutzer startet sie explizit in der SessionStatusList.
@@ -931,7 +934,8 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
         pulse_pause_active: harmonization.pulseDuration !== harmonization.pauseDuration || harmonization.pulseDuration !== 5,
         pulse_seconds: harmonization.pulseDuration,
         pause_seconds: harmonization.pauseDuration,
-        progress: 0
+        progress: 0,
+        batch_id: batchId // Gruppierung aller Sessions dieser Analyse
         // NO job_started_at
       }));
 
@@ -944,7 +948,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
 
       // Speichere die IDs der erstellten Sessions für dieses Fenster
       const createdIds = (data || []).map((s: { id: string }) => s.id);
-      setManagedSessionIds(createdIds);
+      setManagedSessionIds(prev => [...prev, ...createdIds]);
 
       // DO NOT trigger worker here - sessions should wait for explicit user action
       // The user will start sessions via the SessionStatusList "Starten" button
@@ -1084,23 +1088,15 @@ const WordEnergyTester = ({ clientResult, clientName, patientId }: WordEnergyTes
   };
 
   // Realtime subscription + Polling for harmonization updates
+  // NUR für Sessions, die in DIESEM Fenster erstellt wurden (managedSessionIds)
   useEffect(() => {
     if (!patientId) return;
 
-    // Wenn dieses Fenster keine Sessions verwaltet, zeigen wir hier nichts an.
-    // (Globale Verwaltung erfolgt im Tab "Harmonisierung" via HarmonizationManager.)
+    // Wenn dieses Fenster keine Sessions verwaltet, NICHT den Zustand zurücksetzen!
+    // Das würde parallele Analysen im anderen Fenster stören.
+    // Wir zeigen einfach nichts im Test-Tab an.
     if (managedSessionIds.length === 0) {
-      setHarmonization(prev => ({
-        ...prev,
-        isActive: false,
-        isPaused: false,
-        selectedItems: [],
-        elapsedSeconds: 0,
-        remainingSeconds: 0,
-        totalDurationSeconds: 0,
-        currentItemIndex: 0,
-        inPulsePhase: false,
-      }));
+      // KEIN Reset hier - nur Skip der Subscription
       return;
     }
 
