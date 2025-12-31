@@ -149,10 +149,6 @@ const SessionCard: React.FC<SessionCardProps> = ({
         <div className="flex-1 min-w-0 mr-3">
           <p className="font-medium text-sm truncate">{session.word}</p>
           <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
-            <span className="flex items-center gap-1">
-              <Timer className="w-3 h-3" />
-              {formatDuration(remaining)}
-            </span>
             <span>{progressPercent}%</span>
             {session.pulse_pause_active && (
               <span className="flex items-center gap-1">
@@ -168,6 +164,19 @@ const SessionCard: React.FC<SessionCardProps> = ({
                 </span>
               </span>
             )}
+          </div>
+        </div>
+        {/* Prominenter Timer */}
+        <div className="flex items-center gap-2 mr-3">
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-md font-mono text-sm ${
+            session.status === 'running' 
+              ? 'bg-green-500/20 text-green-400' 
+              : session.status === 'paused'
+              ? 'bg-orange-500/20 text-orange-400'
+              : 'bg-muted text-muted-foreground'
+          }`}>
+            <Timer className="w-4 h-4" />
+            <span className="font-bold">{formatDuration(remaining)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2">
