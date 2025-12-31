@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   Brain, 
   Heart, 
@@ -17,7 +19,9 @@ import {
   Network,
   Database,
   Download,
-  ChevronRight
+  ChevronRight,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { ANATOMY_DATABASES, getEntriesForDatabase, getAnatomyStatistics, getAllAnatomyEntries } from '@/utils/anatomyDatabases';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,6 +63,7 @@ const DATABASE_COLORS: Record<string, string> = {
 
 const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDatabaseOverviewProps) => {
   const stats = getAnatomyStatistics();
+  const [selectedSystems, setSelectedSystems] = useState<Set<string>>(new Set());
   
   const handleLoadAll = () => {
     const allEntries = getAllAnatomyEntries();
@@ -70,6 +75,51 @@ const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDa
     const entries = getEntriesForDatabase(key);
     onLoadDatabase(entries, db.name, entries.length);
   };
+
+  const handleLoadSelected = () => {
+    if (selectedSystems.size === 0) return;
+    
+    const combinedEntries: string[] = [];
+    const names: string[] = [];
+    
+    selectedSystems.forEach(key => {
+      const db = ANATOMY_DATABASES[key];
+      const entries = getEntriesForDatabase(key);
+      combinedEntries.push(...entries);
+      names.push(db.name);
+    });
+    
+    const combinedName = names.length <= 3 
+      ? names.join(' + ') 
+      : `${names.slice(0, 2).join(' + ')} +${names.length - 2} weitere`;
+    
+    onLoadDatabase(combinedEntries, combinedName, combinedEntries.length);
+    setSelectedSystems(new Set()); // Reset selection after loading
+  };
+
+  const toggleSelection = (key: string) => {
+    const newSelection = new Set(selectedSystems);
+    if (newSelection.has(key)) {
+      newSelection.delete(key);
+    } else {
+      newSelection.add(key);
+    }
+    setSelectedSystems(newSelection);
+  };
+
+  const selectAll = () => {
+    const allKeys = stats.databases.map(d => d.key);
+    setSelectedSystems(new Set(allKeys));
+  };
+
+  const clearSelection = () => {
+    setSelectedSystems(new Set());
+  };
+
+  // Berechne Gesamtanzahl der ausgewählten Einträge
+  const selectedEntryCount = Array.from(selectedSystems).reduce((sum, key) => {
+    return sum + (ANATOMY_DATABASES[key]?.totalEntries || 0);
+  }, 0);
 
   // Berechne Verteilung für Visualisierung
   const maxEntries = Math.max(...stats.databases.map(d => d.totalEntries));
@@ -125,23 +175,79 @@ const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDa
           </Card>
         </div>
 
-        {/* Alle Laden Button */}
-        <Button
-          onClick={handleLoadAll}
-          disabled={disabled}
-          className="w-full"
-          size="lg"
-        >
-          <Layers className="w-5 h-5 mr-2" />
-          Alle {stats.totalEntries.toLocaleString()} Strukturen laden
-          <ChevronRight className="w-4 h-4 ml-2" />
-        </Button>
+        {/* Mehrfachauswahl Controls */}
+        {selectedSystems.size > 0 && (
+          <Card className="bg-primary/10 border-primary/30">
+            <CardContent className="pt-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <Badge variant="default" className="text-base px-3 py-1">
+                    {selectedSystems.size} ausgewählt
+                  </Badge>
+                  <span className="text-sm text-muted-foreground">
+                    ({selectedEntryCount.toLocaleString()} Strukturen)
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearSelection}
+                  >
+                    <Square className="w-4 h-4 mr-1" />
+                    Auswahl leeren
+                  </Button>
+                  <Button
+                    onClick={handleLoadSelected}
+                    disabled={disabled}
+                    size="sm"
+                  >
+                    <Download className="w-4 h-4 mr-1" />
+                    Ausgewählte laden
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Datenbank-Tabelle */}
+        {/* Alle/Keine Auswahl Buttons */}
+        <div className="flex gap-2">
+          <Button
+            onClick={handleLoadAll}
+            disabled={disabled}
+            className="flex-1"
+            size="lg"
+          >
+            <Layers className="w-5 h-5 mr-2" />
+            Alle {stats.totalEntries.toLocaleString()} Strukturen laden
+            <ChevronRight className="w-4 h-4 ml-2" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={selectedSystems.size === stats.databases.length ? clearSelection : selectAll}
+            size="lg"
+          >
+            {selectedSystems.size === stats.databases.length ? (
+              <>
+                <Square className="w-4 h-4 mr-1" />
+                Keine
+              </>
+            ) : (
+              <>
+                <CheckSquare className="w-4 h-4 mr-1" />
+                Alle
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Datenbank-Tabelle mit Checkboxen */}
         <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">Wahl</TableHead>
                 <TableHead className="w-[250px]">Organsystem</TableHead>
                 <TableHead>Kategorie</TableHead>
                 <TableHead className="text-right">Strukturen</TableHead>
@@ -152,7 +258,17 @@ const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDa
             </TableHeader>
             <TableBody>
               {stats.databases.map((db) => (
-                <TableRow key={db.key} className="hover:bg-muted/50">
+                <TableRow 
+                  key={db.key} 
+                  className={`hover:bg-muted/50 cursor-pointer ${selectedSystems.has(db.key) ? 'bg-primary/10' : ''}`}
+                  onClick={() => toggleSelection(db.key)}
+                >
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedSystems.has(db.key)}
+                      onCheckedChange={() => toggleSelection(db.key)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded ${DATABASE_COLORS[db.key] || 'bg-muted'}`}>
@@ -183,7 +299,7 @@ const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDa
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="sm"
