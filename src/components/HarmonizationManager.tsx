@@ -488,23 +488,35 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       const totalDurationSeconds = durationMinutes * 60;
       const durationPerItem = Math.floor(totalDurationSeconds / items.length);
 
-      const sessionsToCreate = items.map(item => ({
-        user_id: user.id,
-        patient_id: patientId,
-        word: item.word,
-        copen_rate: item.rate?.toString() || clientRate || '',
-        tested_potency: item.potency || 'D0',
-        duration_seconds: durationPerItem,
-        remaining_seconds: durationPerItem,
-        status: 'queued' as const,
-        pulse_pause_active: pulsePauseActive,
-        pulse_seconds: pulsePauseActive ? pulseSeconds : null,
-        pause_seconds: pulsePauseActive ? pauseSeconds : null,
-        progress: 0,
-        source_module: sourceModule
-      }));
-
       const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+      
+      const sessionsToCreate = items.map(item => {
+        const baseSession = {
+          user_id: user.id,
+          patient_id: patientId,
+          word: item.word,
+          copen_rate: item.rate?.toString() || clientRate || '',
+          tested_potency: item.potency || 'D0',
+          duration_seconds: durationPerItem,
+          remaining_seconds: durationPerItem,
+          status: 'queued' as const,
+          pulse_pause_active: pulsePauseActive,
+          pulse_seconds: pulsePauseActive ? pulseSeconds : null,
+          pause_seconds: pulsePauseActive ? pauseSeconds : null,
+          progress: 0,
+        };
+        
+        // Für morphic_field_sessions: kein source_module Feld
+        if (tableName === 'morphic_field_sessions') {
+          return baseSession;
+        }
+        
+        // Für harmonization_sessions_v2: source_module hinzufügen
+        return {
+          ...baseSession,
+          source_module: sourceModule
+        };
+      });
       
       const { error } = await supabase
         .from(tableName as 'harmonization_sessions_v2')
@@ -530,17 +542,19 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   };
 
   const startSession = async (sessionId: string) => {
+    const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+    
     try {
       const nowIso = new Date().toISOString();
       
       const { data: session } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .select('duration_seconds, remaining_seconds')
         .eq('id', sessionId)
         .maybeSingle();
 
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .update({
           status: 'running',
           job_started_at: nowIso,
@@ -573,9 +587,11 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   };
 
   const pauseSession = async (sessionId: string) => {
+    const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+    
     try {
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .update({ status: 'paused' })
         .eq('id', sessionId);
 
@@ -589,9 +605,11 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   };
 
   const resumeSession = async (sessionId: string) => {
+    const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+    
     try {
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .update({ status: 'running' })
         .eq('id', sessionId);
 
@@ -605,9 +623,11 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   };
 
   const cancelSession = async (sessionId: string) => {
+    const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+    
     try {
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .update({ status: 'cancelled', completed_at: new Date().toISOString() })
         .eq('id', sessionId);
 
@@ -625,10 +645,11 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
 
   const cancelAllSessions = async () => {
     if (!user || !patientId) return;
+    const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
     
     try {
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .update({ status: 'cancelled', completed_at: new Date().toISOString() })
         .eq('user_id', user.id)
         .eq('patient_id', patientId)
@@ -647,12 +668,12 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     const queuedSessions = sessions.filter(s => s.status === 'queued');
     if (queuedSessions.length === 0) return;
 
-    // Start ALL queued sessions in parallel
+    const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
     const nowIso = new Date().toISOString();
     
     try {
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .update({
           status: 'running',
           job_started_at: nowIso,
