@@ -36,10 +36,12 @@ interface HarmonizationSession {
 
 interface HarmonizationArchiveCloudProps {
   patientId?: string;
+  sourceModule?: string; // Filter für source_module (z.B. 'copen_v2', 'word_energy', 'morphic_field')
 }
 
 const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({ 
-  patientId
+  patientId,
+  sourceModule
 }) => {
   const [sessions, setSessions] = useState<HarmonizationSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,7 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
         supabase.removeChannel(channel);
       };
     }
-  }, [user, patientId]);
+  }, [user, patientId, sourceModule]);
 
   const loadSessions = async () => {
     try {
@@ -96,6 +98,11 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
 
       if (patientId) {
         query = query.eq('patient_id', patientId);
+      }
+
+      // Filter nach source_module wenn angegeben
+      if (sourceModule) {
+        query = query.eq('source_module', sourceModule);
       }
 
       const { data, error } = await query;

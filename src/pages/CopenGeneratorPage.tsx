@@ -376,6 +376,7 @@ const CopenGeneratorPage: React.FC = () => {
             />
             <HarmonizationArchiveCloud
               patientId={selectedPatient?.id}
+              sourceModule="copen_v2"
             />
           </div>
 

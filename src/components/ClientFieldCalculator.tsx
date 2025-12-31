@@ -985,6 +985,7 @@ const ClientFieldCalculator = () => {
               clientResult={result} 
               clientName={`${vornamen} ${nachname}`.trim()}
               patientId={selectedPatientId || undefined}
+              sourceModule="morphic_field"
             />
           )}
         </CardContent>
