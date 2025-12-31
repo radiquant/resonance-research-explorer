@@ -855,6 +855,36 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   const queuedCount = sessions.filter(s => s.status === 'queued').length;
   const pausedCount = sessions.filter(s => s.status === 'paused').length;
 
+  // Calculate total remaining time for all active sessions
+  const calculateTotalRemaining = (): number => {
+    return sessions
+      .filter(s => s.status === 'running' || s.status === 'paused' || s.status === 'queued')
+      .reduce((total, session) => {
+        const base = session.remaining_seconds ?? session.duration_seconds;
+        if (session.status !== 'running' || !session.job_last_heartbeat) {
+          return total + base;
+        }
+        const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
+        let elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
+        if (session.pulse_pause_active && session.pulse_seconds && session.pause_seconds) {
+          const cycleLength = session.pulse_seconds + session.pause_seconds;
+          const cycles = Math.floor(elapsed / cycleLength);
+          const remainder = elapsed % cycleLength;
+          elapsed = cycles * session.pulse_seconds + Math.min(remainder, session.pulse_seconds);
+        }
+        return total + Math.max(0, base - elapsed);
+      }, 0);
+  };
+
+  const totalRemainingSeconds = calculateTotalRemaining();
+  const formatTotalDuration = (seconds: number): string => {
+    if (seconds <= 0) return '00:00:00';
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <Card className="border-primary/20">
       <CardHeader>
@@ -888,6 +918,29 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
 
           {/* SESSIONS TAB */}
           <TabsContent value="sessions" className="space-y-4">
+            {/* Total Time Overview */}
+            {sessions.length > 0 && (
+              <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <Clock className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Gesamte Restlaufzeit</p>
+                    <p className="text-2xl font-bold font-mono text-primary">
+                      {formatTotalDuration(totalRemainingSeconds)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right text-sm text-muted-foreground">
+                  <p>{runningCount + pausedCount + queuedCount} Sessions aktiv</p>
+                  <p className="text-xs">
+                    {runningCount} laufend • {pausedCount} pausiert • {queuedCount} wartend
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Status Summary */}
             <div className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg">
               <div className="flex items-center gap-2">
