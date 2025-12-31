@@ -819,6 +819,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
         pulse_seconds: pulseInSeconds,
         pause_seconds: pauseInSeconds,
         pulse_pause_active: pulsePauseActive,
+        source_module: 'database_manager'
       }));
 
       const { error } = await supabase
@@ -1218,6 +1219,7 @@ const DatabaseManager: React.FC<DatabaseManagerProps> = ({ selectedPatient }) =>
                         pulse_seconds: pulseInSeconds,
                         pause_seconds: pauseInSeconds,
                         pulse_pause_active: pulsePauseActive,
+                        source_module: 'database_manager'
                       }));
 
                       const { error } = await supabase

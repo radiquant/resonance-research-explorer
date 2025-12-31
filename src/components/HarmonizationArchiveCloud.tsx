@@ -173,6 +173,7 @@ const HarmonizationArchiveCloud: React.FC<HarmonizationArchiveCloudProps> = ({
           pulse_seconds: pulseInSeconds,
           pause_seconds: pauseInSeconds,
           pulse_pause_active: reactivatePulsePauseActive,
+          source_module: 'archive_reactivation'
         });
 
       if (error) throw error;

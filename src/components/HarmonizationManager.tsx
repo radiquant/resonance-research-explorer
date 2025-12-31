@@ -476,7 +476,8 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
         pulse_pause_active: pulsePauseActive,
         pulse_seconds: pulsePauseActive ? pulseSeconds : null,
         pause_seconds: pulsePauseActive ? pauseSeconds : null,
-        progress: 0
+        progress: 0,
+        source_module: 'harmonization_manager'
       }));
 
       const { error } = await supabase
