@@ -35,81 +35,73 @@ serve(async (req) => {
     console.log('🔄 Harmonization Worker gestartet');
 
     // ============================================
-    // 0. AUTO-CLEANUP: Abgelaufene Sessions bereinigen
+    // 0. AUTO-CLEANUP: Abgelaufene Sessions bereinigen (PULSE/PAUSE-sicher)
     // ============================================
-    // Sessions die "running" sind aber deren Zeit längst abgelaufen ist
-    // (Heartbeat + remaining_seconds < now) werden automatisch als "completed" markiert.
-    const STALE_THRESHOLD_MINUTES = 5; // Sessions die 5+ Minuten über Zeit sind
+    // Wichtig: remaining_seconds repräsentiert bei Pulse/Pause die *effektive* Behandlungszeit.
+    // Daher dürfen wir NICHT stumpf (heartbeat + remaining_seconds) als Endzeit annehmen.
+    // Stattdessen berechnen wir die UI-konforme effektive Restzeit seit letztem Heartbeat.
+    const STALE_THRESHOLD_SECONDS = 5 * 60; // erst nach 5 Minuten „überfällig“ hart abschließen
 
-    // Cleanup für harmonization_sessions_v2
-    const { data: staleHarmonization, error: staleHarmError } = await supabase
-      .from('harmonization_sessions_v2')
-      .select('id, word, remaining_seconds, job_last_heartbeat')
-      .eq('status', 'running')
-      .not('job_last_heartbeat', 'is', null)
-      .not('remaining_seconds', 'is', null);
+    const getEffectiveElapsedSeconds = (elapsedRealSeconds: number, session: any): number => {
+      if (!session.pulse_pause_active || !session.pulse_seconds || !session.pause_seconds) return elapsedRealSeconds;
+      const cycleLength = session.pulse_seconds + session.pause_seconds;
+      const cycles = Math.floor(elapsedRealSeconds / cycleLength);
+      const remainder = elapsedRealSeconds % cycleLength;
+      return cycles * session.pulse_seconds + Math.min(remainder, session.pulse_seconds);
+    };
 
-    if (!staleHarmError && staleHarmonization) {
-      const now = Date.now();
-      const staleToComplete = staleHarmonization.filter((s: any) => {
-        if (!s.job_last_heartbeat || s.remaining_seconds === null) return false;
-        const heartbeatTs = new Date(s.job_last_heartbeat).getTime();
-        const expectedEndTs = heartbeatTs + (s.remaining_seconds * 1000);
-        const staleThresholdMs = STALE_THRESHOLD_MINUTES * 60 * 1000;
-        return now > (expectedEndTs + staleThresholdMs);
+    const completeExpiredRunning = async (table: 'harmonization_sessions_v2' | 'morphic_field_sessions') => {
+      const { data, error } = await supabase
+        .from(table)
+        .select('id, word, remaining_seconds, duration_seconds, job_last_heartbeat, pulse_pause_active, pulse_seconds, pause_seconds')
+        .eq('status', 'running')
+        .not('job_last_heartbeat', 'is', null)
+        .limit(500);
+
+      if (error) {
+        console.error(`❌ Cleanup: Fehler beim Abrufen (${table}):`, error);
+        return 0;
+      }
+
+      const nowMs = Date.now();
+      const expired = (data || []).filter((s: any) => {
+        if (!s.job_last_heartbeat) return false;
+        const base = (s.remaining_seconds ?? s.duration_seconds) ?? 0;
+        if (base <= 0) return false;
+
+        const hbMs = new Date(s.job_last_heartbeat).getTime();
+        const elapsedRealSeconds = Math.max(0, Math.floor((nowMs - hbMs) / 1000));
+        if (elapsedRealSeconds < STALE_THRESHOLD_SECONDS) return false;
+
+        const effectiveElapsed = getEffectiveElapsedSeconds(elapsedRealSeconds, s);
+        const displayRemaining = Math.max(0, base - effectiveElapsed);
+        return displayRemaining <= 0;
       });
 
-      if (staleToComplete.length > 0) {
-        console.log(`🧹 Cleanup: ${staleToComplete.length} abgelaufene harmonization_sessions_v2 gefunden`);
-        for (const session of staleToComplete) {
-          await supabase
-            .from('harmonization_sessions_v2')
+      if (expired.length === 0) return 0;
+
+      console.log(`🧹 Cleanup: ${expired.length} überfällige Sessions in ${table} → completed`);
+      const completedAt = new Date().toISOString();
+
+      await Promise.all(
+        expired.map((s: any) =>
+          supabase
+            .from(table)
             .update({
               status: 'completed',
               remaining_seconds: 0,
               progress: 100,
-              completed_at: new Date().toISOString(),
+              completed_at: completedAt,
             })
-            .eq('id', session.id);
-          console.log(`🧹 Cleanup: Session ${session.id} (${session.word?.substring(0, 30)}...) → completed`);
-        }
-      }
-    }
+            .eq('id', s.id)
+        )
+      );
 
-    // Cleanup für morphic_field_sessions
-    const { data: staleMorphic, error: staleMorphicError } = await supabase
-      .from('morphic_field_sessions')
-      .select('id, word, remaining_seconds, job_last_heartbeat')
-      .eq('status', 'running')
-      .not('job_last_heartbeat', 'is', null)
-      .not('remaining_seconds', 'is', null);
+      return expired.length;
+    };
 
-    if (!staleMorphicError && staleMorphic) {
-      const now = Date.now();
-      const staleToComplete = staleMorphic.filter((s: any) => {
-        if (!s.job_last_heartbeat || s.remaining_seconds === null) return false;
-        const heartbeatTs = new Date(s.job_last_heartbeat).getTime();
-        const expectedEndTs = heartbeatTs + (s.remaining_seconds * 1000);
-        const staleThresholdMs = STALE_THRESHOLD_MINUTES * 60 * 1000;
-        return now > (expectedEndTs + staleThresholdMs);
-      });
-
-      if (staleToComplete.length > 0) {
-        console.log(`🧹 Cleanup: ${staleToComplete.length} abgelaufene morphic_field_sessions gefunden`);
-        for (const session of staleToComplete) {
-          await supabase
-            .from('morphic_field_sessions')
-            .update({
-              status: 'completed',
-              remaining_seconds: 0,
-              progress: 100,
-              completed_at: new Date().toISOString(),
-            })
-            .eq('id', session.id);
-          console.log(`🧹 Cleanup: Morphic Session ${session.id} (${session.word?.substring(0, 30)}...) → completed`);
-        }
-      }
-    }
+    await completeExpiredRunning('harmonization_sessions_v2');
+    await completeExpiredRunning('morphic_field_sessions');
 
     // ============================================
     // 1. Pending Sessions auf "running" setzen (Start)

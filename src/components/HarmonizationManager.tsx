@@ -855,25 +855,29 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   const queuedCount = sessions.filter(s => s.status === 'queued').length;
   const pausedCount = sessions.filter(s => s.status === 'paused').length;
 
-  // Calculate total remaining time for all active sessions
+  // Calculate total remaining time (Wall-Clock) for the whole workload
+  // WICHTIG: Diese Anzeige darf NICHT pro Session „parallel“ schneller herunterlaufen.
+  // Sie repräsentiert die reale Restzeit bis alles fertig ist:
+  // - laufend: Maximum der Restzeiten (parallel)
+  // - queued/pending: Summe (werden sequenziell nachgezogen)
+  // - pausiert: Summe (zählt nicht aktiv herunter, bleibt als „Backlog“ sichtbar)
   const calculateTotalRemaining = (): number => {
-    return sessions
-      .filter(s => s.status === 'running' || s.status === 'paused' || s.status === 'queued')
-      .reduce((total, session) => {
-        const base = session.remaining_seconds ?? session.duration_seconds;
-        if (session.status !== 'running' || !session.job_last_heartbeat) {
-          return total + base;
-        }
-        const heartbeatTs = new Date(session.job_last_heartbeat).getTime();
-        let elapsed = Math.max(0, Math.floor((nowTs - heartbeatTs) / 1000));
-        if (session.pulse_pause_active && session.pulse_seconds && session.pause_seconds) {
-          const cycleLength = session.pulse_seconds + session.pause_seconds;
-          const cycles = Math.floor(elapsed / cycleLength);
-          const remainder = elapsed % cycleLength;
-          elapsed = cycles * session.pulse_seconds + Math.min(remainder, session.pulse_seconds);
-        }
-        return total + Math.max(0, base - elapsed);
-      }, 0);
+    const baseForNonRunning = (s: SessionStatus) => (s.remaining_seconds ?? s.duration_seconds) || 0;
+
+    const running = sessions.filter((s) => s.status === 'running');
+    const runningWallClock = running.length
+      ? Math.max(...running.map((s) => getDisplayRemainingSeconds(s)))
+      : 0;
+
+    const queuedAndPendingBacklog = sessions
+      .filter((s) => s.status === 'queued' || s.status === 'pending')
+      .reduce((sum, s) => sum + baseForNonRunning(s), 0);
+
+    const pausedBacklog = sessions
+      .filter((s) => s.status === 'paused')
+      .reduce((sum, s) => sum + baseForNonRunning(s), 0);
+
+    return Math.max(0, runningWallClock + queuedAndPendingBacklog + pausedBacklog);
   };
 
   const totalRemainingSeconds = calculateTotalRemaining();
