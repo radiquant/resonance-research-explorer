@@ -34,6 +34,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { getSessionTable, type SourceModule } from '@/utils/sessionTableRouter';
 
 // ========================
 // INTERFACES
@@ -216,6 +217,9 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Bestimme die korrekte Tabelle basierend auf dem Modul
+  const sessionTable = getSessionTable(sourceModule as SourceModule);
 
   // ========================
   // STATE
@@ -257,18 +261,22 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     if (!user || !patientId) return;
     
     try {
-      let query = supabase
-        .from('harmonization_sessions_v2')
+      // Verwende die korrekte Tabelle basierend auf sourceModule
+      // Für morphic_field: morphic_field_sessions, sonst: harmonization_sessions_v2
+      const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+      
+      const baseQuery = supabase
+        .from(tableName as 'harmonization_sessions_v2')
         .select('id, word, status, progress, remaining_seconds, duration_seconds, job_last_heartbeat, pulse_pause_active, pulse_seconds, pause_seconds, copen_rate, created_at')
         .eq('user_id', user.id)
         .eq('patient_id', patientId)
         .in('status', ['queued', 'pending', 'running', 'paused'])
         .order('created_at', { ascending: false });
 
-      // Filter nach source_module für Modul-Isolation
-      if (sourceModule) {
-        query = query.eq('source_module', sourceModule);
-      }
+      // Filter nach source_module nur für harmonization_sessions_v2 (nicht für morphic_field_sessions)
+      const query = tableName === 'harmonization_sessions_v2' && sourceModule
+        ? baseQuery.eq('source_module', sourceModule)
+        : baseQuery;
 
       const { data, error } = await query;
 
@@ -326,32 +334,32 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
 
     const checkForCompletions = async () => {
       try {
-        let query = supabase
-          .from('harmonization_sessions_v2')
+        const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+        
+        const baseQuery = supabase
+          .from(tableName as 'harmonization_sessions_v2')
           .select('id, word, status, progress, remaining_seconds, duration_seconds, job_last_heartbeat, pulse_pause_active, pulse_seconds, pause_seconds, copen_rate, created_at')
           .eq('user_id', user.id)
           .eq('patient_id', patientId)
           .in('status', ['queued', 'pending', 'running', 'paused'])
           .order('created_at', { ascending: false });
 
-        // Filter nach source_module für Modul-Isolation
-        if (sourceModule) {
-          query = query.eq('source_module', sourceModule);
-        }
+        const query = tableName === 'harmonization_sessions_v2' && sourceModule
+          ? baseQuery.eq('source_module', sourceModule)
+          : baseQuery;
 
         const { data, error } = await query;
 
-      if (error) throw error;
+        if (error) throw error;
 
-      const newData = (data as SessionStatus[]) || [];
-      const newIds = new Set(newData.map((s) => s.id));
-
+        const newData = (data as SessionStatus[]) || [];
+        const newIds = new Set(newData.map((s) => s.id));
         const prevIds = previousSessionIdsRef.current;
         const removedIds = Array.from(prevIds).filter((id) => !newIds.has(id));
 
         if (removedIds.length > 0) {
           const { data: removedSessions } = await supabase
-            .from('harmonization_sessions_v2')
+            .from(tableName as 'harmonization_sessions_v2')
             .select('id, word, status')
             .in('id', removedIds);
 
@@ -379,13 +387,13 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     const interval = setInterval(checkForCompletions, 5000);
 
     const channel = supabase
-      .channel(`harmonization-manager-${patientId}`)
+      .channel(`harmonization-manager-${sourceModule}-${patientId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'harmonization_sessions_v2',
+          table: sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2',
           filter: `patient_id=eq.${patientId}`,
         },
         (payload) => {
@@ -496,11 +504,11 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
         source_module: sourceModule
       }));
 
+      const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+      
       const { error } = await supabase
-        .from('harmonization_sessions_v2')
+        .from(tableName as 'harmonization_sessions_v2')
         .insert(sessionsToCreate);
-
-      if (error) throw error;
 
       toast({
         title: "Sessions erstellt",

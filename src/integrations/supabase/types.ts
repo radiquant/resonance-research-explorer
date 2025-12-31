@@ -391,6 +391,141 @@ export type Database = {
         }
         Relationships: []
       }
+      morphic_field_calculations: {
+        Row: {
+          bohm_integration: Json | null
+          client_name: string
+          coherence: number
+          created_at: string
+          field_intensity: number
+          geometric_form: string | null
+          id: string
+          intention_type: string | null
+          numerical_sequence: Json | null
+          patient_id: string | null
+          quantum_states: Json | null
+          recommendations: Json | null
+          resonance_frequency: number
+          tcm_analysis: Json | null
+          user_id: string
+        }
+        Insert: {
+          bohm_integration?: Json | null
+          client_name: string
+          coherence: number
+          created_at?: string
+          field_intensity: number
+          geometric_form?: string | null
+          id?: string
+          intention_type?: string | null
+          numerical_sequence?: Json | null
+          patient_id?: string | null
+          quantum_states?: Json | null
+          recommendations?: Json | null
+          resonance_frequency: number
+          tcm_analysis?: Json | null
+          user_id: string
+        }
+        Update: {
+          bohm_integration?: Json | null
+          client_name?: string
+          coherence?: number
+          created_at?: string
+          field_intensity?: number
+          geometric_form?: string | null
+          id?: string
+          intention_type?: string | null
+          numerical_sequence?: Json | null
+          patient_id?: string | null
+          quantum_states?: Json | null
+          recommendations?: Json | null
+          resonance_frequency?: number
+          tcm_analysis?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      morphic_field_sessions: {
+        Row: {
+          batch_id: string | null
+          coherence: number | null
+          completed_at: string | null
+          copen_rate: string | null
+          created_at: string
+          duration_seconds: number
+          field_intensity: number | null
+          geometric_form: string | null
+          id: string
+          intention_type: string | null
+          job_last_heartbeat: string | null
+          job_started_at: string | null
+          patient_id: string
+          pause_seconds: number | null
+          progress: number | null
+          pulse_pause_active: boolean | null
+          pulse_seconds: number | null
+          remaining_seconds: number | null
+          started_at: string | null
+          status: string
+          tested_potency: string | null
+          updated_at: string
+          user_id: string
+          word: string
+        }
+        Insert: {
+          batch_id?: string | null
+          coherence?: number | null
+          completed_at?: string | null
+          copen_rate?: string | null
+          created_at?: string
+          duration_seconds: number
+          field_intensity?: number | null
+          geometric_form?: string | null
+          id?: string
+          intention_type?: string | null
+          job_last_heartbeat?: string | null
+          job_started_at?: string | null
+          patient_id: string
+          pause_seconds?: number | null
+          progress?: number | null
+          pulse_pause_active?: boolean | null
+          pulse_seconds?: number | null
+          remaining_seconds?: number | null
+          started_at?: string | null
+          status?: string
+          tested_potency?: string | null
+          updated_at?: string
+          user_id: string
+          word: string
+        }
+        Update: {
+          batch_id?: string | null
+          coherence?: number | null
+          completed_at?: string | null
+          copen_rate?: string | null
+          created_at?: string
+          duration_seconds?: number
+          field_intensity?: number | null
+          geometric_form?: string | null
+          id?: string
+          intention_type?: string | null
+          job_last_heartbeat?: string | null
+          job_started_at?: string | null
+          patient_id?: string
+          pause_seconds?: number | null
+          progress?: number | null
+          pulse_pause_active?: boolean | null
+          pulse_seconds?: number | null
+          remaining_seconds?: number | null
+          started_at?: string | null
+          status?: string
+          tested_potency?: string | null
+          updated_at?: string
+          user_id?: string
+          word?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           birth_date: string
