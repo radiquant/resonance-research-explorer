@@ -240,10 +240,10 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   
   // New Session State
   const [manualInput, setManualInput] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState(30);
-  const [pulsePauseActive, setPulsePauseActive] = useState(false);
-  const [pulseSeconds, setPulseSeconds] = useState(21);
-  const [pauseSeconds, setPauseSeconds] = useState(42);
+  const [durationMinutes, setDurationMinutes] = useState(84); // Default 84 Minuten für Morphic Field
+  const [pulsePauseActive, setPulsePauseActive] = useState(true); // Default aktiviert
+  const [pulseSeconds, setPulseSeconds] = useState(14); // Default 14s Impuls
+  const [pauseSeconds, setPauseSeconds] = useState(14); // Default 14s Pause
   const [itemCount, setItemCount] = useState<21 | 42 | 63>(21);
   const [isCreating, setIsCreating] = useState(false);
   
@@ -258,6 +258,9 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   const [selectedSession, setSelectedSession] = useState<SessionStatus | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  
+  // Dauerbesendung State
+  const [dauerbesendungActive, setDauerbesendungActive] = useState(false);
   
   // Live Timer
   const [nowTs, setNowTs] = useState(() => Date.now());
@@ -680,7 +683,26 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
     const nowIso = new Date().toISOString();
     
+    // Dauerbesendung: Setze duration auf 24 Stunden (86400 Sekunden) mit Impuls/Pause
+    const dauerDuration = dauerbesendungActive ? 86400 : undefined;
+    
     try {
+      // Wenn Dauerbesendung, aktualisiere erst die Dauer aller queued Sessions
+      if (dauerbesendungActive) {
+        await supabase
+          .from(tableName as 'harmonization_sessions_v2')
+          .update({
+            duration_seconds: dauerDuration,
+            remaining_seconds: dauerDuration,
+            pulse_pause_active: true,
+            pulse_seconds: pulseSeconds,
+            pause_seconds: pauseSeconds
+          })
+          .eq('user_id', user?.id)
+          .eq('patient_id', patientId)
+          .eq('status', 'queued');
+      }
+      
       const { error } = await supabase
         .from(tableName as 'harmonization_sessions_v2')
         .update({
@@ -700,8 +722,10 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       await supabase.functions.invoke('harmonization-worker');
 
       toast({
-        title: "Alle Sessions gestartet",
-        description: `${queuedSessions.length} Harmonisierungen laufen parallel`,
+        title: dauerbesendungActive ? "Dauerbesendung gestartet" : "Alle Sessions gestartet",
+        description: dauerbesendungActive 
+          ? `${queuedSessions.length} Sessions laufen mit ${pulseSeconds}s/${pauseSeconds}s Impuls/Pause (24h)` 
+          : `${queuedSessions.length} Harmonisierungen laufen parallel`,
       });
 
       await loadSessions();
@@ -962,10 +986,21 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
               
               <div className="flex-1" />
               
+              {(queuedCount > 0 || runningCount > 0 || pausedCount > 0) && (
+                <div className="flex items-center gap-2 px-2 py-1 bg-purple-500/10 rounded-lg border border-purple-500/20">
+                  <Zap className={`w-4 h-4 ${dauerbesendungActive ? 'text-purple-500 animate-pulse' : 'text-muted-foreground'}`} />
+                  <Label className="text-xs">Dauerbesendung</Label>
+                  <Switch
+                    checked={dauerbesendungActive}
+                    onCheckedChange={setDauerbesendungActive}
+                  />
+                </div>
+              )}
+              
               {queuedCount > 0 && (
                 <Button size="sm" onClick={startAllQueued}>
                   <Play className="w-4 h-4 mr-1" />
-                  Alle starten
+                  {dauerbesendungActive ? 'Alle (Dauer)' : 'Alle starten'}
                 </Button>
               )}
               {sessions.length > 0 && (
