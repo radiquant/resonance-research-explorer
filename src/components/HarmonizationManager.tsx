@@ -29,8 +29,10 @@ import {
   XCircle,
   RefreshCw,
   BookTemplate,
-  Layers
+  Layers,
+  Sparkles
 } from 'lucide-react';
+import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -262,6 +264,9 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   // Dauerbesendung State
   const [dauerbesendungActive, setDauerbesendungActive] = useState(false);
   
+  // Kohärente Regulation State (fügt "Kohärente Harmonisierung Regulation" vor Analyseergebnissen hinzu)
+  const [koharenteRegulationActive, setKoharenteRegulationActive] = useState(false);
+  
   // Live Timer
   const [nowTs, setNowTs] = useState(() => Date.now());
 
@@ -492,17 +497,35 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   // SESSION ACTIONS
   // ========================
 
-  const createSessions = async (items: HarmonizationItem[]) => {
+  // Funktion zur Transformation mit "Kohärente Harmonisierung Regulation" Präfix
+  const applyKoharenteRegulation = (items: HarmonizationItem[]): HarmonizationItem[] => {
+    return items.map(item => {
+      const regulationWord = `Kohärente Harmonisierung Regulation ${item.word}`;
+      const regulationRate = calculateCopenRate(regulationWord, 0, 'D');
+      return {
+        word: regulationWord,
+        rate: regulationRate.rate,
+        potency: item.potency
+      };
+    });
+  };
+
+  const createSessions = async (items: HarmonizationItem[], skipRegulationTransform: boolean = false) => {
     if (!user || !patientId || items.length === 0) return;
     
     setIsCreating(true);
     try {
+      // Wende Kohärente Regulation an, wenn aktiviert (und nicht übersprungen)
+      const transformedItems = (koharenteRegulationActive && !skipRegulationTransform) 
+        ? applyKoharenteRegulation(items) 
+        : items;
+      
       const totalDurationSeconds = durationMinutes * 60;
-      const durationPerItem = Math.floor(totalDurationSeconds / items.length);
+      const durationPerItem = Math.floor(totalDurationSeconds / transformedItems.length);
 
       const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
       
-      const sessionsToCreate = items.map(item => {
+      const sessionsToCreate = transformedItems.map(item => {
         const baseSession = {
           user_id: user.id,
           patient_id: patientId,
@@ -535,8 +558,10 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
         .insert(sessionsToCreate);
 
       toast({
-        title: "Sessions erstellt",
-        description: `${items.length} Harmonisierungen vorbereitet (${Math.floor(durationPerItem / 60)}min je)`,
+        title: koharenteRegulationActive && !skipRegulationTransform 
+          ? "Sessions mit Kohärenter Regulation erstellt" 
+          : "Sessions erstellt",
+        description: `${transformedItems.length} Harmonisierungen vorbereitet (${Math.floor(durationPerItem / 60)}min je)`,
       });
 
       await loadSessions();
@@ -1077,6 +1102,24 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                       Top-Items nach Resonanz
                     </span>
                   </div>
+                  
+                  {/* Kohärente Regulation Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-lg border border-purple-500/20">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className={`w-4 h-4 ${koharenteRegulationActive ? 'text-purple-500 animate-pulse' : 'text-muted-foreground'}`} />
+                      <div>
+                        <Label className="text-sm font-medium">Kohärente Regulation</Label>
+                        <p className="text-xs text-muted-foreground">
+                          Präfixiert Ergebnisse mit "Kohärente Harmonisierung Regulation" und berechnet neue Rate
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={koharenteRegulationActive}
+                      onCheckedChange={setKoharenteRegulationActive}
+                    />
+                  </div>
+                  
                   <Button
                     onClick={() => createSessions(analysisResults.slice(0, itemCount))}
                     disabled={isCreating}
@@ -1084,10 +1127,13 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                   >
                     {isCreating ? (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : koharenteRegulationActive ? (
+                      <Sparkles className="w-4 h-4 mr-2" />
                     ) : (
                       <Zap className="w-4 h-4 mr-2" />
                     )}
                     {Math.min(itemCount, analysisResults.length)} Sessions erstellen
+                    {koharenteRegulationActive && ' (mit Regulation)'}
                   </Button>
                 </CardContent>
               </Card>
