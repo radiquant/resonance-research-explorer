@@ -497,10 +497,10 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   // SESSION ACTIONS
   // ========================
 
-  // Funktion zur Transformation mit "Kohärente Harmonisierung Regulation" Präfix
+  // Funktion zur Transformation mit "Kohärente adaptive Regulation" Präfix
   const applyKoharenteRegulation = (items: HarmonizationItem[]): HarmonizationItem[] => {
     return items.map(item => {
-      const regulationWord = `Kohärente Harmonisierung Regulation ${item.word}`;
+      const regulationWord = `Kohärente adaptive Regulation ${item.word}`;
       const regulationRate = calculateCopenRate(regulationWord, 0, 'D');
       return {
         word: regulationWord,
@@ -853,7 +853,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
       .map(line => line.trim())
       .filter(line => line.length > 0)
       .map(line => ({
-        word: `Kohärente Harmonisierung Regulation ${line}`,
+        word: line, // Kein automatisches Präfix - nur über Toggle
         rate: 0 // Will use clientRate
       }));
   };
@@ -1110,7 +1110,7 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                       <div>
                         <Label className="text-sm font-medium">Kohärente Regulation</Label>
                         <p className="text-xs text-muted-foreground">
-                          Präfixiert Ergebnisse mit "Kohärente Harmonisierung Regulation" und berechnet neue Rate
+                          Präfixiert Ergebnisse mit "Kohärente adaptive Regulation" und berechnet neue Rate
                         </p>
                       </div>
                     </div>
