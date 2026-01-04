@@ -648,10 +648,10 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
     const intensität = calculateIntensität(copenRate, fokusResult.kombinierteResonanz);
     const { typ: polarität, wert: polaritätWert } = calculatePolarität(word, copenRate);
     
-    // Kohärente Harmonisierung Regulation: Präfix + Wort für Harmonisierungsrate
-    const harmonisierungsWort = `Kohärente Harmonisierung Regulation ${word}`;
-    const harmonisierungsRateResult = calculateCopenRate(harmonisierungsWort, 0, 'D', 'latin');
-    const harmonisierungsRate = harmonisierungsRateResult.rate;
+    // harmonisierungsWort und harmonisierungsRate werden jetzt NICHT mehr automatisch berechnet
+    // Die "Kohärente adaptive Regulation" Transformation erfolgt optional im HarmonizationManager
+    const harmonisierungsWort = word; // Kein automatisches Präfix mehr
+    const harmonisierungsRate = copenRate; // Standard-Rate ohne Transformation
     
     // Clarke Symptome zuordnen (case-insensitive) - NUR für Anzeige, nicht für Rate-Berechnung
     // FIX: Case-insensitive matching for Clarke symptom lookup
@@ -1135,7 +1135,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
       if (activeSessions && activeSessions.length > 0) {
         // Reconstruct harmonization state from active sessions
         const topItems = activeSessions.map(s => ({
-          word: s.word.replace('Kohärente Harmonisierung Regulation ', ''),
+          word: s.word.replace('Kohärente adaptive Regulation ', ''),
           copenRate: parseInt(s.copen_rate || '0'),
           resonanz: 0,
           resonanzBasis: 0,
@@ -2170,7 +2170,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
                                     <div>
                                       <p className="text-xs text-muted-foreground">Aktuelles Item ({harmonization.currentItemIndex + 1}/{harmonization.selectedItems.length})</p>
                                       <p className="font-semibold text-primary">
-                                        Kohärente Harmonisierung Regulation {harmonization.selectedItems[harmonization.currentItemIndex].word}
+                                        {harmonization.selectedItems[harmonization.currentItemIndex].word}
                                       </p>
                                     </div>
                                     <div className="text-right">
@@ -2209,7 +2209,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
                                           {idx < harmonization.currentItemIndex ? '✓' : idx === harmonization.currentItemIndex ? '▶' : (idx + 1)}
                                         </span>
                                         <span className={idx === harmonization.currentItemIndex ? 'font-medium text-primary' : ''}>
-                                          Kohärente Harmonisierung Regulation {item.word}
+                                          {item.word}
                                         </span>
                                       </div>
                                       <span className="font-mono">
