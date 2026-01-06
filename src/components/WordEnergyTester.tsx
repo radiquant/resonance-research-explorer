@@ -219,6 +219,9 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
   const [ebeneFilter, setEbeneFilter] = useState<number | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   
+  // Nur Wortenergien-Modus (ohne Rate-Berechnung)
+  const [nurWortenergienModus, setNurWortenergienModus] = useState(false);
+  
   // Wortlisten-Datenbank State
   const [savedWordLists, setSavedWordLists] = useState<{ id: string; name: string; entries: string[] }[]>([]);
   const [newListName, setNewListName] = useState('');
@@ -630,11 +633,11 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
   };
 
   const testWordEnergy = useCallback((word: string, clientWellenfunktion: number): WordEnergyTestResult => {
-    const rateResult = calculateCopenRate(word, 0, 'D', 'latin');
-    const copenRate = rateResult.rate;
+    // Wenn nurWortenergienModus aktiv: Keine Rate-Berechnung, nur Wort durchreichen
+    const copenRate = nurWortenergienModus ? 0 : calculateCopenRate(word, 0, 'D', 'latin').rate;
     const ebenVerteilung = calculateLevelResonance(copenRate, word);
     const { level: dominanteEbene, value: dominanteEbeneWert } = findHighestResonanceLevel(ebenVerteilung);
-    const resonanzBasis = calculateResonanz(copenRate, clientWellenfunktion);
+    const resonanzBasis = nurWortenergienModus ? 50 : calculateResonanz(copenRate, clientWellenfunktion);
     
     // Quanteninspirierte Fokus-Resonanz berechnen
     const fokusResult = calculateFokusResonanz(
@@ -689,7 +692,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
       harmonisierungsRate,
       clarkeSymptoms: clarkeSymptoms.length > 0 ? clarkeSymptoms : undefined
     };
-  }, [effectiveFokus, fokusGewichtung, clarkeSymptomMap]);
+  }, [effectiveFokus, fokusGewichtung, clarkeSymptomMap, nurWortenergienModus]);
 
   // Custom Fokus zur Historie hinzufügen (persistent in localStorage)
   const addToFokusHistory = useCallback((fokus: string) => {
@@ -1280,7 +1283,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
             {/* TEST TAB */}
             <TabsContent value="test" className="space-y-4">
               {/* Test Mode Toggle */}
-              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg flex-wrap gap-3">
                 <div className="flex items-center gap-3">
                   <Label htmlFor="testMode" className="text-sm">Test-Modus:</Label>
                   <div className="flex items-center gap-2">
@@ -1297,6 +1300,25 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
                     </span>
                   </div>
                 </div>
+                
+                {/* Nur Wortenergien Modus Toggle */}
+                <div className="flex items-center gap-3 border-l border-border pl-3">
+                  <Label htmlFor="nurWortenergien" className="text-sm flex items-center gap-1">
+                    Nur Wortenergien
+                    <span className="text-xs text-muted-foreground">(ohne Raten)</span>
+                  </Label>
+                  <Switch
+                    id="nurWortenergien"
+                    checked={nurWortenergienModus}
+                    onCheckedChange={setNurWortenergienModus}
+                  />
+                  {nurWortenergienModus && (
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30">
+                      Aktiv
+                    </Badge>
+                  )}
+                </div>
+                
                 <Badge variant={testMode === 'parallel' ? 'default' : 'secondary'}>
                   {testMode === 'parallel' ? '< 1s' : '~' + (parseWords(wordInput).length * 0.05).toFixed(1) + 's'}
                 </Badge>
