@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Home, BookOpen, User, Sparkles } from 'lucide-react';
-import MorphicFieldCalculator from '@/components/MorphicFieldCalculator';
+import { Home, BookOpen } from 'lucide-react';
 import ClientFieldCalculator from '@/components/ClientFieldCalculator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const MorphicFieldPage = () => {
   const [showTheory, setShowTheory] = useState(false);
@@ -219,27 +217,8 @@ const MorphicFieldPage = () => {
           </Card>
         )}
 
-        {/* Calculator Tabs */}
-        <Tabs defaultValue="standard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="standard" className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4" />
-              Standard-Berechnung
-            </TabsTrigger>
-            <TabsTrigger value="klient" className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Klienten-Feldalgorithmus
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="standard">
-            <MorphicFieldCalculator />
-          </TabsContent>
-          
-          <TabsContent value="klient">
-            <ClientFieldCalculator />
-          </TabsContent>
-        </Tabs>
+        {/* Klienten-Feldalgorithmus */}
+        <ClientFieldCalculator />
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-muted-foreground">
