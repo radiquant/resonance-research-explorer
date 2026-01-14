@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, User, Calendar, MapPin, Sparkles, Heart, Leaf, Table, Info, Upload, X, ImageIcon, Save, Users, Link2 } from 'lucide-react';
+import { Loader2, User, Calendar, MapPin, Sparkles, Heart, Leaf, Table, Info, Upload, X, ImageIcon, Save, Users, Link2, Database, Target, ChevronRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -18,6 +18,11 @@ import {
   type FünfElementeProfile,
   type KlientenFeldErgebnis 
 } from '@/utils/clientFieldAlgorithms';
+import { 
+  getTopDatabaseRecommendations, 
+  getAvailableFokusCategories,
+  type RecommendationResult 
+} from '@/utils/databaseRecommendationEngine';
 import WordEnergyTester from './WordEnergyTester';
 
 const PLANET_LABELS: Record<Planet, string> = {
@@ -164,6 +169,11 @@ const ClientFieldCalculator = () => {
   const [showMatrix, setShowMatrix] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [result, setResult] = useState<KlientenFeldErgebnis | null>(null);
+  
+  // Database Recommendation State
+  const [showDbRecommendation, setShowDbRecommendation] = useState(false);
+  const [dbFokus, setDbFokus] = useState<string>('');
+  const [dbRecommendation, setDbRecommendation] = useState<RecommendationResult | null>(null);
   
   // Patient linking state
   const [patients, setPatients] = useState<PatientV2[]>([]);
@@ -444,6 +454,23 @@ const ClientFieldCalculator = () => {
     } finally {
       setIsCalculating(false);
     }
+  };
+
+  // Datenbank-Empfehlung berechnen
+  const handleCalculateDbRecommendation = () => {
+    if (!result) return;
+    
+    const elementProfile = result.tcmAnalyse.elementVerteilung as Record<TCMElement, number>;
+    const dominantElement = result.tcmAnalyse.dominantesElement;
+    
+    const recommendation = getTopDatabaseRecommendations(
+      elementProfile,
+      dominantElement,
+      dbFokus || null,
+      dbFokus ? 0.4 : 0 // 40% Fokus-Gewichtung wenn Fokus gewählt
+    );
+    
+    setDbRecommendation(recommendation);
   };
 
   const formatNumber = (num: number) => {
@@ -975,6 +1002,124 @@ const ClientFieldCalculator = () => {
                   <div><span className="text-muted-foreground">Seelenplan:</span><br/>{formatNumber(result.bohmIntegration.impliziteOrdnung.seelenplan)}</div>
                   <div><span className="text-muted-foreground">Harmonisierung:</span><br/>{(result.bohmIntegration.expliziteOrdnung.harmonisierungsbedarf * 100).toFixed(1)}%</div>
                 </CardContent>
+              </Card>
+
+              {/* Datenbank-Empfehlung */}
+              <Card className="border-primary/20 bg-gradient-to-br from-indigo-500/5 to-purple-500/5">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Database className="w-4 h-4 text-indigo-500" />
+                      Top-3 Datenbank-Empfehlungen
+                    </CardTitle>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => setShowDbRecommendation(!showDbRecommendation)}
+                    >
+                      {showDbRecommendation ? 'Ausblenden' : 'Anzeigen'}
+                    </Button>
+                  </div>
+                  <CardDescription className="text-xs">
+                    Ermittelt relevante Datenbanken basierend auf Klientenvektor & Fokus
+                  </CardDescription>
+                </CardHeader>
+                
+                {showDbRecommendation && (
+                  <CardContent className="space-y-4">
+                    {/* Fokus-Auswahl */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1">
+                        <Label className="text-xs flex items-center gap-1 mb-2">
+                          <Target className="w-3 h-3" />
+                          Symptom-Fokus (optional)
+                        </Label>
+                        <Select value={dbFokus || "none"} onValueChange={(v) => setDbFokus(v === "none" ? '' : v)}>
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Fokus wählen..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">-- Kein Fokus (nur TCM) --</SelectItem>
+                            {getAvailableFokusCategories().map(cat => (
+                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button 
+                        onClick={handleCalculateDbRecommendation}
+                        className="sm:self-end"
+                        size="sm"
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Ermitteln
+                      </Button>
+                    </div>
+
+                    {/* Ergebnis anzeigen */}
+                    {dbRecommendation && (
+                      <div className="space-y-3 pt-3 border-t border-primary/10">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">
+                            Basis: {ELEMENT_LABELS[dbRecommendation.dominantElement || 'erde']}
+                            {dbRecommendation.fokusCategory && (
+                              <span className="ml-2">+ Fokus: {dbRecommendation.fokusCategory}</span>
+                            )}
+                          </span>
+                          <Badge variant="secondary" className="text-[10px]">
+                            Ø {dbRecommendation.totalScore}% Relevanz
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {dbRecommendation.topDatabases.map((db, idx) => (
+                            <div 
+                              key={db.key}
+                              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                                idx === 0 
+                                  ? 'bg-primary/10 border-primary/30' 
+                                  : 'bg-muted/30 border-border/50 hover:bg-muted/50'
+                              }`}
+                            >
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-background text-lg">
+                                {db.icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm truncate">{db.name}</span>
+                                  <Badge 
+                                    variant={db.category === 'anatomie' ? 'default' : 'secondary'}
+                                    className="text-[9px] px-1.5"
+                                  >
+                                    {db.category === 'anatomie' ? 'Anatomie' : 'Frequenz'}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {db.reasoning} • {db.entryCount} Einträge
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <div className={`text-lg font-bold ${
+                                  db.score >= 80 ? 'text-green-500' : 
+                                  db.score >= 60 ? 'text-yellow-500' : 'text-orange-500'
+                                }`}>
+                                  {db.score}%
+                                </div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  TCM {db.tcmRelevanz}% | Fokus {db.fokusRelevanz}%
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        <p className="text-[10px] text-muted-foreground italic pt-2">
+                          Empfehlungen basieren auf TCM-Organbeziehungen und Symptom-Fokus-Korrelation
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                )}
               </Card>
             </div>
           )}
