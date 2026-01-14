@@ -146,12 +146,49 @@ function calculateTCMResonance(
 /**
  * Berechnet die Fokus-Resonanz einer Datenbank basierend auf dem gewählten Fokus
  */
-function calculateFokusResonance(dbKey: string, fokus: string | null): number {
+function calculateFokusResonance(dbKey: string, fokus: string | null, isCustomFokus: boolean = false): number {
   if (!fokus) return 0;
   
   const dbFokusCategories = DATABASE_FOKUS_MAPPING[dbKey] || [];
+  const dbNameLower = (DATABASE_NAMES[dbKey]?.name || '').toLowerCase();
   
-  // Exakter Match
+  // Custom-Fokus: Keywords direkt prüfen
+  if (isCustomFokus) {
+    const customKeywords = fokus.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
+    if (customKeywords.length === 0) return 0;
+    
+    let matchScore = 0;
+    
+    // Prüfe Keywords gegen Datenbankname und Fokus-Kategorien
+    for (const keyword of customKeywords) {
+      // Match im Datenbanknamen
+      if (dbNameLower.includes(keyword)) {
+        matchScore += 35;
+      }
+      
+      // Match in den Fokus-Kategorien der Datenbank
+      for (const cat of dbFokusCategories) {
+        if (cat.toLowerCase().includes(keyword)) {
+          matchScore += 25;
+        }
+      }
+      
+      // Match gegen bekannte Fokus-Kategorien und deren Keywords
+      for (const [catName, catKeywords] of Object.entries(FOKUS_KATEGORIEN)) {
+        if (dbFokusCategories.includes(catName)) {
+          for (const catKw of catKeywords) {
+            if (catKw.includes(keyword) || keyword.includes(catKw)) {
+              matchScore += 15;
+            }
+          }
+        }
+      }
+    }
+    
+    return Math.min(100, matchScore);
+  }
+  
+  // Standard-Fokus: Exakter Match
   if (dbFokusCategories.includes(fokus)) {
     return 100;
   }
@@ -161,7 +198,6 @@ function calculateFokusResonance(dbKey: string, fokus: string | null): number {
   if (fokusKeywords.length === 0) return 0;
   
   let matchScore = 0;
-  const dbNameLower = (DATABASE_NAMES[dbKey]?.name || '').toLowerCase();
   
   for (const keyword of fokusKeywords) {
     if (dbNameLower.includes(keyword)) {
@@ -179,7 +215,8 @@ export function getTopDatabaseRecommendations(
   elementProfile: Record<TCMElement, number>,
   dominantElement: TCMElement | null,
   fokus: string | null,
-  fokusGewichtung: number = 0.4 // 40% Fokus, 60% TCM
+  fokusGewichtung: number = 0.4, // 40% Fokus, 60% TCM
+  isCustomFokus: boolean = false
 ): RecommendationResult {
   const recommendations: DatabaseRecommendation[] = [];
   
@@ -194,7 +231,7 @@ export function getTopDatabaseRecommendations(
     const tcmRelevanz = calculateTCMResonance(dbKey, elementProfile, dominantElement);
     
     // Fokus-Resonanz berechnen
-    const fokusRelevanz = calculateFokusResonance(dbKey, fokus);
+    const fokusRelevanz = calculateFokusResonance(dbKey, fokus, isCustomFokus);
     
     // Kombinierter Score
     const tcmWeight = 1 - fokusGewichtung;

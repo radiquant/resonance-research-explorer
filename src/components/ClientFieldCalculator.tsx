@@ -173,6 +173,8 @@ const ClientFieldCalculator = () => {
   // Database Recommendation State
   const [showDbRecommendation, setShowDbRecommendation] = useState(false);
   const [dbFokus, setDbFokus] = useState<string>('');
+  const [dbCustomFokus, setDbCustomFokus] = useState<string>('');
+  const [useCustomFokus, setUseCustomFokus] = useState(false);
   const [dbRecommendation, setDbRecommendation] = useState<RecommendationResult | null>(null);
   
   // Patient linking state
@@ -463,11 +465,16 @@ const ClientFieldCalculator = () => {
     const elementProfile = result.tcmAnalyse.elementVerteilung as Record<TCMElement, number>;
     const dominantElement = result.tcmAnalyse.dominantesElement;
     
+    // Fokus ermitteln: Custom oder Standard
+    const fokusToUse = useCustomFokus ? dbCustomFokus : (dbFokus || null);
+    const hasFokus = fokusToUse && fokusToUse.trim().length > 0;
+    
     const recommendation = getTopDatabaseRecommendations(
       elementProfile,
       dominantElement,
-      dbFokus || null,
-      dbFokus ? 0.4 : 0 // 40% Fokus-Gewichtung wenn Fokus gewählt
+      fokusToUse,
+      hasFokus ? 0.4 : 0, // 40% Fokus-Gewichtung wenn Fokus gewählt
+      useCustomFokus // Flag für Custom-Fokus Modus
     );
     
     setDbRecommendation(recommendation);
@@ -1028,32 +1035,72 @@ const ClientFieldCalculator = () => {
                 {showDbRecommendation && (
                   <CardContent className="space-y-4">
                     {/* Fokus-Auswahl */}
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <div className="flex-1">
-                        <Label className="text-xs flex items-center gap-1 mb-2">
-                          <Target className="w-3 h-3" />
-                          Symptom-Fokus (optional)
-                        </Label>
-                        <Select value={dbFokus || "none"} onValueChange={(v) => setDbFokus(v === "none" ? '' : v)}>
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Fokus wählen..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">-- Kein Fokus (nur TCM) --</SelectItem>
-                            {getAvailableFokusCategories().map(cat => (
-                              <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    <div className="space-y-3">
+                      {/* Toggle zwischen Standard und Custom */}
+                      <div className="flex items-center gap-4">
+                        <Button 
+                          variant={!useCustomFokus ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUseCustomFokus(false)}
+                          className="text-xs"
+                        >
+                          Standard-Fokus
+                        </Button>
+                        <Button 
+                          variant={useCustomFokus ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setUseCustomFokus(true)}
+                          className="text-xs"
+                        >
+                          Custom-Fokus
+                        </Button>
                       </div>
-                      <Button 
-                        onClick={handleCalculateDbRecommendation}
-                        className="sm:self-end"
-                        size="sm"
-                      >
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Ermitteln
-                      </Button>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        {!useCustomFokus ? (
+                          <div className="flex-1">
+                            <Label className="text-xs flex items-center gap-1 mb-2">
+                              <Target className="w-3 h-3" />
+                              Symptom-Fokus (optional)
+                            </Label>
+                            <Select value={dbFokus || "none"} onValueChange={(v) => setDbFokus(v === "none" ? '' : v)}>
+                              <SelectTrigger className="h-9">
+                                <SelectValue placeholder="Fokus wählen..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">-- Kein Fokus (nur TCM) --</SelectItem>
+                                {getAvailableFokusCategories().map(cat => (
+                                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ) : (
+                          <div className="flex-1">
+                            <Label className="text-xs flex items-center gap-1 mb-2">
+                              <Target className="w-3 h-3" />
+                              Custom-Fokus Keywords
+                            </Label>
+                            <Input 
+                              value={dbCustomFokus}
+                              onChange={(e) => setDbCustomFokus(e.target.value)}
+                              placeholder="z.B. Kopfschmerz, Migräne, Spannung..."
+                              className="h-9"
+                            />
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              Mehrere Keywords durch Komma getrennt eingeben
+                            </p>
+                          </div>
+                        )}
+                        <Button 
+                          onClick={handleCalculateDbRecommendation}
+                          className="sm:self-end"
+                          size="sm"
+                        >
+                          <Sparkles className="w-4 h-4 mr-2" />
+                          Ermitteln
+                        </Button>
+                      </div>
                     </div>
 
                     {/* Ergebnis anzeigen */}
