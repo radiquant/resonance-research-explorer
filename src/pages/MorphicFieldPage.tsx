@@ -9,6 +9,7 @@ import SessionRecoveryDashboard from '@/components/SessionRecoveryDashboard';
 
 const MorphicFieldPage = () => {
   const [showTheory, setShowTheory] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
@@ -219,7 +220,7 @@ const MorphicFieldPage = () => {
         )}
 
         {/* Klienten-Feldalgorithmus */}
-        <ClientFieldCalculator />
+        <ClientFieldCalculator onPatientChange={setSelectedPatientId} />
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-muted-foreground">
@@ -231,8 +232,9 @@ const MorphicFieldPage = () => {
           <SessionRecoveryDashboard 
             sourceModuleFilter="morphic_field"
             showControls={true}
-            title="Morphische Feld Sessions"
+            title={selectedPatientId ? "Sessions für ausgewählten Klienten" : "Alle Morphische Feld Sessions"}
             compact={false}
+            patientFilter={selectedPatientId}
           />
         </div>
       </div>

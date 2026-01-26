@@ -40,6 +40,7 @@ interface SessionRecoveryDashboardProps {
   title?: string;
   description?: string;
   compact?: boolean;
+  patientFilter?: string | null; // Wenn gesetzt, nur Sessions dieses Patienten anzeigen
 }
 
 const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ 
@@ -48,7 +49,8 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
   showControls = false,
   title = 'Aktive Harmonisierungen',
   description,
-  compact = false
+  compact = false,
+  patientFilter = null
 }) => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
@@ -73,7 +75,7 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sourceModuleFilter]);
+  }, [sourceModuleFilter, patientFilter]);
 
   const loadActiveSessions = async () => {
     try {
@@ -108,6 +110,11 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
           const module = s.source_module || 'word_energy';
           return filters.includes(module as SourceModuleFilter);
         });
+      }
+
+      // Filter nach Patient wenn angegeben
+      if (patientFilter) {
+        allSessions = allSessions.filter(s => s.patient_id === patientFilter);
       }
 
       setSessions(allSessions);
