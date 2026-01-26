@@ -10,6 +10,7 @@ import CopenGeneratorPage from "./pages/CopenGeneratorPage";
 import CopenVisualizationV2Page from "./pages/CopenVisualizationV2Page";
 import FormulasPage from "./pages/FormulasPage";
 import MorphicFieldPage from "./pages/MorphicFieldPage";
+import SessionRecoveryPage from "./pages/SessionRecoveryPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/copen-visualisierung-v2" element={<ProtectedRoute><CopenVisualizationV2Page /></ProtectedRoute>} />
           <Route path="/formulas" element={<ProtectedRoute><FormulasPage /></ProtectedRoute>} />
           <Route path="/morphic-field" element={<ProtectedRoute><MorphicFieldPage /></ProtectedRoute>} />
+          <Route path="/session-recovery" element={<ProtectedRoute><SessionRecoveryPage /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
