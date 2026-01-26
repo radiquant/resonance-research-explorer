@@ -3,11 +3,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Activity, Clock, Zap, AlertTriangle, ChevronRight, X, CheckCircle2 } from 'lucide-react';
+import { Activity, Clock, Zap, AlertTriangle, ChevronRight, X, CheckCircle2, Pause, Play, Square } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 interface ActiveSession {
   id: string;
@@ -30,11 +31,25 @@ interface PatientInfo {
   last_name: string;
 }
 
+export type SourceModuleFilter = 'all' | 'morphic_field' | 'copen_v2' | 'word_energy' | 'session_transfer';
+
 interface SessionRecoveryDashboardProps {
   onDismiss?: () => void;
+  sourceModuleFilter?: SourceModuleFilter | SourceModuleFilter[];
+  showControls?: boolean;
+  title?: string;
+  description?: string;
+  compact?: boolean;
 }
 
-const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onDismiss }) => {
+const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ 
+  onDismiss, 
+  sourceModuleFilter = 'all',
+  showControls = false,
+  title = 'Aktive Harmonisierungen',
+  description,
+  compact = false
+}) => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [patients, setPatients] = useState<Record<string, PatientInfo>>({});
@@ -43,7 +58,22 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
 
   useEffect(() => {
     loadActiveSessions();
-  }, []);
+    
+    // Realtime subscription für Updates
+    const channel = supabase
+      .channel('session-recovery-updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'harmonization_sessions_v2' }, () => {
+        loadActiveSessions();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'morphic_field_sessions' }, () => {
+        loadActiveSessions();
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sourceModuleFilter]);
 
   const loadActiveSessions = async () => {
     try {
@@ -68,10 +98,19 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
           .limit(50)
       ]);
 
-      const allSessions = [
+      let allSessions = [
         ...(harmonizationResult.data || []),
         ...(morphicResult.data || []).map(s => ({ ...s, source_module: 'morphic_field' }))
       ];
+
+      // Filter nach source_module wenn angegeben
+      if (sourceModuleFilter !== 'all') {
+        const filters = Array.isArray(sourceModuleFilter) ? sourceModuleFilter : [sourceModuleFilter];
+        allSessions = allSessions.filter(s => {
+          const module = s.source_module || 'word_energy';
+          return filters.includes(module as SourceModuleFilter);
+        });
+      }
 
       setSessions(allSessions);
 
@@ -150,6 +189,56 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
     navigate(getModuleRoute(session.source_module));
   };
 
+  // Session-Steuerungsfunktionen
+  const getTableForSession = (session: ActiveSession) => {
+    return session.source_module === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+  };
+
+  const handlePauseSession = async (session: ActiveSession) => {
+    const table = getTableForSession(session);
+    const { error } = await supabase
+      .from(table)
+      .update({ status: 'paused' })
+      .eq('id', session.id);
+    
+    if (error) {
+      toast.error('Fehler beim Pausieren');
+    } else {
+      toast.success('Session pausiert');
+      loadActiveSessions();
+    }
+  };
+
+  const handleResumeSession = async (session: ActiveSession) => {
+    const table = getTableForSession(session);
+    const { error } = await supabase
+      .from(table)
+      .update({ status: 'running', started_at: new Date().toISOString() })
+      .eq('id', session.id);
+    
+    if (error) {
+      toast.error('Fehler beim Fortsetzen');
+    } else {
+      toast.success('Session fortgesetzt');
+      loadActiveSessions();
+    }
+  };
+
+  const handleCancelSession = async (session: ActiveSession) => {
+    const table = getTableForSession(session);
+    const { error } = await supabase
+      .from(table)
+      .update({ status: 'cancelled' })
+      .eq('id', session.id);
+    
+    if (error) {
+      toast.error('Fehler beim Abbrechen');
+    } else {
+      toast.success('Session abgebrochen');
+      loadActiveSessions();
+    }
+  };
+
   if (dismissed || loading || sessions.length === 0) {
     return null;
   }
@@ -168,25 +257,31 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
     return acc;
   }, 0);
 
+  const dynamicDescription = description || `${sessions.length} Session${sessions.length !== 1 ? 's' : ''} ${sourceModuleFilter === 'all' ? 'laufen im Hintergrund weiter' : 'in diesem Modul'}`;
+
   return (
-    <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-background shadow-lg animate-in slide-in-from-top-2 duration-500">
-      <CardHeader className="pb-3">
+    <Card className={`border-primary/30 bg-gradient-to-br from-primary/5 to-background shadow-lg animate-in slide-in-from-top-2 duration-500 ${compact ? 'p-2' : ''}`}>
+      <CardHeader className={compact ? 'pb-2 pt-3 px-3' : 'pb-3'}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Activity className="w-6 h-6 text-primary animate-pulse" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+              <Activity className={`${compact ? 'w-5 h-5' : 'w-6 h-6'} text-primary animate-pulse`} />
+              {runningSessions.length > 0 && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+              )}
             </div>
             <div>
-              <CardTitle className="text-lg">Aktive Harmonisierungen</CardTitle>
-              <CardDescription>
-                {sessions.length} Session{sessions.length !== 1 ? 's' : ''} laufen im Hintergrund weiter
+              <CardTitle className={compact ? 'text-base' : 'text-lg'}>{title}</CardTitle>
+              <CardDescription className={compact ? 'text-xs' : ''}>
+                {dynamicDescription}
               </CardDescription>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleDismiss}>
-            <X className="w-4 h-4" />
-          </Button>
+          {onDismiss && (
+            <Button variant="ghost" size="icon" onClick={handleDismiss}>
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       </CardHeader>
 
@@ -217,9 +312,9 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
         )}
 
         {/* Session-Liste */}
-        <ScrollArea className="max-h-48">
+        <ScrollArea className={compact ? 'max-h-32' : 'max-h-48'}>
           <div className="space-y-2">
-            {sessions.slice(0, 5).map((session) => {
+            {sessions.slice(0, compact ? 3 : 5).map((session) => {
               const patient = patients[session.patient_id];
               const patientName = patient 
                 ? `${patient.first_name} ${patient.last_name}` 
@@ -228,10 +323,12 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
               return (
                 <div 
                   key={session.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group"
-                  onClick={() => handleNavigate(session)}
+                  className="flex items-center justify-between p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div 
+                    className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                    onClick={() => handleNavigate(session)}
+                  >
                     {session.status === 'running' ? (
                       <Zap className="w-4 h-4 text-green-400 flex-shrink-0" />
                     ) : session.status === 'paused' ? (
@@ -243,8 +340,12 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
                       <div className="text-sm font-medium truncate">{session.word}</div>
                       <div className="text-xs text-muted-foreground flex items-center gap-2">
                         <span>{patientName}</span>
-                        <span>•</span>
-                        <span>{getModuleLabel(session.source_module)}</span>
+                        {sourceModuleFilter === 'all' && (
+                          <>
+                            <span>•</span>
+                            <span>{getModuleLabel(session.source_module)}</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -253,15 +354,52 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({ onD
                     {session.pulse_pause_active && (
                       <Badge variant="outline" className="text-[10px]">P/P</Badge>
                     )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    
+                    {/* Steuerungsbuttons wenn showControls aktiv */}
+                    {showControls && (
+                      <div className="flex items-center gap-1 ml-2">
+                        {session.status === 'running' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7"
+                            onClick={(e) => { e.stopPropagation(); handlePauseSession(session); }}
+                          >
+                            <Pause className="w-3 h-3" />
+                          </Button>
+                        )}
+                        {session.status === 'paused' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-7 w-7"
+                            onClick={(e) => { e.stopPropagation(); handleResumeSession(session); }}
+                          >
+                            <Play className="w-3 h-3" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={(e) => { e.stopPropagation(); handleCancelSession(session); }}
+                        >
+                          <Square className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {!showControls && (
+                      <ChevronRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
                   </div>
                 </div>
               );
             })}
             
-            {sessions.length > 5 && (
+            {sessions.length > (compact ? 3 : 5) && (
               <div className="text-center text-xs text-muted-foreground py-2">
-                + {sessions.length - 5} weitere Sessions
+                + {sessions.length - (compact ? 3 : 5)} weitere Sessions
               </div>
             )}
           </div>

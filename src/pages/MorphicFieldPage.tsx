@@ -5,6 +5,7 @@ import { Home, BookOpen } from 'lucide-react';
 import ClientFieldCalculator from '@/components/ClientFieldCalculator';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import SessionRecoveryDashboard from '@/components/SessionRecoveryDashboard';
 
 const MorphicFieldPage = () => {
   const [showTheory, setShowTheory] = useState(false);
@@ -216,6 +217,16 @@ const MorphicFieldPage = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Modul-spezifisches Session Dashboard */}
+        <div className="mb-6">
+          <SessionRecoveryDashboard 
+            sourceModuleFilter="morphic_field"
+            showControls={true}
+            title="Morphische Feld Sessions"
+            compact={true}
+          />
+        </div>
 
         {/* Klienten-Feldalgorithmus */}
         <ClientFieldCalculator />
