@@ -149,7 +149,11 @@ const PARAMETER_KOMBINATIONEN: ParameterKombination[] = [
   }
 ];
 
-const ClientFieldCalculator = () => {
+interface ClientFieldCalculatorProps {
+  onPatientChange?: (patientId: string | null) => void;
+}
+
+const ClientFieldCalculator: React.FC<ClientFieldCalculatorProps> = ({ onPatientChange }) => {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -208,6 +212,9 @@ const ClientFieldCalculator = () => {
   // Load patient data when selected
   const handlePatientSelect = async (patientId: string) => {
     setSelectedPatientId(patientId);
+    
+    // Callback für Patientenänderung
+    onPatientChange?.(patientId || null);
     
     if (!patientId) {
       // Clear form
