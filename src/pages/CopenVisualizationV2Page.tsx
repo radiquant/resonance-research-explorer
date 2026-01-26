@@ -20,22 +20,19 @@ const CopenVisualizationV2Page = () => {
           ← Zurück zur Übersicht
         </Button>
         
-        {/* Modul-spezifisches Session Dashboard */}
-        <div className="mb-6">
+        <CopenAlgorithmVisualizationV2 />
+        
+        <div className="mt-6 space-y-4">
+          <AnalysisArchiveCloud />
+          <WorkerStatusMonitor />
+          
+          {/* Modul-spezifisches Session Dashboard */}
           <SessionRecoveryDashboard 
             sourceModuleFilter={['copen_v2', 'word_energy', 'session_transfer']}
             showControls={true}
             title="Copen V2 & Wortenergie Sessions"
             compact={true}
           />
-        </div>
-        
-        <CopenAlgorithmVisualizationV2 />
-        
-        <div className="mt-6 space-y-4">
-          <AnalysisArchiveCloud />
-          <SessionStatusList />
-          <WorkerStatusMonitor />
         </div>
       </div>
     </div>
