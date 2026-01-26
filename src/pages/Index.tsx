@@ -24,6 +24,7 @@ import PetrovWeltenformel from "@/components/theories/PetrovWeltenformel";
 import GrigoriGrabovoi from "@/components/theories/GrigoriGrabovoi";
 import KozyrevDioden from "@/components/theories/KozyrevDioden";
 import UserMenu from "@/components/UserMenu";
+import SessionRecoveryDashboard from "@/components/SessionRecoveryDashboard";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -246,6 +247,12 @@ const Index = () => {
         <div className="absolute top-4 right-4">
           <UserMenu />
         </div>
+        
+        {/* Session Recovery Dashboard */}
+        <div className="mb-8">
+          <SessionRecoveryDashboard />
+        </div>
+
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold mb-6 text-white">
             Resonanz Forschungs-Explorer
