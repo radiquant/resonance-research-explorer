@@ -51,7 +51,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useWordEnergyHistory } from '@/hooks/useWordEnergyHistory';
 
-const CopenAlgorithmVisualizationV2: React.FC = () => {
+interface CopenAlgorithmVisualizationV2Props {
+  onPatientChange?: (patientId: string | null) => void;
+}
+
+const CopenAlgorithmVisualizationV2: React.FC<CopenAlgorithmVisualizationV2Props> = ({ onPatientChange }) => {
   const [word, setWord] = useState('NUX VOMICA');
   const [potency, setPotency] = useState(6);
   const [potencyType, setPotencyType] = useState<'D' | 'C' | 'LM' | 'M' | 'F1' | 'F2' | 'F3'>('D');
@@ -96,6 +100,7 @@ const CopenAlgorithmVisualizationV2: React.FC = () => {
   // Patient-Switch-Handler: nur Auswahl setzen, keine Mutation bestehender Sitzungen
   const handlePatientSwitch = (patient: CloudPatient | null) => {
     setSelectedPatient(patient);
+    onPatientChange?.(patient?.id || null);
   };
   
   const calculateClientRateFor = (patient: CloudPatient, wordEnergy: string): number => {
