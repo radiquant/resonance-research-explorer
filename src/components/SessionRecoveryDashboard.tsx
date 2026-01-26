@@ -310,7 +310,7 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
         )}
 
         {/* Session-Liste */}
-        <ScrollArea className={compact ? 'max-h-64' : 'max-h-80'}>
+        <ScrollArea className={compact ? 'h-64' : 'h-96'}>
           <div className="space-y-2 pr-3">
             {sessions.map((session) => {
               const patient = patients[session.patient_id];
