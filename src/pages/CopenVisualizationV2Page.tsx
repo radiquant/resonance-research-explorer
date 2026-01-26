@@ -4,6 +4,7 @@ import CopenAlgorithmVisualizationV2 from "@/components/CopenAlgorithmVisualizat
 import { WorkerStatusMonitor } from "@/components/WorkerStatusMonitor";
 import { SessionStatusList } from "@/components/SessionStatusList";
 import AnalysisArchiveCloud from "@/components/AnalysisArchiveCloud";
+import SessionRecoveryDashboard from "@/components/SessionRecoveryDashboard";
 
 const CopenVisualizationV2Page = () => {
   const navigate = useNavigate();
@@ -18,6 +19,16 @@ const CopenVisualizationV2Page = () => {
         >
           ← Zurück zur Übersicht
         </Button>
+        
+        {/* Modul-spezifisches Session Dashboard */}
+        <div className="mb-6">
+          <SessionRecoveryDashboard 
+            sourceModuleFilter={['copen_v2', 'word_energy', 'session_transfer']}
+            showControls={true}
+            title="Copen V2 & Wortenergie Sessions"
+            compact={true}
+          />
+        </div>
         
         <CopenAlgorithmVisualizationV2 />
         
