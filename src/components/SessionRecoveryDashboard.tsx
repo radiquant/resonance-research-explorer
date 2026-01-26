@@ -87,15 +87,13 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
           .select('*')
           .eq('user_id', user.id)
           .in('status', ['running', 'pending', 'queued', 'paused'])
-          .order('created_at', { ascending: false })
-          .limit(50),
+          .order('created_at', { ascending: false }),
         supabase
           .from('morphic_field_sessions')
           .select('*')
           .eq('user_id', user.id)
           .in('status', ['running', 'pending', 'queued', 'paused'])
           .order('created_at', { ascending: false })
-          .limit(50)
       ]);
 
       let allSessions = [
@@ -312,9 +310,9 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
         )}
 
         {/* Session-Liste */}
-        <ScrollArea className={compact ? 'max-h-32' : 'max-h-48'}>
-          <div className="space-y-2">
-            {sessions.slice(0, compact ? 3 : 5).map((session) => {
+        <ScrollArea className={compact ? 'max-h-64' : 'max-h-80'}>
+          <div className="space-y-2 pr-3">
+            {sessions.map((session) => {
               const patient = patients[session.patient_id];
               const patientName = patient 
                 ? `${patient.first_name} ${patient.last_name}` 
@@ -397,11 +395,6 @@ const SessionRecoveryDashboard: React.FC<SessionRecoveryDashboardProps> = ({
               );
             })}
             
-            {sessions.length > (compact ? 3 : 5) && (
-              <div className="text-center text-xs text-muted-foreground py-2">
-                + {sessions.length - (compact ? 3 : 5)} weitere Sessions
-              </div>
-            )}
           </div>
         </ScrollArea>
 

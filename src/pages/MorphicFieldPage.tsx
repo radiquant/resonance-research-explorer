@@ -218,22 +218,22 @@ const MorphicFieldPage = () => {
           </Card>
         )}
 
-        {/* Modul-spezifisches Session Dashboard */}
-        <div className="mb-6">
-          <SessionRecoveryDashboard 
-            sourceModuleFilter="morphic_field"
-            showControls={true}
-            title="Morphische Feld Sessions"
-            compact={true}
-          />
-        </div>
-
         {/* Klienten-Feldalgorithmus */}
         <ClientFieldCalculator />
 
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>Morphische Feld-Engine • Basierend auf Quantenmechanik, Heiliger Geometrie & Kozyrev-Torsionsfeldern</p>
+        </div>
+
+        {/* Modul-spezifisches Session Dashboard - am unteren Ende */}
+        <div className="mt-8">
+          <SessionRecoveryDashboard 
+            sourceModuleFilter="morphic_field"
+            showControls={true}
+            title="Morphische Feld Sessions"
+            compact={false}
+          />
         </div>
       </div>
     </div>
