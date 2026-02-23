@@ -708,8 +708,8 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
     const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
     const nowIso = new Date().toISOString();
     
-    // Dauerbesendung: Setze duration auf 24 Stunden (86400 Sekunden) mit Impuls/Pause
-    const dauerDuration = dauerbesendungActive ? 86400 : undefined;
+    // Dauerbesendung: Setze duration auf 30 Tage (2592000 Sekunden) mit Impuls/Pause
+    const dauerDuration = dauerbesendungActive ? 2592000 : undefined;
     
     try {
       // Wenn Dauerbesendung, aktualisiere erst die Dauer aller queued Sessions
