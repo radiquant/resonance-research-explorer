@@ -855,6 +855,152 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   };
 
   // ========================
+  // SAVE ACTIVE SESSIONS AS TEMPLATE
+  // ========================
+
+  const saveActiveSessionsAsTemplate = async () => {
+    if (!user || !patientId) return;
+
+    const activeSessions = sessions.filter(s => ['queued', 'pending', 'running', 'paused'].includes(s.status));
+    if (activeSessions.length === 0) {
+      toast({ title: 'Keine aktiven Sessions', description: 'Es gibt keine aktiven Sessions zum Speichern', variant: 'destructive' });
+      return;
+    }
+
+    const templateName = `Aktive Sessions ${clientName} – ${new Date().toLocaleDateString('de-DE')}`;
+    const templateItems: HarmonizationItem[] = activeSessions.map(s => ({
+      word: s.word,
+      rate: parseInt(s.copen_rate || '0') || 0,
+      potency: undefined,
+    }));
+
+    setIsSavingTemplate(true);
+    try {
+      const { error } = await supabase
+        .from('harmonization_templates_v2')
+        .insert([{
+          user_id: user.id,
+          patient_id: patientId,
+          name: templateName,
+          description: `Automatisch gespeichert: ${activeSessions.length} aktive Sessions`,
+          sessions: templateItems as any,
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Template gespeichert',
+        description: `${activeSessions.length} aktive Sessions als "${templateName}" gespeichert`,
+      });
+      await loadTemplates();
+    } catch (error: any) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  // ========================
+  // TRANSFER TEMPLATE TO ANOTHER CLIENT
+  // ========================
+
+  const openTransferDialog = async (templateId: string) => {
+    setTransferTemplateId(templateId);
+    setSelectedTransferPatientId(null);
+    setTransferDialogOpen(true);
+    setIsLoadingPatients(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('patients_v2')
+        .select('id, first_name, last_name')
+        .eq('user_id', user!.id)
+        .order('last_name', { ascending: true });
+
+      if (error) throw error;
+      // Exclude current patient
+      setAvailablePatients((data || []).filter(p => p.id !== patientId));
+    } catch (error: any) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoadingPatients(false);
+    }
+  };
+
+  const executeTransfer = async () => {
+    if (!user || !transferTemplateId || !selectedTransferPatientId) return;
+
+    const template = templates.find(t => t.id === transferTemplateId);
+    if (!template) return;
+
+    setIsTransferring(true);
+    try {
+      const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+
+      // 1. Cancel all active sessions of the target patient
+      const { error: cancelError } = await supabase
+        .from(tableName as 'harmonization_sessions_v2')
+        .update({ status: 'cancelled', completed_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('patient_id', selectedTransferPatientId)
+        .in('status', ['queued', 'pending', 'running', 'paused']);
+
+      if (cancelError) throw cancelError;
+
+      // 2. Get target patient's personal_rate
+      const { data: targetPatient } = await supabase
+        .from('patients_v2')
+        .select('personal_rate')
+        .eq('id', selectedTransferPatientId)
+        .maybeSingle();
+
+      const targetRate = targetPatient?.personal_rate || '';
+
+      // 3. Create new sessions from template
+      const totalDurationSeconds = durationMinutes * 60;
+      const durationPerItem = Math.floor(totalDurationSeconds / template.sessions.length);
+
+      const sessionsToCreate = template.sessions.map(item => {
+        const baseSession = {
+          user_id: user.id,
+          patient_id: selectedTransferPatientId,
+          word: item.word,
+          copen_rate: item.rate?.toString() || targetRate || '',
+          tested_potency: item.potency || 'D0',
+          duration_seconds: durationPerItem,
+          remaining_seconds: durationPerItem,
+          status: 'queued' as const,
+          pulse_pause_active: pulsePauseActive,
+          pulse_seconds: pulsePauseActive ? pulseSeconds : null,
+          pause_seconds: pulsePauseActive ? pauseSeconds : null,
+          progress: 0,
+        };
+
+        if (tableName === 'morphic_field_sessions') return baseSession;
+        return { ...baseSession, source_module: sourceModule };
+      });
+
+      const { error: insertError } = await supabase
+        .from(tableName as 'harmonization_sessions_v2')
+        .insert(sessionsToCreate);
+
+      if (insertError) throw insertError;
+
+      const targetName = availablePatients.find(p => p.id === selectedTransferPatientId);
+      toast({
+        title: 'Transfer erfolgreich',
+        description: `${template.sessions.length} Harmonisierungen auf "${targetName?.first_name} ${targetName?.last_name}" übertragen`,
+      });
+
+      setTransferDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: 'Fehler beim Transfer', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  // ========================
   // HELPERS
   // ========================
 
