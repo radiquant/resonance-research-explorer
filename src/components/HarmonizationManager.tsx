@@ -1191,6 +1191,12 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                   Alle abbrechen
                 </Button>
               )}
+              {sessions.length > 0 && (
+                <Button size="sm" variant="outline" onClick={saveActiveSessionsAsTemplate} disabled={isSavingTemplate}>
+                  {isSavingTemplate ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+                  Als Template
+                </Button>
+              )}
             </div>
 
             {/* Session List */}
