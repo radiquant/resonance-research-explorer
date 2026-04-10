@@ -12,6 +12,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { ScrollArea as DialogScrollArea } from '@/components/ui/scroll-area';
 import {
   Play,
   Pause,
@@ -30,7 +31,9 @@ import {
   RefreshCw,
   BookTemplate,
   Layers,
-  Sparkles
+  Sparkles,
+  ArrowRightLeft,
+  Users
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { supabase } from '@/integrations/supabase/client';
@@ -266,6 +269,14 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   
   // Kohärente Regulation State (fügt "Kohärente Harmonisierung Regulation" vor Analyseergebnissen hinzu)
   const [koharenteRegulationActive, setKoharenteRegulationActive] = useState(false);
+  
+  // Transfer State
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferTemplateId, setTransferTemplateId] = useState<string | null>(null);
+  const [availablePatients, setAvailablePatients] = useState<Array<{id: string; first_name: string; last_name: string}>>([]);
+  const [selectedTransferPatientId, setSelectedTransferPatientId] = useState<string | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [isLoadingPatients, setIsLoadingPatients] = useState(false);
   
   // Live Timer
   const [nowTs, setNowTs] = useState(() => Date.now());
@@ -844,6 +855,152 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   };
 
   // ========================
+  // SAVE ACTIVE SESSIONS AS TEMPLATE
+  // ========================
+
+  const saveActiveSessionsAsTemplate = async () => {
+    if (!user || !patientId) return;
+
+    const activeSessions = sessions.filter(s => ['queued', 'pending', 'running', 'paused'].includes(s.status));
+    if (activeSessions.length === 0) {
+      toast({ title: 'Keine aktiven Sessions', description: 'Es gibt keine aktiven Sessions zum Speichern', variant: 'destructive' });
+      return;
+    }
+
+    const templateName = `Aktive Sessions ${clientName} – ${new Date().toLocaleDateString('de-DE')}`;
+    const templateItems: HarmonizationItem[] = activeSessions.map(s => ({
+      word: s.word,
+      rate: parseInt(s.copen_rate || '0') || 0,
+      potency: undefined,
+    }));
+
+    setIsSavingTemplate(true);
+    try {
+      const { error } = await supabase
+        .from('harmonization_templates_v2')
+        .insert([{
+          user_id: user.id,
+          patient_id: patientId,
+          name: templateName,
+          description: `Automatisch gespeichert: ${activeSessions.length} aktive Sessions`,
+          sessions: templateItems as any,
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Template gespeichert',
+        description: `${activeSessions.length} aktive Sessions als "${templateName}" gespeichert`,
+      });
+      await loadTemplates();
+    } catch (error: any) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsSavingTemplate(false);
+    }
+  };
+
+  // ========================
+  // TRANSFER TEMPLATE TO ANOTHER CLIENT
+  // ========================
+
+  const openTransferDialog = async (templateId: string) => {
+    setTransferTemplateId(templateId);
+    setSelectedTransferPatientId(null);
+    setTransferDialogOpen(true);
+    setIsLoadingPatients(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('patients_v2')
+        .select('id, first_name, last_name')
+        .eq('user_id', user!.id)
+        .order('last_name', { ascending: true });
+
+      if (error) throw error;
+      // Exclude current patient
+      setAvailablePatients((data || []).filter(p => p.id !== patientId));
+    } catch (error: any) {
+      toast({ title: 'Fehler', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsLoadingPatients(false);
+    }
+  };
+
+  const executeTransfer = async () => {
+    if (!user || !transferTemplateId || !selectedTransferPatientId) return;
+
+    const template = templates.find(t => t.id === transferTemplateId);
+    if (!template) return;
+
+    setIsTransferring(true);
+    try {
+      const tableName = sourceModule === 'morphic_field' ? 'morphic_field_sessions' : 'harmonization_sessions_v2';
+
+      // 1. Cancel all active sessions of the target patient
+      const { error: cancelError } = await supabase
+        .from(tableName as 'harmonization_sessions_v2')
+        .update({ status: 'cancelled', completed_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+        .eq('patient_id', selectedTransferPatientId)
+        .in('status', ['queued', 'pending', 'running', 'paused']);
+
+      if (cancelError) throw cancelError;
+
+      // 2. Get target patient's personal_rate
+      const { data: targetPatient } = await supabase
+        .from('patients_v2')
+        .select('personal_rate')
+        .eq('id', selectedTransferPatientId)
+        .maybeSingle();
+
+      const targetRate = targetPatient?.personal_rate || '';
+
+      // 3. Create new sessions from template
+      const totalDurationSeconds = durationMinutes * 60;
+      const durationPerItem = Math.floor(totalDurationSeconds / template.sessions.length);
+
+      const sessionsToCreate = template.sessions.map(item => {
+        const baseSession = {
+          user_id: user.id,
+          patient_id: selectedTransferPatientId,
+          word: item.word,
+          copen_rate: item.rate?.toString() || targetRate || '',
+          tested_potency: item.potency || 'D0',
+          duration_seconds: durationPerItem,
+          remaining_seconds: durationPerItem,
+          status: 'queued' as const,
+          pulse_pause_active: pulsePauseActive,
+          pulse_seconds: pulsePauseActive ? pulseSeconds : null,
+          pause_seconds: pulsePauseActive ? pauseSeconds : null,
+          progress: 0,
+        };
+
+        if (tableName === 'morphic_field_sessions') return baseSession;
+        return { ...baseSession, source_module: sourceModule };
+      });
+
+      const { error: insertError } = await supabase
+        .from(tableName as 'harmonization_sessions_v2')
+        .insert(sessionsToCreate);
+
+      if (insertError) throw insertError;
+
+      const targetName = availablePatients.find(p => p.id === selectedTransferPatientId);
+      toast({
+        title: 'Transfer erfolgreich',
+        description: `${template.sessions.length} Harmonisierungen auf "${targetName?.first_name} ${targetName?.last_name}" übertragen`,
+      });
+
+      setTransferDialogOpen(false);
+    } catch (error: any) {
+      toast({ title: 'Fehler beim Transfer', description: error.message, variant: 'destructive' });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  // ========================
   // HELPERS
   // ========================
 
@@ -1032,6 +1189,12 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                 <Button size="sm" variant="destructive" onClick={cancelAllSessions}>
                   <XCircle className="w-4 h-4 mr-1" />
                   Alle abbrechen
+                </Button>
+              )}
+              {sessions.length > 0 && (
+                <Button size="sm" variant="outline" onClick={saveActiveSessionsAsTemplate} disabled={isSavingTemplate}>
+                  {isSavingTemplate ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+                  Als Template
                 </Button>
               )}
             </div>
@@ -1318,6 +1481,14 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                           </Button>
                           <Button
                             size="sm"
+                            variant="outline"
+                            onClick={() => openTransferDialog(template.id)}
+                          >
+                            <ArrowRightLeft className="w-3 h-3 mr-1" />
+                            Übertragen
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => deleteTemplate(template.id)}
                           >
@@ -1450,6 +1621,68 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer Template Dialog */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="w-5 h-5" />
+              Template auf Klienten übertragen
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Alle aktiven Harmonisierungen des Ziel-Klienten werden abgebrochen und durch die Template-Sessions ersetzt.
+            </p>
+
+            {isLoadingPatients ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : availablePatients.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">Keine anderen Klienten verfügbar</p>
+            ) : (
+              <div className="border rounded-lg max-h-60 overflow-y-auto">
+                {availablePatients.map(patient => (
+                  <div
+                    key={patient.id}
+                    onClick={() => setSelectedTransferPatientId(patient.id)}
+                    className={`p-3 cursor-pointer border-b last:border-b-0 transition-colors ${
+                      selectedTransferPatientId === patient.id
+                        ? 'bg-primary/10 border-primary'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium">{patient.first_name} {patient.last_name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={executeTransfer}
+              disabled={!selectedTransferPatientId || isTransferring}
+            >
+              {isTransferring ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+              )}
+              Übertragen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
