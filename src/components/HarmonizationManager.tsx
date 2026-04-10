@@ -1481,6 +1481,14 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
                           </Button>
                           <Button
                             size="sm"
+                            variant="outline"
+                            onClick={() => openTransferDialog(template.id)}
+                          >
+                            <ArrowRightLeft className="w-3 h-3 mr-1" />
+                            Übertragen
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => deleteTemplate(template.id)}
                           >
