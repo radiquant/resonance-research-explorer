@@ -31,7 +31,9 @@ import {
   RefreshCw,
   BookTemplate,
   Layers,
-  Sparkles
+  Sparkles,
+  ArrowRightLeft,
+  Users
 } from 'lucide-react';
 import { calculateCopenRate } from '@/utils/copenRateGenerator';
 import { supabase } from '@/integrations/supabase/client';
