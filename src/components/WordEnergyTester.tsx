@@ -204,7 +204,7 @@ const WordEnergyTester = ({ clientResult, clientName, patientId, sourceModule = 
   });
   const [showHarmonization, setShowHarmonization] = useState(false);
   const [harmonizationItemCount, setHarmonizationItemCount] = useState<21 | 42 | 63>(21);
-  const harmonizationIntervalRef = useState<NodeJS.Timeout | null>(null);
+  const harmonizationIntervalRef = useState<ReturnType<typeof setInterval> | null>(null);
 
   // Schutz für Multi-Session-Harmonisierungen:
   // Steuer-/Abbruch-Buttons in diesem Tab dürfen nur Sessions beeinflussen,
