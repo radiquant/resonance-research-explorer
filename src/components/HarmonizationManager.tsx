@@ -1621,6 +1621,68 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Transfer Template Dialog */}
+      <Dialog open={transferDialogOpen} onOpenChange={setTransferDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="w-5 h-5" />
+              Template auf Klienten übertragen
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Alle aktiven Harmonisierungen des Ziel-Klienten werden abgebrochen und durch die Template-Sessions ersetzt.
+            </p>
+
+            {isLoadingPatients ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              </div>
+            ) : availablePatients.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">Keine anderen Klienten verfügbar</p>
+            ) : (
+              <div className="border rounded-lg max-h-60 overflow-y-auto">
+                {availablePatients.map(patient => (
+                  <div
+                    key={patient.id}
+                    onClick={() => setSelectedTransferPatientId(patient.id)}
+                    className={`p-3 cursor-pointer border-b last:border-b-0 transition-colors ${
+                      selectedTransferPatientId === patient.id
+                        ? 'bg-primary/10 border-primary'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" />
+                      <span className="font-medium">{patient.first_name} {patient.last_name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={executeTransfer}
+              disabled={!selectedTransferPatientId || isTransferring}
+            >
+              {isTransferring ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+              )}
+              Übertragen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
