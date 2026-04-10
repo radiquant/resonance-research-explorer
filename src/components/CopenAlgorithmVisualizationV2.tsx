@@ -471,7 +471,7 @@ const CopenAlgorithmVisualizationV2: React.FC<CopenAlgorithmVisualizationV2Props
 
   // Harmonisierungs-Timer: Backend-Sync alle 2 Sekunden für korrekte Zeitanzeige
   useEffect(() => {
-    let syncTimer: NodeJS.Timeout;
+    let syncTimer: ReturnType<typeof setInterval>;
     
     const syncWithBackend = async () => {
       if (!selectedPatient) return;
