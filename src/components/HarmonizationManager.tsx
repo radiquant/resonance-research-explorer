@@ -270,6 +270,14 @@ const HarmonizationManager: React.FC<HarmonizationManagerProps> = ({
   // Kohärente Regulation State (fügt "Kohärente Harmonisierung Regulation" vor Analyseergebnissen hinzu)
   const [koharenteRegulationActive, setKoharenteRegulationActive] = useState(false);
   
+  // Transfer State
+  const [transferDialogOpen, setTransferDialogOpen] = useState(false);
+  const [transferTemplateId, setTransferTemplateId] = useState<string | null>(null);
+  const [availablePatients, setAvailablePatients] = useState<Array<{id: string; first_name: string; last_name: string}>>([]);
+  const [selectedTransferPatientId, setSelectedTransferPatientId] = useState<string | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [isLoadingPatients, setIsLoadingPatients] = useState(false);
+  
   // Live Timer
   const [nowTs, setNowTs] = useState(() => Date.now());
 
