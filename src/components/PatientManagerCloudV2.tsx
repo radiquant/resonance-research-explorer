@@ -296,6 +296,46 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
 
       if (error) throw error;
 
+      // Aktive Harmonisierungs-Sessions: copen_rate nachziehen
+      // Sicher: nur Sessions die noch nicht abgeschlossen sind, nur dieser Patient,
+      // nur dieser User. Bei Fehlern wird der Patient-Update NICHT zurückgerollt –
+      // wir loggen lediglich und informieren den Nutzer.
+      const syncedPatient = {
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        birth_date: formData.birth_date,
+        birth_place: formData.birth_place,
+        personal_rate: formData.personal_rate || null,
+      };
+      let updatedSessionCount = 0;
+      try {
+        const activeStatuses = ['pending', 'queued', 'running', 'paused'];
+        const tables = ['harmonization_sessions_v2', 'morphic_field_sessions'] as const;
+        for (const table of tables) {
+          const { data: sessions, error: loadErr } = await supabase
+            .from(table)
+            .select('id, word, copen_rate')
+            .eq('patient_id', editingId)
+            .eq('user_id', user!.id)
+            .in('status', activeStatuses);
+
+          if (loadErr || !sessions) continue;
+
+          for (const s of sessions) {
+            const newRate = calculateClientRate(syncedPatient, s.word).toString();
+            if (newRate !== (s.copen_rate ?? '')) {
+              const { error: updErr } = await supabase
+                .from(table)
+                .update({ copen_rate: newRate })
+                .eq('id', s.id);
+              if (!updErr) updatedSessionCount++;
+            }
+          }
+        }
+      } catch (syncErr) {
+        console.error('Fehler beim Aktualisieren der Klienten-Rate in laufenden Sessions:', syncErr);
+      }
+
       setEditingId(null);
       setFormData({ first_name: '', last_name: '', birth_date: '', birth_place: '', image_signature: '', personal_rate: '' });
       setHardwareConfig({
@@ -319,7 +359,9 @@ const PatientManagerCloudV2: React.FC<PatientManagerCloudV2Props> = ({
 
       toast({
         title: "Erfolg",
-        description: "Patient aktualisiert",
+        description: updatedSessionCount > 0
+          ? `Patient aktualisiert. Klienten-Rate in ${updatedSessionCount} laufender Harmonisierung${updatedSessionCount === 1 ? '' : 'en'} nachgezogen.`
+          : "Patient aktualisiert",
       });
     } catch (error: any) {
       toast({
