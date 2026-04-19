@@ -12,6 +12,7 @@ import { analyzeImageWithOllama, checkOllamaConnection } from '@/utils/ollamaCli
 import { PatientHardwareConfig } from './PatientHardwareConfig';
 import { DEFAULT_HARDWARE_CONFIG, HardwareConfig } from '@/utils/hardwareAlgorithms';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { calculateClientRate } from '@/utils/clientRateCalculation';
 
 // DSGVO-konforme Input-Validierung
 const patientSchema = z.object({
