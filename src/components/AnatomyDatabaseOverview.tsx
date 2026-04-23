@@ -123,7 +123,6 @@ const AnatomyDatabaseOverview = ({ onLoadDatabase, disabled = false }: AnatomyDa
         .from('word_databases')
         .select('id, name, entries, created_at')
         .eq('user_id', user.id)
-        .ilike('name', 'Anatomie:%')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

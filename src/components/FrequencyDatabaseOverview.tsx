@@ -112,7 +112,6 @@ const FrequencyDatabaseOverview = ({ onLoadDatabase, disabled = false }: Frequen
         .from('word_databases')
         .select('id, name, entries, created_at')
         .eq('user_id', user.id)
-        .ilike('name', 'Frequenz:%')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
